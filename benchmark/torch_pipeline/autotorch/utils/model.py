@@ -94,6 +94,7 @@ def test_load_checkpoint_(args, log_info=True):
             args.resume, map_location=lambda storage, loc: storage.cuda(args.gpu)
         )
         model_state = checkpoint["state_dict"]
+        optimizer_state = checkpoint["optimizer"]
         if "state_dict_ema" in checkpoint:
             model_state_ema = checkpoint["state_dict_ema"]
         else:
@@ -114,6 +115,7 @@ def test_load_checkpoint(args):
             args.resume, map_location=lambda storage, loc: storage.cuda(args.gpu)
         )
         checkpoint = {k[len("module."):] if k.startswith("module.") else k: v for k, v in checkpoint.items()}
+        optimizer_state = checkpoint["optimizer"]
         model_state = checkpoint["state_dict"]
         if "state_dict_ema" in checkpoint:
             model_state_ema = checkpoint["state_dict_ema"]
