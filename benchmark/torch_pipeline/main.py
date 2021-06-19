@@ -58,8 +58,8 @@ def parse_args():
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                         metavar='LR', help='initial learning rate', dest='lr')
     parser.add_argument('--lr-schedule', default="step", type=str, metavar="SCHEDULE",
-                        choices=["step", "linear", "cosine"],
-                        help="Type of LR schedule: {}, {}, {}".format("step", "linear", "cosine"),)
+                        choices=["step", "linear", "cosine", "exponential"],
+                        help="Type of LR schedule: {}, {}, {}".format("step", "linear", "cosine" "exponential"),)           
     parser.add_argument('--warmup', default=0, type=int, metavar="E", help="number of warmup epochs")
     parser.add_argument('--label-smoothing', default=0.0, type=float, metavar="S", help="label smoothing")
     parser.add_argument('--mixup', default=0.0, type=float, metavar="ALPHA", help="mixup alpha")
@@ -245,7 +245,10 @@ def prepare_for_training(args):
     elif args.lr_schedule == "linear":
         lr_policy = lr_linear_policy(base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
         )
-
+    elif args.lr_schedule == "exponential":
+        lr_policy = lr_exponential(base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
+        )
+ 
     scaler = torch.cuda.amp.GradScaler(
         init_scale=args.static_loss_scale,
         growth_factor=2,

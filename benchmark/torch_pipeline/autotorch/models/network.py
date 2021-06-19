@@ -52,6 +52,7 @@ def init_network(model_name, num_class, pretrained=False):
 
 if __name__ == '__main__':
     model_names = get_model_list()
+    model_names = ['resnetv2_50x1_bitm']
     for name in model_names:
         try:
             print("=" * 10, name)
@@ -67,7 +68,7 @@ if __name__ == '__main__':
                 print(fc_layer)
             else:
                 print(net)
-        except:
+        except NotImplementedError:
             print("Error " * 10)
             net = get_model(name)
             print(net)

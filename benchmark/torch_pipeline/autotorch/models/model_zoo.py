@@ -1,4 +1,4 @@
-import timm 
+import timm
 import torchvision.models as models
 
 """"
