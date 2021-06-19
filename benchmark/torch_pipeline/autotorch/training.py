@@ -66,13 +66,14 @@ def get_optimizer(parameters, lr, args, state=None):
     return optimizer
 
 
-def get_train_step(model_and_loss, optimizer, scaler, use_amp=False, top_k=1):
-    def _step(input, target):
+def get_train_step(model_and_loss, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
+    def _step(input, target, optimizer_step=True):
         input_var = Variable(input)
         target_var = Variable(target)
 
         with autocast(enabled=use_amp):
             loss, output = model_and_loss(input_var, target_var)
+            loss /= batch_size_multiplier
             prec1, prec5 = accuracy(output.data, target, topk=(1, min(top_k, 5)))
             if torch.distributed.is_initialized():
                 reduced_loss = reduce_tensor(loss.data)
@@ -83,9 +84,10 @@ def get_train_step(model_and_loss, optimizer, scaler, use_amp=False, top_k=1):
 
         scaler.scale(loss).backward()
 
-        scaler.step(optimizer)
-        scaler.update()
-        optimizer.zero_grad()
+        if optimizer_step:
+            scaler.step(optimizer)
+            scaler.update()
+            optimizer.zero_grad()
 
         torch.cuda.synchronize()
 
@@ -106,6 +108,7 @@ def train(
     timeout_handler,
     ema=None,
     use_amp=False,
+    batch_size_multiplier=1,
     log_interval=10
 ):
     batch_time_m = AverageMeter('Time', ':6.3f')
@@ -120,6 +123,7 @@ def train(
         optimizer,
         scaler=scaler,
         use_amp=use_amp,
+        batch_size_multiplier=batch_size_multiplier,
         top_k=num_class
     )
 
@@ -133,7 +137,8 @@ def train(
         lr_scheduler(optimizer, i, epoch)
         data_time = time.time() - end
 
-        loss, prec1, prec5 = step(input, target)
+        optimizer_step = ((i + 1) % batch_size_multiplier) == 0
+        loss, prec1, prec5 = step(input, target, optimizer_step=optimizer_step)
         if ema is not None:
             ema(model_and_loss, epoch*steps_per_epoch+i)
 
@@ -254,6 +259,7 @@ def train_loop(
     ema=None,
     model_ema=None,
     use_amp=False,
+    batch_size_multiplier=1,
     best_prec1=0,
     start_epoch=0,
     end_epoch=0,
@@ -287,6 +293,7 @@ def train_loop(
                     timeout_handler,
                     ema=ema,
                     use_amp=use_amp,
+                    batch_size_multiplier=batch_size_multiplier,
                     log_interval=10
                 )
 
