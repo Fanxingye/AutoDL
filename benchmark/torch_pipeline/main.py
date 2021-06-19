@@ -150,7 +150,7 @@ def prepare_for_training(args):
     if args.optimizer_batch_size < 0:
         batch_size_multiplier = 1
     else:
-        tbs = args.world_size * args.batch_size
+        tbs = args.batch_size
         if args.optimizer_batch_size % tbs != 0:
             print(
                 "Warning: simulated batch size {} is not divisible by actual batch size {}".format(
