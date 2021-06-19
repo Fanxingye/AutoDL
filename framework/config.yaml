@@ -1,0 +1,7 @@
+name: classification
+time_limit_sec: 36000
+data_name: dog-vs-cat
+data_path: assert/test_dataset
+output_path: ./work_dir/
+device_limit: 1
+device_type: nvidia

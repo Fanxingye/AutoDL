@@ -1,0 +1,1 @@
+python data_split.py   --data-dir /media/robin/DATA/datatsets/image_data/hymenoptera/images/train

@@ -1,0 +1,3 @@
+dataset_name,framework,model,lr,batch_size,epochs,early_stop_patience,momentum,wd,time
+default,autogluon,resnet18_v1b,0.01,2,30,10,0.0001,0.0001,3000
+cifar10,autogluon,resnet18_v1b,0.01,2,30,10,0.0001,0.0001,3000

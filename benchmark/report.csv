@@ -1,0 +1,4 @@
+dataset_name,hpo_type,train_acc,valid_acc,test_acc,model,batch_size,learning_rate,momentum,wd,data_augmention,epochs,search_strategy,input_size,total_time
+hymenoptera,default,0.6764705882352942,0.972972972972973,0.9512195121951219,senet_154,8,0.01,0.9,0.0001,False,1,random,224,22.468660831451416
+hymenoptera,default,0.7642857142857142,1.0,0.9512195121951219,se_resnext50_32x4d,8,0.01,0.9,0.0001,False,1,random,224,8.570250272750854
+hymenoptera,default,0.7535714285714286,0.9714285714285714,0.926829268292683,se_resnext101_32x4d,8,0.01,0.9,0.0001,False,1,random,224,11.54570198059082

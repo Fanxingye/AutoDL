@@ -1,0 +1,55 @@
+# ImageClassificationCfg
+gpus:
+- 0
+img_cls:
+  batch_norm: false
+  last_gamma: false
+  model: resnest200
+  use_gn: false
+  use_pretrained: true
+  use_se: false
+train:
+  batch_size: 32
+  crop_ratio: 0.875
+  data_dir: auto
+  dtype: float32
+  early_stop_baseline: -.inf
+  early_stop_max_value: .inf
+  early_stop_min_delta: 0.001
+  early_stop_patience: 10
+  epochs: 30
+  hard_weight: 0.5
+  input_size: 224
+  label_smoothing: false
+  log_interval: 50
+  lr: 0.01
+  lr_decay: 0.1
+  lr_decay_epoch: 40, 60
+  lr_decay_period: 0
+  lr_mode: step
+  mixup: false
+  mixup_alpha: 0.2
+  mixup_off_epoch: 0
+  mode: ''
+  momentum: 0.9
+  no_wd: false
+  num_training_samples: -1
+  num_workers: 16
+  output_lr_mult: 0.1
+  pretrained_base: true
+  rec_train: auto
+  rec_train_idx: auto
+  rec_val: auto
+  rec_val_idx: auto
+  resume_epoch: 0
+  start_epoch: 0
+  teacher: null
+  temperature: 20
+  transfer_lr_mult: 0.01
+  use_rec: false
+  warmup_epochs: 0
+  warmup_lr: 0.0
+  wd: 0.0001
+valid:
+  batch_size: 16
+  num_workers: 16

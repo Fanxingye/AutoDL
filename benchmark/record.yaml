@@ -1,0 +1,29 @@
+datasetName_Path_dict = {
+    "Leaf-Classification": "/data/AutoML_compete/leaf-classification/split/train",
+    "Store-type-recognition": "/data/AutoML_compete/Store-type-recognition/split/train",
+    "Flowers-Recognition": "/data/AutoML_compete/Flowers-Recognition/split/train",
+    "APTOS-2019-Blindness-Detection": "/data/AutoML_compete/aptos2019-blindness-detection/split/train",
+    "Caltech-UCSD-Birds-200-2011": "/data/AutoML_compete/CUB_200_2011/split/train",
+    "DTD": "/data/AutoML_compete/dtd/split/train",
+    "UKCarsDataset": "/data/AutoML_compete/UKCarsDataset/split/train",
+    "flying-plan": "/data/AutoML_compete/planes/split/train",
+    "National-Data-Science-Bowl": "/data/AutoML_compete/datasciencebowl/split/train",
+    "Emotion-Detection": "/data/AutoML_compete/Emotion-Detection/split/train",
+}
+
+datasetName_Path_dict = {
+    "A-Large-Scale-Fish-Dataset": "/data/AutoML_compete/A-Large-Scale-Fish-Dataset/split/train",
+    "CINIC-10": "/data/AutoML_compete/CINIC-10/split/train",
+    "MURA": "/data/AutoML_compete/MURA-v1.1/split/train",
+    "Oxford-Flower-102": "/data/AutoML_compete/oxford-102-flower-pytorch/split/train",
+    "sport-70": "/data/AutoML_compete/70-Sports-Image-Classification/split/train",
+    "Chinese-MNIST": "/data/AutoML_compete/Chinese-MNIST/split/train",
+    "garbage-classification": "/data/AutoML_compete/garbage_classification/split/train",
+    "MAMe": "/data/AutoML_compete/MAMe-dataset/split/train",
+    "Road-damage": "/data/AutoML_compete/sih-road-dataset/split/train",
+    "Boat-types-recognition": "/data/AutoML_compete/Boat-types-recognition/split/train",
+    "Scene-Classification": "/data/AutoML_compete/Scene-Classification/split/train",
+    "Vietnamese-Foods": "/data/AutoML_compete/Vietnamese-Foods/split/train",
+    "MIT-Indoor-Scenes": "/data/AutoML_compete/MIT-Indoor-Scenes/split/train",
+    "Google-Scraped-Image": "/data/AutoML_compete/Google-Scraped-Image/split/train"
+}
