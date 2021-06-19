@@ -58,6 +58,11 @@ def parse_args():
                         help='Use NVIDIA Apex AMP mixed precision')
     parser.add_argument('--native-amp', action='store_true', default=False,
                         help='Use Native Torch AMP mixed precision')
+    parser.add_argument('--static-loss-scale', type=float, default=1,
+                        help="Static loss scale, positive power of 2 values can improve amp convergence.")
+    parser.add_argument('--mixup', default=0.0, type=float, metavar="ALPHA", help="mixup alpha")
+    parser.add_argument('--label-smoothing', default=0.0, type=float, metavar="S", help="label smoothing")
+
     parser.add_argument("--local_rank", default=0, type=int)
     parser.add_argument('--world-size', default=-1, type=int,
                         help='number of nodes for distributed training')
