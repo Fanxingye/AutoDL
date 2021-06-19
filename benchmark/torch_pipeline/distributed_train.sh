@@ -58,3 +58,17 @@ nohup python3 test.py \
 --model "efficientnet_b4" \
 --resume "/home/yiran.wu/work_dirs/pytorch_model_benchmark/Flowers-Recognitionefficientnet_b4/model_best.pth.tar" \
 -b 8 > ddpoutput.txt 2>&1 &
+
+nohup python3 test.py \
+--data_name "Flowers-Recognition" \
+--data_path "/data/AutoML_compete/Flowers-Recognition/split" \
+--model "resnet18" \
+--resume "/home/yiran.wu/work_dirs/pytorch_model_benchmark/Flowers-Recognitionresnet18/model_best.pth.tar" \
+-b 256 > testoutput.txt 2>&1 &
+
+nohup python3 test.py \
+--data_name "UKCarsDataset" \
+--data_path "/data/AutoML_compete/UKCarsDataset/split" \
+--model "resnetv2_50x1_bitm_in21k" \
+--resume "/home/yiran.wu/work_dirs/pytorch_model_benchmark/UKCarsDataset-resnetv2_50x1_bitm_in21k/model_best.pth.tar" \
+-b 256 > testoutput.txt 2>&1 &
