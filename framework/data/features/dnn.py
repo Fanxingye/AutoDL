@@ -13,7 +13,7 @@ from utils.constant import Constant
 class DNNFeature:
     def __init__(self, task_config,
                  csv_path=Constant.BIT_FEATURES_CSV,
-                 model_path="/home/yiran.wu/wyr/code/meta_features/bit_m/",
+                 model_path="",
                  save_to_file=False):
         ''' Extract feature vector of input dataset, and compare with known datasets to determine similarity.
         Args:
@@ -27,7 +27,7 @@ class DNNFeature:
             csv_path[str]: path to the csv file that contains info about previous datasets
 
             DIM[int]: output shape of the model
-            model_path[str]: path to the model to be loaded
+            model_path[str]: path to the model to be loaded, use the default url if empty
             BITM[keras layer]: model used to calculate features
             df[pd.DataFrame]: data loaded from csv_path
             entry[np.ndarray]: cnn meta features of current dataset
@@ -40,12 +40,13 @@ class DNNFeature:
         self.model_path = model_path
         if not os.path.exists(self.model_path):
             print("BiT-m model file does not exist, try to download.")
-            self.model_path = "https://tfhub.dev/google/bit/m-r50x1/1"
-
+            # "https://tfhub.dev/google/bit/m-r50x1/1" 
+            # "tfhub.dev" is blocked in China, however, "storage.googleapis.com" still works
+            self.model_path = "https://storage.googleapis.com/tfhub-modules/google/bit/m-r50x1/1.tar.gz"
+            
         self.BITM = hub.KerasLayer(self.model_path, trainable=False, dtype=tf.float32)
         self.BITM.build([None, None, None, 3])
         print('BiT Medium Res50 built.')
-        # https://storage.googleapis.com/tfhub-modules/google/bit/m-r50x1/1.tar.gz
 
         self.df = self._load_csv()
         self.entry = self._generate_feature(save_to_file)

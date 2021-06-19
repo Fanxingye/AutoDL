@@ -108,7 +108,5 @@ benchmark/hymenoptera/
 *.tar
 framework/bit_models/
 framework/checkpoint
-framework/checkpoint/
-framework/work_dir
 framework/work_dir
 framework/asset/test_dataset/split

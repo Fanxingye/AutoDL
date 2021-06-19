@@ -29,7 +29,7 @@ def main():
     ).calculate_similarity_topk(1)
     engineer_feature = EngineerFeature(task_config)
     config_generator = ConfigGenerator(
-        dataset=similar_datasets[0],
+        dataset_name=similar_datasets[0],
         device_limit=task_config["device_limit"],
         time_limit=task_config["time_limit_sec"])
     model_config, framework = config_generator.generate_config()

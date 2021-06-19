@@ -67,3 +67,6 @@ RUN apt-get install -y --no-install-recommends openssh-client openssh-server && 
 RUN cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking > /etc/ssh/ssh_config.new && \
     echo "    StrictHostKeyChecking no" >> /etc/ssh/ssh_config.new && \
     mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config
+
+# Install more python packages
+RUN pip install tensorflow_hub
