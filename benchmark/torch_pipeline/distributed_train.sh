@@ -48,6 +48,7 @@ nohup python3 -m torch.distributed.launch --nproc_per_node=2 main.py \
 --lr 0.005 \
 --epochs 50 \
 --batch-size 32 \
+--optimizer-batch-size 128  \
 --pretrained \
 --multiprocessing-distributed > output.txt 2>&1 &
 
