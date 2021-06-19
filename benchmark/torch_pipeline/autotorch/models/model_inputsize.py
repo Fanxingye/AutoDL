@@ -274,7 +274,7 @@ model_inputsize = {'adv_inception_v3': 299,
  'swin_base_patch4_window7_224_in22k': 224,
  'swin_base_patch4_window12_384_in22k': 384,
  'swin_large_patch4_window7_224_in22k': 224,
- 'swin_large_patch4_window12_384_in22k': 384
+ 'swin_large_patch4_window12_384_in22k': 384,
  'swsl_resnet18': 224,
  'swsl_resnet50': 224,
  'swsl_resnext101_32x16d': 224,
