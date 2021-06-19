@@ -38,11 +38,14 @@ class DNNFeature:
 
         self.DIM = 2048
         self.model_path = model_path
-        assert os.path.exists(self.model_path),  "Model file does not exist"
+        if not os.path.exists(self.model_path):
+            print("BiT-m model file does not exist, try to download.")
+            self.model_path = "https://tfhub.dev/google/bit/m-r50x1/1"
+
         self.BITM = hub.KerasLayer(self.model_path, trainable=False, dtype=tf.float32)
         self.BITM.build([None, None, None, 3])
         print('BiT Medium Res50 built.')
-        # https://tfhub.dev/google/bit/m-r50x1/1
+        # https://storage.googleapis.com/tfhub-modules/google/bit/m-r50x1/1.tar.gz
 
         self.df = self._load_csv()
         self.entry = self._generate_feature(save_to_file)
