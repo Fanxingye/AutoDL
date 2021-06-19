@@ -55,6 +55,8 @@ def parse_args():
                         help='mini-batch size (default: 256), this is the total '
                             'batch size of all GPUs on the current node when '
                             'using Data Parallel or Distributed Data Parallel')
+    parser.add_argument('--optimizer-batch-size', default=-1, type=int, metavar="N",
+                        help="size of a total batch size, for simulating bigger batches using gradient accumulation",)
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                         metavar='LR', help='initial learning rate', dest='lr')
     parser.add_argument('--lr-schedule', default="step", type=str, metavar="SCHEDULE",
@@ -144,6 +146,19 @@ def prepare_for_training(args):
     if args.static_loss_scale != 1.0:
         if not args.amp:
             print("Warning: if --amp is not used, static_loss_scale will be ignored.")
+
+    if args.optimizer_batch_size < 0:
+        batch_size_multiplier = 1
+    else:
+        tbs = args.world_size * args.batch_size
+        if args.optimizer_batch_size % tbs != 0:
+            print(
+                "Warning: simulated batch size {} is not divisible by actual batch size {}".format(
+                    args.optimizer_batch_size, tbs
+                )
+            )
+        batch_size_multiplier = int(args.optimizer_batch_size / tbs)
+        print("BSM: {}".format(batch_size_multiplier))
 
     start_epoch = 0
     # set the image_size
@@ -265,14 +280,14 @@ def prepare_for_training(args):
         print("load ema")
         ema.load_state_dict(model_state_ema)
 
-    return (model_and_loss, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema,
+    return (model_and_loss, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier,
             start_epoch, num_class)
 
 
 def main(args):
     global best_prec1
     best_prec1 = 0
-    model_and_loss, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, \
+    model_and_loss, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier, \
         start_epoch, num_class = prepare_for_training(args)
 
     train_loop(
@@ -287,6 +302,7 @@ def main(args):
         ema=ema,
         model_ema=model_ema,
         use_amp=args.amp,
+        batch_size_multiplier=batch_size_multiplier,
         start_epoch=start_epoch,
         end_epoch=min((start_epoch + args.run_epochs), args.epochs) if args.run_epochs != -1 else args.epochs,
         early_stopping_patience=args.early_stopping_patience,

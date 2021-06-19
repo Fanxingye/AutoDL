@@ -2,10 +2,10 @@ import os
 
 import tensorflow as tf
 from autogluon.vision import ImagePredictor
-from data.dataset.generator import generate_dataset
 
 from configs.generator import ConfigGenerator
 from data.augmentation.data_aug import DataAug
+from data.dataset.generator import generate_dataset
 from data.features.dnn import DNNFeature
 from data.features.engineer import EngineerFeature
 from data.utils.data_split import DataSplit
@@ -28,10 +28,11 @@ def main():
         save_to_file=True
     ).calculate_similarity_topk(1)
     engineer_feature = EngineerFeature(task_config)
-    model_config, framework = ConfigGenerator(
+    config_generator = ConfigGenerator(
         dataset=similar_datasets[0],
         device_limit=task_config["device_limit"],
-        time_limit=task_config["time_limit_sec"]).generate_config()
+        time_limit=task_config["time_limit_sec"])
+    model_config, framework = config_generator.generate_config()
     # dataset spilt
     train_dataset, val_dataset, test_dataset = DataSplit(
         task_config).run_data_split()
@@ -59,9 +60,7 @@ def main():
                       verbosity=2)
         summary = predictor.fit_summary()
         print(summary)
-        # TODO
-        new_config = None
-        ConfigGenerator.update_config_csv(new_config)
+        config_generator.update_config_csv(checkpoint_dir)
 
     # calculate engineer feature
     # engineer_feature = EngineerFeature(task_config)
