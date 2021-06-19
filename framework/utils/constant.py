@@ -9,10 +9,7 @@ class Constant:
     DATASET_CONFIGURATION_CSV = os.path.join(BASE_DIR, ASSERT_DIR, "dataset_configuration.csv")
     AUTO_GLUON = "autogluon"
     PYTORCH="pytorch"
-<<<<<<< HEAD
-=======
     DEBUG=True
->>>>>>> fa50923b471c6816c5a13e2026dd046f097fdece
 
 
 if __name__ == '__main__':

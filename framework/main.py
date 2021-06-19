@@ -24,12 +24,8 @@ def main():
     # calculate similarity
     similar_datasets = DNNFeature(
         task_config,
-<<<<<<< HEAD
-        model_path='/home/robin/Downloads/bit_models/bit_m-r50x1_1'
-=======
         model_path='/home/robin/Downloads/bit_models/bit_m-r50x1_1',
         save_to_file=True
->>>>>>> fa50923b471c6816c5a13e2026dd046f097fdece
     ).calculate_similarity_topk(1)
     engineer_feature = EngineerFeature(task_config)
     model_config, framework = ConfigGenerator(
