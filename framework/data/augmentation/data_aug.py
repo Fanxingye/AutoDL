@@ -23,19 +23,9 @@ class DataAug:
         size = len(os.listdir(f'{path}/train/'))
         index = 1
         for i in os.listdir(f'{path}/train/'):
-<<<<<<< HEAD
-            print(f'process  {index}/{size}')
-            print(f'label  {i}')
-
             index+=1
             for j in os.listdir(f'{path}/train/{i}'):
                 image = cv2.imread(f'{path}/train/{i}/{j}')
-                
-=======
-            index+=1
-            for j in os.listdir(f'{path}/train/{i}'):
-                image = cv2.imread(f'{path}/train/{i}/{j}')
->>>>>>> fa50923b471c6816c5a13e2026dd046f097fdece
                 for x in range(level):
                     transform = A.Compose([
                     A.Rotate(limit=20,p=1),
@@ -46,27 +36,13 @@ class DataAug:
                     A.Flip(p=0.3),
                     A.RandomResizedCrop(image.shape[0],image.shape[1],scale=(0.75, 1.0), ratio=(0.75, 1.3333333333333333), p=0.3),
                     ])
-<<<<<<< HEAD
-                    
-                    transformed = transform(image=image)
-                    transformed_image = transformed["image"]
-
-    #                 transformed_image=RandomErasing(image) 
-                    
-=======
                     transformed = transform(image=image)
                     transformed_image = transformed["image"]
     #                 transformed_image=RandomErasing(image) 
->>>>>>> fa50923b471c6816c5a13e2026dd046f097fdece
                     save_path = f'{path}/{self.aug_folder_name}/{i}/'
                     if not os.path.exists(save_path):
                         os.makedirs(save_path)
                     save_name = f'aug{x}_'+''.join(random.sample(string.ascii_letters + string.digits, 32))+'.jpg'
                     cv2.imwrite(os.path.join(f'{save_path}'+save_name),transformed_image)
-<<<<<<< HEAD
-                print(f"{path}/{self.aug_folder_name}/{i}/{j}")
-
-=======
->>>>>>> fa50923b471c6816c5a13e2026dd046f097fdece
                 cv2.imwrite(f'{path}/{self.aug_folder_name}/{i}/{j}',image)  #copy the ori image
         return f'{path}/{self.aug_folder_name}/'
