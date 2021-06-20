@@ -52,9 +52,7 @@ def lr_cosine_policy(base_lr, warmup_length, epochs, end_lr=0, logger=None):
     return lr_policy(_lr_fn, logger=logger)
 
 
-def lr_exponential_policy(
-    base_lr, warmup_length, epochs, final_multiplier=0.001, decay_factor=None, decay_step=1, logger=None
-):
+def lr_exponential_policy(base_lr, warmup_length, epochs, final_multiplier=0.001, decay_factor=None, decay_step=1, logger=None):
     """Exponential lr policy. Setting decay factor parameter overrides final_multiplier"""
     es = epochs - warmup_length
 

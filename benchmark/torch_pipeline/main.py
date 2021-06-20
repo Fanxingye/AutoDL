@@ -3,6 +3,7 @@ import os
 import time
 import random
 import logging
+from autogluon.core.space import Bool
 import numpy as np
 from copy import deepcopy
 
@@ -52,16 +53,15 @@ def parse_args():
                         help="early stopping after N epochs without validation accuracy improving",)
     parser.add_argument('--image-size', default=None, type=int, help="resolution of image")
     parser.add_argument('-b', '--batch-size', default=256, type=int, metavar='N',
-                        help='mini-batch size (default: 256), this is the total '
-                            'batch size of all GPUs on the current node when '
-                            'using Data Parallel or Distributed Data Parallel')
+                        help="mini-batch size (default: 256) per gpu")
     parser.add_argument('--optimizer-batch-size', default=-1, type=int, metavar="N",
                         help="size of a total batch size, for simulating bigger batches using gradient accumulation",)
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                         metavar='LR', help='initial learning rate', dest='lr')
     parser.add_argument('--lr-schedule', default="step", type=str, metavar="SCHEDULE",
                         choices=["step", "linear", "cosine", "exponential"],
-                        help="Type of LR schedule: {}, {}, {}".format("step", "linear", "cosine" "exponential"),)           
+                        help="Type of LR schedule: {}, {}, {} , {}".format("step", "linear", "cosine", "exponential"),)
+    parser.add_argument('--auto-step', default=True, type=Bool, help="Use auto-step lr-schedule or not``")                       
     parser.add_argument('--warmup', default=0, type=int, metavar="E", help="number of warmup epochs")
     parser.add_argument('--label-smoothing', default=0.0, type=float, metavar="S", help="label smoothing")
     parser.add_argument('--mixup', default=0.0, type=float, metavar="ALPHA", help="mixup alpha")
@@ -79,12 +79,9 @@ def parse_args():
     parser.add_argument('--augmentation', type=str, default=None, 
                         choices=[None, "autoaugment", "original-mstd0.5", "rand-m9-n3-mstd0.5", "augmix-m5-w4-d2"], 
                         help="augmentation method",)
-    parser.add_argument('--log_interval', default=10, type=int,
-                        metavar='N', help='print frequency (default: 10)')
-    parser.add_argument('--resume', default=None, type=str, metavar='PATH',
-                        help='path to latest checkpoint (default: none)')
-    parser.add_argument('--evaluate', dest='evaluate', action='store_true',
-                        help='evaluate model on validation set')
+    parser.add_argument('--log_interval', default=10, type=int, metavar='N', help='print frequency (default: 10)')
+    parser.add_argument('--resume', default=None, type=str, metavar='PATH', help='path to latest checkpoint (default: none)')
+    parser.add_argument('--evaluate', dest='evaluate', action='store_true', help='evaluate model on validation set')
     parser.add_argument("--training-only", action="store_true", help="do not evaluate")
     parser.add_argument("--no-checkpoints", action="store_false", dest="save_checkpoints",
                         help="do not store any checkpoints, useful for benchmarking",)
@@ -150,7 +147,8 @@ def prepare_for_training(args):
     if args.optimizer_batch_size < 0:
         batch_size_multiplier = 1
     else:
-        tbs = args.batch_size
+        tbs = args.world_size * args.batch_size
+
         if args.optimizer_batch_size % tbs != 0:
             print(
                 "Warning: simulated batch size {} is not divisible by actual batch size {}".format(
@@ -250,9 +248,16 @@ def prepare_for_training(args):
     )
 
     if args.lr_schedule == "step":
-        lr_policy = lr_step_policy(
-            base_lr=args.lr, steps=[30, 60, 80], decay_factor=0.1, warmup_length=args.warmup, logger=logger
-        )
+        if args.auto_step:
+            step_ratios = [0.6, 0.9]
+            auto_steps = [int(ratio * args.epochs) for ratio in step_ratios]
+            lr_policy = lr_step_policy(
+                base_lr=args.lr, steps=auto_steps, decay_factor=0.1, warmup_length=args.warmup, logger=logger
+            )
+        else:
+            lr_policy = lr_step_policy(
+                base_lr=args.lr, steps=[30, 60, 80], decay_factor=0.1, warmup_length=args.warmup, logger=logger
+            )
     elif args.lr_schedule == "cosine":
         lr_policy = lr_cosine_policy(
             base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, end_lr=args.end_lr, logger=logger
@@ -261,7 +266,7 @@ def prepare_for_training(args):
         lr_policy = lr_linear_policy(base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
         )
     elif args.lr_schedule == "exponential":
-        lr_policy = lr_exponential(base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
+        lr_policy = lr_exponential_policy(base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
         )
  
     scaler = torch.cuda.amp.GradScaler(
@@ -322,10 +327,6 @@ if __name__ == "__main__":
     args.output_dir = os.path.join(args.output_dir, task_name)
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
-        tm = time.strftime("%Y%m%d-%H%M", time.localtime())
-        tm_dir = os.path.join(args.output_dir, tm)
-        if not os.path.exists(tm_dir):
-            os.makedirs(tm_dir)
 
     logger = logging.getLogger('')
     filehandler = logging.FileHandler(os.path.join(args.output_dir, 'summary.log'))
