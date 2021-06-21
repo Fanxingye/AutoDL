@@ -61,7 +61,7 @@ def parse_args():
     parser.add_argument('--lr-schedule', default="step", type=str, metavar="SCHEDULE",
                         choices=["step", "linear", "cosine", "exponential"],
                         help="Type of LR schedule: {}, {}, {} , {}".format("step", "linear", "cosine", "exponential"),)
-    parser.add_argument('--auto-step', default=True, type=Bool, help="Use auto-step lr-schedule or not``")                       
+    parser.add_argument('--auto-step', default=True, type=bool, help="Use auto-step lr-schedule or not")                       
     parser.add_argument('--warmup', default=0, type=int, metavar="E", help="number of warmup epochs")
     parser.add_argument('--label-smoothing', default=0.0, type=float, metavar="S", help="label smoothing")
     parser.add_argument('--mixup', default=0.0, type=float, metavar="ALPHA", help="mixup alpha")

@@ -41,16 +41,15 @@ nohup python3 -m torch.distributed.launch --nproc_per_node=4 main.py \
 --pretrained \
 --multiprocessing-distributed > ddpoutput.txt 2>&1 &
 
-nohup python3 -m torch.distributed.launch --nproc_per_node=2 main.py \
+nohup python -m torch.distributed.launch --nproc_per_node=4 main.py \
 --data_name "APTOS-2019-Blindness-Detection" \
 --data_path "/data/AutoML_compete/aptos2019-blindness-detection/split" \
---model "resnetv2_101x3_bitm" \
---lr 0.005 \
---epochs 50 \
---batch-size 32 \
+--model "resnetv2_50x1_bitm_in21k" \
+--lr 0.01 \
+--epochs 40 \
+--batch-size 16 \
 --optimizer-batch-size 128  \
---pretrained \
---multiprocessing-distributed > output.txt 2>&1 &
+--pretrained > APTOS-2019-Blindness-Detection-resnetv2_101x3_bitm-output.txt 2>&1 &
 
 
 nohup python3 test.py \
