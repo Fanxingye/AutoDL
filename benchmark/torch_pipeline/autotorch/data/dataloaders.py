@@ -479,8 +479,8 @@ def get_pytorch_train_loader(
     )
 
     return (
-        PrefetchedWrapper(train_loader, start_epoch, num_classes, one_hot),
-        num_classes, train_sampler
+        PrefetchedWrapper(train_loader, start_epoch=start_epoch, num_classes=num_classes, one_hot=one_hot),
+        num_classes
     )
 
 
@@ -533,7 +533,7 @@ def get_pytorch_val_loader(
         persistent_workers=True,
     )
 
-    return PrefetchedWrapper(val_loader, 0, num_classes, one_hot), num_classes
+    return PrefetchedWrapper(val_loader, start_epoch=0, num_classes=num_classes, one_hot=one_hot), num_classes
 
 
 class SynteticDataLoader(object):
