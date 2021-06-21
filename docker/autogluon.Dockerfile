@@ -55,6 +55,12 @@ RUN pip install numpy && \
     pip install matplotlib
     #/tmp/clean-layer.sh
 
+# install gluoncv
+RUN pip uninstall gluoncv
+RUN git clone https://gitee.com/jianzhnie/gluon-cv.git /gluon-cv
+WORKDIR /gluon-cv
+RUN python setup.py install
+
 # Install tensorboard jypyterlab
 RUN pip install jupyterlab && \
     pip install tensorboard
