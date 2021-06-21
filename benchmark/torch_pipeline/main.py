@@ -193,7 +193,7 @@ def prepare_for_training(args):
         exit(1)
 
     # get data loaders
-    train_loader, num_class = get_train_loader(
+    train_loader, num_class, train_sampler = get_train_loader(
         args.data_path,
         "train",
         image_size,
@@ -285,14 +285,14 @@ def prepare_for_training(args):
         print("load ema")
         ema.load_state_dict(model_state_ema)
 
-    return (model_and_loss, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier,
+    return (model_and_loss, optimizer, lr_policy, scaler, train_loader, train_sampler, val_loader, ema, model_ema, batch_size_multiplier,
             start_epoch, num_class)
 
 
 def main(args):
     global best_prec1
     best_prec1 = 0
-    model_and_loss, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier, \
+    model_and_loss, optimizer, lr_policy, scaler, train_loader, train_sampler, val_loader, ema, model_ema, batch_size_multiplier, \
         start_epoch, num_class = prepare_for_training(args)
 
     train_loop(
@@ -301,6 +301,7 @@ def main(args):
         scaler,
         lr_policy,
         train_loader,
+        train_sampler,
         val_loader,
         num_class=num_class,
         logger=logger,
