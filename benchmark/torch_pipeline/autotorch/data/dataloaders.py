@@ -425,6 +425,10 @@ def get_pytorch_train_loader(
         transforms.RandomResizedCrop(image_size, interpolation=interpolation_m),
         transforms.RandomHorizontalFlip(),
     ]
+    jitter_param = 0.4
+    autogluon_transforms = [
+        transforms.ColorJitter(brightness=jitter_param, contrast=jitter_param, saturation=jitter_param),
+    ]
 
     if augmentation:
         assert isinstance(augmentation, str)
@@ -440,6 +444,8 @@ def get_pytorch_train_loader(
             aa_params['interpolation'] = _pil_interp(interpolation)
         if augmentation == "autoaugment":
             transforms_list.append(AutoaugmentImageNetPolicy())
+        elif augmentation == "autogluon":
+            transforms_list.append(autogluon_transforms)
         elif augmentation.startswith('rand'):
             transforms_list.append(rand_augment_transform(augmentation, aa_params))
         elif augmentation.startswith('augmix'):
@@ -474,7 +480,7 @@ def get_pytorch_train_loader(
 
     return (
         PrefetchedWrapper(train_loader, start_epoch, num_classes, one_hot),
-        num_classes
+        num_classes, train_sampler
     )
 
 

@@ -253,6 +253,7 @@ def train_loop(
     scaler,
     lr_scheduler,
     train_loader,
+    train_sampler,
     val_loader,
     num_class,
     logger,
@@ -280,6 +281,7 @@ def train_loop(
     with TimeoutHandler() as timeout_handler:
         interrupted = False
         for epoch in range(start_epoch, end_epoch):
+            train_sampler.set_epoch(epoch)
             if not skip_training:
                 interrupted = train(
                     train_loader,
