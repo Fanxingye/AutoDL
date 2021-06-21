@@ -166,7 +166,7 @@ def gluon_config_choice(dataset, model_choice="default"):
 
         'search_models': {
             'hyperparameters': {
-                'model': ag.Categorical('efficientnet_b4', 'resnet152_v1d', 'efficientnet_b2', 'senet_154'), # 'resnet152_v1d', 
+                'model': ag.Categorical('senet_154'), # 'resnet152_v1d', 'efficientnet_b4', 'resnet152_v1d', 'efficientnet_b2', 
                 'lr':  ag.Categorical(1e-3, 3e-3, 6e-3, 1e-2, 3e-2, 6e-2, 1e-1, 3e-1, 6e-1),
                 'batch_size': ag.Categorical(32),
                 'epochs': 30,
@@ -175,7 +175,7 @@ def gluon_config_choice(dataset, model_choice="default"):
                 'cleanup_disk': False
             },
             'hyperparameter_tune_kwargs': {
-                'num_trials': 36,
+                'num_trials': 9,
                 'max_reward': 1.0,
                 'searcher': 'random'
             },

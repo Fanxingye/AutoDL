@@ -72,7 +72,7 @@ def main():
         train_data_dir = opt.data_path
         val_data_dir = opt.data_path.replace("train", "val")
         if opt.data_augmention == "True":
-            train_data_dir = opt.data_path.replace("train", "train_dataaug")
+            train_data_dir = opt.data_path.replace("train", "train_dataaug2_balance")
         test_data_dir = opt.data_path.replace("train", "test")
 
         train_dataset = ImagePredictor.Dataset.from_folder(train_data_dir)

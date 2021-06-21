@@ -9,16 +9,16 @@ datasetName_Path_dict = {
     # "DTD": "/data/AutoML_compete/dtd/split/train",
     # "Weather-recognition": "/data/AutoML_compete/weather-recognitionv2/split/train",
     # "Emotion-Detection": "/data/AutoML_compete/Emotion-Detection/split/train",
-    "APTOS-2019-Blindness-Detection": "/data/AutoML_compete/aptos2019-blindness-detection/split/train",
+    # "APTOS-2019-Blindness-Detection": "/data/AutoML_compete/aptos2019-blindness-detection/split/train",
     # "The-Nature-Conservancy-Fisheries-Monitoring": "/data/AutoML_compete/the-nature-conservancy-fisheries-monitoring/split/train",
     # "FGVC-Aircraft": "/data/AutoML_compete/fgvc-aircraft-2013b/split/train",
     # "Caltech-UCSD-Birds-200-2011": "/data/AutoML_compete/CUB_200_2011/split/train",
     # "Food-101": "/data/AutoML_compete/food-101/split/train",
-    # "Cassava-Leaf-Disease": "/data/AutoML_compete/cassava-leaf-diease/split/train",
-    # "National-Data-Science-Bowl": "/data/AutoML_compete/datasciencebowl/split/train",
+    "Cassava-Leaf-Disease": "/data/AutoML_compete/cassava-leaf-diease/split/train",
+    "National-Data-Science-Bowl": "/data/AutoML_compete/datasciencebowl/split/train",
     # "Plant-Seedlings-Classification": "/data/AutoML_compete/plant-seedlings-classification/split/train",
     # "Flowers-Recognition": "/data/AutoML_compete/Flowers-Recognition/split/train",
-    "Dog-Breed-Identification": "/data/AutoML_compete/dog-breed-identification/split/train",
+    # "Dog-Breed-Identification": "/data/AutoML_compete/dog-breed-identification/split/train",
     # "CINIC-10": "/data/AutoML_compete/CINIC-10/split/train",
     # "MURA": "/data/AutoML_compete/MURA-v1.1/split/train",
     # "Caltech-101": "/data/AutoML_compete/Caltech-101/split/train",
@@ -46,22 +46,22 @@ datasetName_Path_dict = {
     # "Google-Scraped-Image": "/data/AutoML_compete/Google-Scraped-Image/split/train"
 }
 
-config_list = ['search_models']
-# config_list = ['default']#'default_hpo', 'medium_quality_faster_inference', 'good_quality_fast_inference', 'best_quality', 'big_models', 'default'
+# config_list = ['search_models']
+config_list = ['default']#'default_hpo', 'medium_quality_faster_inference', 'good_quality_fast_inference', 'best_quality', 'big_models', 'default'
 dataaug = True
 ############################################################
 userName = 'yiran.wu'
 # autogluon、autokeras
 trainFramework = "autogluon"
 # 数据集名称
-num_gpus = 4
+num_gpus = 1
 for key in datasetName_Path_dict:
     datasetName = key
     dataSetPath = datasetName_Path_dict[key]
     for model_config in config_list:
         taskName = f"{trainFramework}-{datasetName}-{model_config}"
         if dataaug:
-            taskName = f"{trainFramework}-{datasetName}-aug-{model_config}"
+            taskName = f"{trainFramework}-{datasetName}-aug5_balance-{model_config}"
         payloadData = {"name": taskName, "jobTrainingType": "RegularJob",
                     "engine": "apulistech/aiauto-gluon-keras:0.0.1-0.2.0-1.0.12-cuda10.1",
                     "codePath": "/home/yiran.wu",
