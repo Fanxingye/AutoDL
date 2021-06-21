@@ -335,7 +335,14 @@ if __name__ == "__main__":
     logger.addHandler(filehandler)
     logger.addHandler(streamhandler)
     cudnn.benchmark = True
+    start_time = time.time()
     main(args)
+    train_end_time = time.time()
+    train_time = train_end_time - start_time
     args.resume = os.path.join(args.output_dir, "model_best.pth.tar")
     prec1 = test(args, logger)
-    logger.info("Test Acc of Top1 is %s" % prec1)
+    test_time = time.time() - train_end_time
+    if not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0:
+        logger.info("Test Acc of Top1 is %s" % prec1)
+        logger.info("Total time of train is {:7.1f} s".format(train_time))
+        logger.info("Total time of test is {:7.1f} s".format(test_time))
