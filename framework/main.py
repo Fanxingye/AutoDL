@@ -24,7 +24,7 @@ def main():
     # calculate similarity
     similar_datasets = DNNFeature(
         task_config,
-        model_path='/home/robin/Downloads/bit_models/bit_m-r50x1_1',
+        model_path='/home/yiran.wu/wyr/code/meta_features/bit_m',
         save_to_file=True
     ).calculate_similarity_topk(1)
     engineer_feature = EngineerFeature(task_config)
@@ -60,8 +60,10 @@ def main():
                       verbosity=2)
         summary = predictor.fit_summary()
         print(summary)
+        # TODO
+        # use wrapper
         config_generator.update_config_csv(checkpoint_dir)
-
+        DataAug.clear()
     # calculate engineer feature
     # engineer_feature = EngineerFeature(task_config)
     # # select config

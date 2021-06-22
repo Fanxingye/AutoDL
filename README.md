@@ -129,7 +129,7 @@ Run `benchmark.py` script with different dataset:
 
 #### AutoGluon Benchmark
 
-```python
+```shell script
 python benchmark.py \
     --data_path /media/robin/DATA/datatsets/image_data/dog-breed-identification \
     --output_path /home/robin/jianzh/automl/autodl/benchmark \
@@ -138,7 +138,7 @@ python benchmark.py \
 ```
 #### AutoKeras Benchmark
 
-```python
+```shell script
 python benchmark.py \
     --data_path /media/robin/DATA/datatsets/image_data/hymenoptera/images/train \
     --dataset hymenoptera \
