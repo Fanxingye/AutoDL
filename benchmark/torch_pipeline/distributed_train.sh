@@ -21,33 +21,18 @@ python -m torch.distributed.launch --nproc_per_node=1 main.py \
 --pretrained > output.txt 2>&1 &
 
 
-nohup python3 -m torch.distributed.launch --nproc_per_node=4 main.py \
---data_name "Flowers-Recognition" \
---data_path "/data/AutoML_compete/Flowers-Recognition/split" \
---model "resnet18" \
---lr 0.005 \
---epochs 1 \
---batch-size 256 \
---pretrained \
---multiprocessing-distributed > ddpoutput.txt 2>&1 &
-
-nohup python3 -m torch.distributed.launch --nproc_per_node=2 main.py \
---data_name "APTOS-2019-Blindness-Detection" \
---data_path "/data/AutoML_compete/aptos2019-blindness-detection/split" \
---model "resnetv2_101x3_bitm" \
---lr 0.005 \
---epochs 50 \
---batch-size 32 \
---pretrained \
---multiprocessing-distributed > output.txt 2>&1 &
-
-
-nohup python3 test.py \
---data_name "Flowers-Recognition" \
---data_path "/data/AutoML_compete/Flowers-Recognition/split" \
---model "efficientnet_b4" \
---resume "/home/yiran.wu/work_dirs/pytorch_model_benchmark/Flowers-Recognitionefficientnet_b4/model_best.pth.tar" \
--b 8 > ddpoutput.txt 2>&1 &
+python multiproc_ddp.py  \
+    --data_path /media/robin/DATA/datatsets/image_data/shopee-iet/images/ \
+    --output-dir //media/robin/DATA/datatsets/image_data/shopee-iet \
+    --data-backend pytorch  \
+    --lr 0.1  \
+    --batch-size 32 \
+    --model resnet18 \
+    --pretrained \
+    --epochs 1  \
+    --multiprocessing-distributed \
+    --world-size 1 \
+    --rank 0 
 
 ## on platform
 python multiproc_ddp.py  \

@@ -69,13 +69,15 @@ def get_optimizer(parameters, lr, args, state=None):
     return optimizer
 
 
-def get_train_step(model_and_loss, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
+def get_train_step(model, criterion, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
     def _step(input, target, optimizer_step=True):
         input_var = Variable(input)
         target_var = Variable(target)
 
         with autocast(enabled=use_amp):
-            loss, output = model_and_loss(input_var, target_var)
+            output = model(input_var)
+            loss = criterion(output, target_var)
+
             loss /= batch_size_multiplier
             prec1, prec5 = accuracy(output.data, target, topk=(1, min(top_k, 5)))
             if torch.distributed.is_initialized():
@@ -101,7 +103,8 @@ def get_train_step(model_and_loss, optimizer, scaler, use_amp=False, batch_size_
 
 def train(
     train_loader,
-    model_and_loss,
+    model,
+    criterion,
     optimizer,
     scaler,
     lr_scheduler,
@@ -112,7 +115,7 @@ def train(
     ema=None,
     use_amp=False,
     batch_size_multiplier=1,
-    log_interval=10
+    log_interval=1
 ):
     batch_time_m = AverageMeter('Time', ':6.3f')
     data_time_m = AverageMeter('Data', ':6.3f')
@@ -122,7 +125,8 @@ def train(
 
     interrupted = False
     step = get_train_step(
-        model_and_loss,
+        model,
+        criterion,
         optimizer,
         scaler=scaler,
         use_amp=use_amp,
@@ -130,12 +134,15 @@ def train(
         top_k=num_class
     )
 
-    model_and_loss.train()
+    model.train()
     optimizer.zero_grad()
     steps_per_epoch = len(train_loader)
     data_iter = enumerate(train_loader)
     end = time.time()
     for i, (input, target) in data_iter:
+        input = input.cuda()
+        target = target.cuda()
+
         bs = input.size(0)
         lr_scheduler(optimizer, i, epoch)
         data_time = time.time() - end
@@ -143,7 +150,7 @@ def train(
         optimizer_step = ((i + 1) % batch_size_multiplier) == 0
         loss, prec1, prec5 = step(input, target, optimizer_step=optimizer_step)
         if ema is not None:
-            ema(model_and_loss, epoch*steps_per_epoch+i)
+            ema(model, epoch*steps_per_epoch+i)
 
         it_time = time.time() - end
         batch_time_m.update(it_time)
@@ -176,13 +183,14 @@ def train(
     return interrupted
 
 
-def get_val_step(model_and_loss, use_amp=False, top_k=1):
+def get_val_step(model, criterion, use_amp=False, top_k=1):
     def _step(input, target):
         input_var = Variable(input)
         target_var = Variable(target)
 
         with torch.no_grad(), autocast(enabled=use_amp):
-            loss, output = model_and_loss(input_var, target_var)
+            output = model(input_var)
+            loss = criterion(output, target_var)
 
             prec1, prec5 = accuracy(output.data, target, topk=(1, min(5, top_k)))
 
@@ -202,7 +210,8 @@ def get_val_step(model_and_loss, use_amp=False, top_k=1):
 
 def validate(
     val_loader,
-    model_and_loss,
+    model,
+    criterion,
     num_class,
     logger,
     logger_name,
@@ -215,9 +224,9 @@ def validate(
     top1_m = AverageMeter('Acc@1', ':6.2f')
     top5_m = AverageMeter('Acc@5', ':6.2f')
 
-    step = get_val_step(model_and_loss, use_amp=use_amp, top_k=num_class)
+    step = get_val_step(model, criterion, use_amp=use_amp, top_k=num_class)
     # switch to evaluate mode
-    model_and_loss.eval()
+    model.eval()
     steps_per_epoch = len(val_loader)
     end = time.time()
     data_iter = enumerate(val_loader)
@@ -251,7 +260,8 @@ def validate(
 
 
 def train_loop(
-    model_and_loss,
+    model,
+    criterion,
     optimizer,
     scaler,
     lr_scheduler,
@@ -286,7 +296,8 @@ def train_loop(
             if not skip_training:
                 interrupted = train(
                     train_loader,
-                    model_and_loss,
+                    model,
+                    criterion,
                     optimizer,
                     scaler,
                     lr_scheduler,
@@ -303,7 +314,8 @@ def train_loop(
             if not skip_validation:
                 prec1 = validate(
                     val_loader,
-                    model_and_loss,
+                    model,
+                    criterion,
                     num_class,
                     logger,
                     "Val-log",
@@ -313,6 +325,7 @@ def train_loop(
                     model_ema.load_state_dict({k.replace('module.', ''): v for k, v in ema.state_dict().items()})
                     prec1 = validate(
                         val_loader,
+                        criterion,
                         model_ema,
                         num_class,
                         logger,
@@ -333,7 +346,7 @@ def train_loop(
             ):
                 checkpoint_state = {
                     "epoch": epoch + 1,
-                    "state_dict": model_and_loss.model.state_dict(),
+                    "state_dict": model.state_dict(),
                     "best_prec1": best_prec1,
                     "optimizer": optimizer.state_dict(),
                 }

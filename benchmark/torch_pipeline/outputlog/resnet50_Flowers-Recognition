@@ -1,0 +1,140 @@
+nohup: ignoring input
+Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.
+Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.
+Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.
+
+/data/autodl/benchmark/torch_pipeline/autotorch/models/common.py:13: UserWarning: pytorch_quantization module not found, quantization will not be available
+  "pytorch_quantization module not found, quantization will not be available"
+/data/autodl/benchmark/torch_pipeline/autotorch/models/common.py:13: UserWarning: pytorch_quantization module not found, quantization will not be available
+  "pytorch_quantization module not found, quantization will not be available"
+/data/autodl/benchmark/torch_pipeline/autotorch/models/common.py:13: UserWarning: pytorch_quantization module not found, quantization will not be available
+  "pytorch_quantization module not found, quantization will not be available"
+/data/autodl/benchmark/torch_pipeline/autotorch/models/common.py:13: UserWarning: pytorch_quantization module not found, quantization will not be available
+  "pytorch_quantization module not found, quantization will not be available"
+Added key: store_based_barrier_key:1 to store for rank: 3
+Added key: store_based_barrier_key:1 to store for rank: 2
+Added key: store_based_barrier_key:1 to store for rank: 1
+Using seed = 42
+Added key: store_based_barrier_key:1 to store for rank: 0
+Using seed = 42
+Using seed = 42Using seed = 42
+
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:804: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:804: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:804: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:804: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:258: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:258: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:258: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:258: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+Loading pretrained weights from url (https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth)
+Downloading: "https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth" to /home/yiran.wu/.cache/torch/hub/checkpoints/resnet50_ram-a26f946b.pth
+Loading pretrained weights from url (https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth)
+Downloading: "https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth" to /home/yiran.wu/.cache/torch/hub/checkpoints/resnet50_ram-a26f946b.pth
+Loading pretrained weights from url (https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth)
+Downloading: "https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth" to /home/yiran.wu/.cache/torch/hub/checkpoints/resnet50_ram-a26f946b.pth
+Loading pretrained weights from url (https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth)
+Downloading: "https://github.com/rwightman/pytorch-image-models/releases/download/v0.1-weights/resnet50_ram-a26f946b.pth" to /home/yiran.wu/.cache/torch/hub/checkpoints/resnet50_ram-a26f946b.pth
+Traceback (most recent call last):
+  File "main.py", line 338, in <module>
+    main(args)
+  File "main.py", line 296, in main
+    start_epoch, num_class = prepare_for_training(args)
+  File "main.py", line 231, in prepare_for_training
+    model = init_network(args.model, num_class, pretrained=args.pretrained)
+  File "/data/autodl/benchmark/torch_pipeline/autotorch/models/network.py", line 17, in init_network
+    net = get_model(model_name, pretrained=pretrained)
+  File "/data/autodl/benchmark/torch_pipeline/autotorch/models/model_zoo.py", line 470, in get_model
+    net = timm.create_model(name, **kwargs)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/timm/models/factory.py", line 81, in create_model
+    model = create_fn(pretrained=pretrained, **kwargs)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/timm/models/resnet.py", line 751, in resnet50
+    return _create_resnet('resnet50', pretrained, **model_args)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/timm/models/resnet.py", line 684, in _create_resnet
+    **kwargs)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/timm/models/helpers.py", line 451, in build_model_with_cfg
+    strict=pretrained_strict)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/timm/models/helpers.py", line 177, in load_pretrained
+    state_dict = load_state_dict_from_url(pretrained_url, progress=progress, map_location='cpu')
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/hub.py", line 528, in load_state_dict_from_url
+    return torch.load(cached_file, map_location=map_location)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/serialization.py", line 593, in load
+    return _legacy_load(opened_file, map_location, pickle_module, **pickle_load_args)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/serialization.py", line 779, in _legacy_load
+    deserialized_objects[key]._set_from_file(f, offset, f_should_read_directly)
+RuntimeError: unexpected EOF, expected 22289 more bytes. The file might be corrupted.
+Traceback (most recent call last):
+  File "main.py", line 338, in <module>
+Traceback (most recent call last):
+  File "main.py", line 338, in <module>
+    main(args)
+  File "main.py", line 296, in main
+Traceback (most recent call last):
+  File "main.py", line 338, in <module>
+    start_epoch, num_class = prepare_for_training(args)
+  File "main.py", line 281, in prepare_for_training
+    model_and_loss.distributed(args.gpu)
+  File "/data/autodl/benchmark/torch_pipeline/autotorch/training.py", line 46, in distributed
+    main(args)
+  File "main.py", line 296, in main
+    self.model = DDP(self.model, device_ids=[gpu_id], output_device=gpu_id)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 446, in __init__
+    main(args)
+  File "main.py", line 296, in main
+    start_epoch, num_class = prepare_for_training(args)
+  File "main.py", line 281, in prepare_for_training
+    start_epoch, num_class = prepare_for_training(args)
+      File "main.py", line 281, in prepare_for_training
+model_and_loss.distributed(args.gpu)
+  File "/data/autodl/benchmark/torch_pipeline/autotorch/training.py", line 46, in distributed
+    self.model = DDP(self.model, device_ids=[gpu_id], output_device=gpu_id)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 446, in __init__
+    model_and_loss.distributed(args.gpu)
+  File "/data/autodl/benchmark/torch_pipeline/autotorch/training.py", line 46, in distributed
+    self.model = DDP(self.model, device_ids=[gpu_id], output_device=gpu_id)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 446, in __init__
+    self._sync_params_and_buffers(authoritative_rank=0)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 460, in _sync_params_and_buffers
+    self._sync_params_and_buffers(authoritative_rank=0)    
+self._sync_params_and_buffers(authoritative_rank=0)  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 460, in _sync_params_and_buffers
+
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 460, in _sync_params_and_buffers
+    authoritative_rank)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 1156, in _distributed_broadcast_coalesced
+    authoritative_rank)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 1156, in _distributed_broadcast_coalesced
+    authoritative_rank)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/nn/parallel/distributed.py", line 1156, in _distributed_broadcast_coalesced
+        self.process_group, tensors, buffer_size, authoritative_rank
+    self.process_group, tensors, buffer_size, authoritative_rank
+RuntimeError: Connection reset by peer
+RuntimeError: Connection reset by peer
+self.process_group, tensors, buffer_size, authoritative_rank
+RuntimeError: Connection reset by peer
+Traceback (most recent call last):
+  File "/usr/lib/python3.7/runpy.py", line 193, in _run_module_as_main
+    "__main__", mod_spec)
+  File "/usr/lib/python3.7/runpy.py", line 85, in _run_code
+    exec(code, run_globals)
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/distributed/launch.py", line 340, in <module>
+    main()
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/distributed/launch.py", line 326, in main
+    sigkill_handler(signal.SIGTERM, None)  # not coming back
+  File "/home/yiran.wu/.local/lib/python3.7/site-packages/torch/distributed/launch.py", line 301, in sigkill_handler
+    raise subprocess.CalledProcessError(returncode=last_return_code, cmd=cmd)
+subprocess.CalledProcessError: Command '['/usr/bin/python', '-u', 'main.py', '--local_rank=3', '--data_name', 'Flowers-Recognition', '--data_path', '/data/AutoML_compete/Flowers-Recognition/split', '--model', 'resnet50', '--lr', '0.01', '--epochs', '40', '--batch-size', '64', '--early-stopping-patience', '10', '--pretrained']' died with <Signals.SIGSEGV: 11>.
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+Killing subprocess 17573
+Killing subprocess 17574
+Killing subprocess 17575
+Killing subprocess 17576

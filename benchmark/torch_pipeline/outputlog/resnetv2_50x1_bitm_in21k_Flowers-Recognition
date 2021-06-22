@@ -1,0 +1,391 @@
+nohup: ignoring input
+Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.
+Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.
+Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.
+/data/autodl/benchmark/torch_pipeline/autotorch/models/common.py:13: UserWarning: pytorch_quantization module not found, quantization will not be available
+  "pytorch_quantization module not found, quantization will not be available"
+Please install DALI from https://www.github.com/NVIDIA/DALI to run this example.
+/data/autodl/benchmark/torch_pipeline/autotorch/models/common.py:13: UserWarning: pytorch_quantization module not found, quantization will not be available
+  "pytorch_quantization module not found, quantization will not be available"
+/data/autodl/benchmark/torch_pipeline/autotorch/models/common.py:13: UserWarning: pytorch_quantization module not found, quantization will not be available
+  "pytorch_quantization module not found, quantization will not be available"
+/data/autodl/benchmark/torch_pipeline/autotorch/models/common.py:13: UserWarning: pytorch_quantization module not found, quantization will not be available
+  "pytorch_quantization module not found, quantization will not be available"
+Added key: store_based_barrier_key:1 to store for rank: 1
+Added key: store_based_barrier_key:1 to store for rank: 2
+Added key: store_based_barrier_key:1 to store for rank: 3
+Added key: store_based_barrier_key:1 to store for rank: 0
+Using seed = 42
+BSM: 1
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:804: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+Using seed = 42
+Using seed = 42
+BSM: 1
+BSM: 1
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:804: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:804: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+Using seed = 42
+BSM: 1
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:804: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:258: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:258: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:258: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+/home/yiran.wu/.local/lib/python3.7/site-packages/torchvision/transforms/transforms.py:258: UserWarning: Argument interpolation should be of type InterpolationMode instead of int. Please, use InterpolationMode enum.
+  "Argument interpolation should be of type InterpolationMode instead of int. "
+RUNNING EPOCHS FROM 0 TO 40
+RUNNING EPOCHS FROM 0 TO 40
+RUNNING EPOCHS FROM 0 TO 40
+RUNNING EPOCHS FROM 0 TO 40
+Train-log: [epoch: 1] [ 0/48] DataTime: 1.138 (1.138) BatchTime: 2.902 (2.902) Loss:  2.8430 (2.8430) Acc@1: 14.0625 (14.0625) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Reducer buckets have been rebuilt in this iteration.
+Reducer buckets have been rebuilt in this iteration.
+Reducer buckets have been rebuilt in this iteration.
+Reducer buckets have been rebuilt in this iteration.
+Train-log: [epoch: 1] [10/48] DataTime: 0.001 (0.104) BatchTime: 0.326 (0.561) Loss:  5.6155 (4.3034) Acc@1: 48.4375 (51.4205) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 1] [20/48] DataTime: 0.001 (0.055) BatchTime: 0.338 (0.452) Loss:  4.1127 (6.7831) Acc@1: 20.3125 (39.8810) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 1] [30/48] DataTime: 0.001 (0.037) BatchTime: 0.326 (0.412) Loss:  1.7229 (5.2370) Acc@1: 23.4375 (35.5847) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 1] [40/48] DataTime: 0.001 (0.028) BatchTime: 0.327 (0.393) Loss:  1.5557 (4.3427) Acc@1: 32.8125 (34.2607) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 1] [47/48] DataTime: 0.000 (0.024) BatchTime: 0.309 (0.383) Loss:  1.2982 (3.9135) Acc@1: 39.0625 (34.6354) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.718 (0.718) Time: 0.860 (0.860) Loss:  1.8142 (1.8142) Acc@1:  3.1250 ( 3.1250) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.149) Time: 1.628 (0.502) Loss:  0.6492 (1.3226) Acc@1: 87.5000 (38.6628) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch: 2] [ 0/48] DataTime: 0.154 (0.154) BatchTime: 0.473 (0.473) Loss:  1.4650 (1.4650) Acc@1: 26.5625 (26.5625) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 2] [10/48] DataTime: 0.001 (0.015) BatchTime: 0.338 (0.344) Loss:  1.4120 (1.3154) Acc@1: 34.3750 (37.9261) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 2] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.329 (0.337) Loss:  1.1933 (1.2584) Acc@1: 48.4375 (42.8571) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 2] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.331 (0.337) Loss:  1.0668 (1.2345) Acc@1: 54.6875 (45.2117) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 2] [40/48] DataTime: 0.000 (0.004) BatchTime: 0.342 (0.335) Loss:  1.2298 (1.2297) Acc@1: 50.0000 (45.6936) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 2] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.327 (0.335) Loss:  1.0856 (1.2203) Acc@1: 54.6875 (46.4844) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.186 (0.186) Time: 0.335 (0.335) Loss:  1.0951 (1.0951) Acc@1: 73.4375 (73.4375) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.032) Time: 0.040 (0.123) Loss:  0.9147 (1.1196) Acc@1: 58.3333 (49.1279) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch: 3] [ 0/48] DataTime: 0.158 (0.158) BatchTime: 0.492 (0.492) Loss:  1.1713 (1.1713) Acc@1: 54.6875 (54.6875) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 3] [10/48] DataTime: 0.001 (0.015) BatchTime: 0.331 (0.344) Loss:  1.0067 (1.1034) Acc@1: 65.6250 (55.6818) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 3] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.328 (0.340) Loss:  0.9657 (1.0713) Acc@1: 62.5000 (56.2500) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 3] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.339 (0.338) Loss:  1.1755 (1.0872) Acc@1: 45.3125 (54.1331) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 3] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.331 (0.336) Loss:  1.0795 (1.1057) Acc@1: 51.5625 (52.8963) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 3] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.338 (0.337) Loss:  1.0093 (1.0997) Acc@1: 57.8125 (53.2878) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.207 (0.207) Time: 0.321 (0.321) Loss:  1.6026 (1.6026) Acc@1: 45.3125 (45.3125) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.035) Time: 0.040 (0.122) Loss:  0.7127 (1.0758) Acc@1: 83.3333 (53.7791) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch: 4] [ 0/48] DataTime: 0.194 (0.194) BatchTime: 0.528 (0.528) Loss:  0.9616 (0.9616) Acc@1: 57.8125 (57.8125) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 4] [10/48] DataTime: 0.001 (0.018) BatchTime: 0.343 (0.349) Loss:  1.1263 (1.0782) Acc@1: 59.3750 (54.9716) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 4] [20/48] DataTime: 0.001 (0.010) BatchTime: 0.328 (0.342) Loss:  1.1829 (1.0892) Acc@1: 50.0000 (53.1994) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 4] [30/48] DataTime: 0.001 (0.007) BatchTime: 0.338 (0.340) Loss:  0.8987 (1.0713) Acc@1: 62.5000 (53.9315) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 4] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.342 (0.338) Loss:  1.0804 (1.0460) Acc@1: 60.9375 (56.0595) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 4] [47/48] DataTime: 0.000 (0.005) BatchTime: 0.329 (0.338) Loss:  1.0128 (1.0328) Acc@1: 53.1250 (56.7057) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.182 (0.182) Time: 0.322 (0.322) Loss:  1.0980 (1.0980) Acc@1: 64.0625 (64.0625) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.032) Time: 0.040 (0.121) Loss:  0.9695 (0.9156) Acc@1: 58.3333 (63.6628) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch: 5] [ 0/48] DataTime: 0.152 (0.152) BatchTime: 0.483 (0.483) Loss:  0.7673 (0.7673) Acc@1: 68.7500 (68.7500) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 5] [10/48] DataTime: 0.001 (0.015) BatchTime: 0.341 (0.347) Loss:  0.7825 (0.9056) Acc@1: 65.6250 (64.6307) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 5] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.317 (0.339) Loss:  1.0334 (0.9241) Acc@1: 56.2500 (63.2440) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 5] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.333 (0.334) Loss:  0.8401 (0.9340) Acc@1: 70.3125 (63.2560) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 5] [40/48] DataTime: 0.000 (0.004) BatchTime: 0.329 (0.334) Loss:  0.9820 (0.9150) Acc@1: 60.9375 (63.9482) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 5] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.339 (0.334) Loss:  0.7346 (0.9074) Acc@1: 71.8750 (63.9648) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.213 (0.213) Time: 0.310 (0.310) Loss:  0.9372 (0.9372) Acc@1: 67.1875 (67.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.036) Time: 0.041 (0.118) Loss:  0.6224 (0.8342) Acc@1: 83.3333 (71.2209) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch: 6] [ 0/48] DataTime: 0.139 (0.139) BatchTime: 0.467 (0.467) Loss:  0.6607 (0.6607) Acc@1: 75.0000 (75.0000) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 6] [10/48] DataTime: 0.001 (0.013) BatchTime: 0.332 (0.349) Loss:  0.9479 (0.8336) Acc@1: 64.0625 (69.4602) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 6] [20/48] DataTime: 0.001 (0.007) BatchTime: 0.341 (0.342) Loss:  0.7538 (0.8145) Acc@1: 73.4375 (68.1548) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 6] [30/48] DataTime: 0.001 (0.005) BatchTime: 0.331 (0.339) Loss:  0.8232 (0.7965) Acc@1: 70.3125 (68.8508) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 6] [40/48] DataTime: 0.001 (0.004) BatchTime: 0.329 (0.339) Loss:  1.0120 (0.7946) Acc@1: 65.6250 (68.8262) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 6] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.342 (0.338) Loss:  0.8553 (0.7891) Acc@1: 68.7500 (69.0104) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.209 (0.209) Time: 0.313 (0.313) Loss:  0.8372 (0.8372) Acc@1: 76.5625 (76.5625) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.037) Time: 0.041 (0.120) Loss:  0.5033 (0.7633) Acc@1: 87.5000 (72.3837) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch: 7] [ 0/48] DataTime: 0.174 (0.174) BatchTime: 0.501 (0.501) Loss:  0.8031 (0.8031) Acc@1: 65.6250 (65.6250) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 7] [10/48] DataTime: 0.001 (0.017) BatchTime: 0.331 (0.353) Loss:  0.8153 (0.7117) Acc@1: 75.0000 (74.4318) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 7] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.344 (0.345) Loss:  0.5461 (0.6808) Acc@1: 79.6875 (74.7768) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 7] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.345 (0.342) Loss:  0.7079 (0.6872) Acc@1: 78.1250 (74.4456) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 7] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.331 (0.341) Loss:  0.5545 (0.6824) Acc@1: 78.1250 (74.3140) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 7] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.341 (0.340) Loss:  0.5575 (0.6795) Acc@1: 81.2500 (74.5443) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.192 (0.192) Time: 0.295 (0.295) Loss:  0.7709 (0.7709) Acc@1: 68.7500 (68.7500) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.033) Time: 0.041 (0.117) Loss:  1.1610 (0.6878) Acc@1: 54.1667 (73.5465) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch: 8] [ 0/48] DataTime: 0.189 (0.189) BatchTime: 0.532 (0.532) Loss:  0.6072 (0.6072) Acc@1: 75.0000 (75.0000) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 8] [10/48] DataTime: 0.001 (0.018) BatchTime: 0.332 (0.354) Loss:  0.7542 (0.7244) Acc@1: 70.3125 (71.5909) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 8] [20/48] DataTime: 0.001 (0.010) BatchTime: 0.333 (0.347) Loss:  0.5348 (0.7119) Acc@1: 76.5625 (72.6935) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 8] [30/48] DataTime: 0.001 (0.007) BatchTime: 0.340 (0.343) Loss:  0.4957 (0.7257) Acc@1: 84.3750 (72.3790) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 8] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.341 (0.341) Loss:  0.5693 (0.7102) Acc@1: 81.2500 (73.5518) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 8] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.328 (0.341) Loss:  0.6374 (0.7059) Acc@1: 76.5625 (73.3398) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.205 (0.205) Time: 0.357 (0.357) Loss:  0.9919 (0.9919) Acc@1: 73.4375 (73.4375) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.035) Time: 0.039 (0.125) Loss:  0.3771 (0.7064) Acc@1: 87.5000 (75.2907) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch: 9] [ 0/48] DataTime: 0.167 (0.167) BatchTime: 0.479 (0.479) Loss:  0.7560 (0.7560) Acc@1: 71.8750 (71.8750) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 9] [10/48] DataTime: 0.001 (0.016) BatchTime: 0.333 (0.341) Loss:  0.5126 (0.6381) Acc@1: 81.2500 (73.5795) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 9] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.330 (0.340) Loss:  0.4906 (0.6173) Acc@1: 82.8125 (75.2976) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 9] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.334 (0.339) Loss:  0.5688 (0.5899) Acc@1: 76.5625 (76.1593) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 9] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.344 (0.339) Loss:  0.4870 (0.5915) Acc@1: 85.9375 (76.6387) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch: 9] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.328 (0.338) Loss:  0.6947 (0.5868) Acc@1: 78.1250 (76.9531) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.152 (0.152) Time: 0.330 (0.330) Loss:  0.8117 (0.8117) Acc@1: 71.8750 (71.8750) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.029) Time: 0.039 (0.125) Loss:  0.5835 (0.5363) Acc@1: 62.5000 (80.5233) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:10] [ 0/48] DataTime: 0.155 (0.155) BatchTime: 0.490 (0.490) Loss:  0.4551 (0.4551) Acc@1: 84.3750 (84.3750) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:10] [10/48] DataTime: 0.000 (0.015) BatchTime: 0.345 (0.350) Loss:  0.4782 (0.5671) Acc@1: 81.2500 (79.1193) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:10] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.334 (0.343) Loss:  0.4746 (0.5344) Acc@1: 84.3750 (80.6548) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:10] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.329 (0.341) Loss:  0.6961 (0.5292) Acc@1: 71.8750 (79.9899) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:10] [40/48] DataTime: 0.000 (0.004) BatchTime: 0.338 (0.340) Loss:  0.3951 (0.5280) Acc@1: 87.5000 (79.8018) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:10] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.330 (0.339) Loss:  0.6467 (0.5313) Acc@1: 78.1250 (79.8503) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.204 (0.204) Time: 0.311 (0.311) Loss:  0.4866 (0.4866) Acc@1: 82.8125 (82.8125) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.035) Time: 0.039 (0.119) Loss:  0.5211 (0.4692) Acc@1: 79.1667 (82.2674) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:11] [ 0/48] DataTime: 0.169 (0.169) BatchTime: 0.498 (0.498) Loss:  0.3403 (0.3403) Acc@1: 90.6250 (90.6250) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:11] [10/48] DataTime: 0.001 (0.016) BatchTime: 0.341 (0.352) Loss:  0.3527 (0.4773) Acc@1: 85.9375 (83.2386) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:11] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.342 (0.344) Loss:  0.4029 (0.4583) Acc@1: 84.3750 (83.7798) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:11] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.332 (0.342) Loss:  0.3884 (0.4491) Acc@1: 82.8125 (83.6190) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:11] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.334 (0.341) Loss:  0.4540 (0.4568) Acc@1: 78.1250 (83.2698) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:11] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.341 (0.340) Loss:  0.3637 (0.4551) Acc@1: 90.6250 (83.2357) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.172 (0.172) Time: 0.321 (0.321) Loss:  0.2357 (0.2357) Acc@1: 93.7500 (93.7500) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.030) Time: 0.041 (0.121) Loss:  0.3315 (0.5564) Acc@1: 87.5000 (79.3605) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:12] [ 0/48] DataTime: 0.188 (0.188) BatchTime: 0.524 (0.524) Loss:  0.7135 (0.7135) Acc@1: 71.8750 (71.8750) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:12] [10/48] DataTime: 0.001 (0.018) BatchTime: 0.345 (0.353) Loss:  0.6331 (0.5584) Acc@1: 78.1250 (80.2557) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:12] [20/48] DataTime: 0.001 (0.010) BatchTime: 0.333 (0.345) Loss:  0.4960 (0.4993) Acc@1: 84.3750 (82.2173) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:12] [30/48] DataTime: 0.001 (0.007) BatchTime: 0.320 (0.339) Loss:  0.2908 (0.4990) Acc@1: 90.6250 (81.9556) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:12] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.330 (0.337) Loss:  0.2620 (0.4848) Acc@1: 90.6250 (82.6220) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:12] [47/48] DataTime: 0.000 (0.005) BatchTime: 0.342 (0.337) Loss:  0.3692 (0.4707) Acc@1: 85.9375 (83.3008) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.221 (0.221) Time: 0.315 (0.315) Loss:  0.4238 (0.4238) Acc@1: 85.9375 (85.9375) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.038) Time: 0.040 (0.120) Loss:  0.1987 (0.4381) Acc@1: 87.5000 (84.3023) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:13] [ 0/48] DataTime: 0.164 (0.164) BatchTime: 0.505 (0.505) Loss:  0.4736 (0.4736) Acc@1: 84.3750 (84.3750) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:13] [10/48] DataTime: 0.001 (0.016) BatchTime: 0.335 (0.352) Loss:  0.6244 (0.3933) Acc@1: 78.1250 (86.0795) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:13] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.330 (0.345) Loss:  0.5993 (0.4307) Acc@1: 75.0000 (84.6726) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:13] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.340 (0.343) Loss:  0.2543 (0.4461) Acc@1: 93.7500 (83.8710) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:13] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.342 (0.341) Loss:  0.6210 (0.4397) Acc@1: 81.2500 (84.1845) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:13] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.332 (0.341) Loss:  0.3635 (0.4427) Acc@1: 89.0625 (84.1797) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.183 (0.183) Time: 0.369 (0.369) Loss:  0.6211 (0.6211) Acc@1: 79.6875 (79.6875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.031) Time: 0.039 (0.128) Loss:  0.1385 (0.4993) Acc@1: 95.8333 (79.0698) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:14] [ 0/48] DataTime: 0.157 (0.157) BatchTime: 0.484 (0.484) Loss:  0.3232 (0.3232) Acc@1: 85.9375 (85.9375) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:14] [10/48] DataTime: 0.001 (0.015) BatchTime: 0.328 (0.351) Loss:  0.2708 (0.3630) Acc@1: 90.6250 (85.5114) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:14] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.336 (0.345) Loss:  0.4803 (0.4019) Acc@1: 90.6250 (85.6399) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:14] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.347 (0.342) Loss:  0.4790 (0.4124) Acc@1: 81.2500 (84.7278) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:14] [40/48] DataTime: 0.001 (0.004) BatchTime: 0.333 (0.341) Loss:  0.3220 (0.4106) Acc@1: 89.0625 (84.7180) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:14] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.334 (0.341) Loss:  0.4803 (0.4010) Acc@1: 82.8125 (85.1562) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.426 (0.426) Time: 0.514 (0.514) Loss:  0.4568 (0.4568) Acc@1: 82.8125 (82.8125) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.072) Time: 0.041 (0.153) Loss:  0.3834 (0.3500) Acc@1: 87.5000 (88.0814) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:15] [ 0/48] DataTime: 0.173 (0.173) BatchTime: 0.512 (0.512) Loss:  0.1559 (0.1559) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:15] [10/48] DataTime: 0.001 (0.016) BatchTime: 0.338 (0.351) Loss:  0.2137 (0.3657) Acc@1: 95.3125 (85.3693) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:15] [20/48] DataTime: 0.001 (0.012) BatchTime: 0.334 (0.347) Loss:  0.5056 (0.3944) Acc@1: 81.2500 (84.3006) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:15] [30/48] DataTime: 0.001 (0.008) BatchTime: 0.330 (0.344) Loss:  0.3483 (0.3699) Acc@1: 87.5000 (85.4335) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:15] [40/48] DataTime: 0.000 (0.006) BatchTime: 0.334 (0.343) Loss:  0.1802 (0.3553) Acc@1: 95.3125 (86.0899) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:15] [47/48] DataTime: 0.000 (0.006) BatchTime: 0.336 (0.341) Loss:  0.5824 (0.3606) Acc@1: 81.2500 (86.1328) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.170 (0.170) Time: 0.314 (0.314) Loss:  0.4847 (0.4847) Acc@1: 81.2500 (81.2500) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.029) Time: 0.040 (0.119) Loss:  0.5194 (0.3786) Acc@1: 75.0000 (86.3372) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:16] [ 0/48] DataTime: 0.173 (0.173) BatchTime: 0.513 (0.513) Loss:  0.4487 (0.4487) Acc@1: 84.3750 (84.3750) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:16] [10/48] DataTime: 0.001 (0.016) BatchTime: 0.325 (0.339) Loss:  0.3206 (0.3776) Acc@1: 92.1875 (85.7955) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:16] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.333 (0.338) Loss:  0.4937 (0.3722) Acc@1: 79.6875 (86.3095) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:16] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.340 (0.338) Loss:  0.3439 (0.3352) Acc@1: 87.5000 (88.0040) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:16] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.345 (0.338) Loss:  0.2994 (0.3154) Acc@1: 89.0625 (88.7195) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:16] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.333 (0.337) Loss:  0.3948 (0.3115) Acc@1: 85.9375 (88.8021) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.185 (0.185) Time: 0.320 (0.320) Loss:  0.1714 (0.1714) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.031) Time: 0.039 (0.122) Loss:  0.4169 (0.3510) Acc@1: 79.1667 (87.7907) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:17] [ 0/48] DataTime: 0.180 (0.180) BatchTime: 0.507 (0.507) Loss:  0.3769 (0.3769) Acc@1: 84.3750 (84.3750) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:17] [10/48] DataTime: 0.001 (0.017) BatchTime: 0.339 (0.356) Loss:  0.4255 (0.3263) Acc@1: 79.6875 (87.3580) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:17] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.335 (0.349) Loss:  0.2730 (0.3419) Acc@1: 93.7500 (87.5000) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:17] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.336 (0.347) Loss:  0.2023 (0.3153) Acc@1: 95.3125 (88.3569) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:17] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.341 (0.346) Loss:  0.4282 (0.3204) Acc@1: 85.9375 (88.1860) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:17] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.345 (0.345) Loss:  0.4054 (0.3226) Acc@1: 82.8125 (88.1836) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.200 (0.200) Time: 0.296 (0.296) Loss:  0.2587 (0.2587) Acc@1: 90.6250 (90.6250) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.034) Time: 0.041 (0.118) Loss:  0.2429 (0.3166) Acc@1: 87.5000 (88.6628) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:18] [ 0/48] DataTime: 0.155 (0.155) BatchTime: 0.484 (0.484) Loss:  0.3076 (0.3076) Acc@1: 89.0625 (89.0625) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:18] [10/48] DataTime: 0.001 (0.015) BatchTime: 0.333 (0.352) Loss:  0.1974 (0.3151) Acc@1: 95.3125 (88.7784) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:18] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.340 (0.345) Loss:  0.4134 (0.2827) Acc@1: 85.9375 (90.0298) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:18] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.343 (0.342) Loss:  0.1780 (0.2796) Acc@1: 92.1875 (89.6673) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:18] [40/48] DataTime: 0.000 (0.004) BatchTime: 0.333 (0.341) Loss:  0.2908 (0.2861) Acc@1: 85.9375 (89.1387) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:18] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.339 (0.341) Loss:  0.3032 (0.2888) Acc@1: 89.0625 (89.1602) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.159 (0.159) Time: 0.319 (0.319) Loss:  0.2821 (0.2821) Acc@1: 85.9375 (85.9375) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.029) Time: 0.041 (0.123) Loss:  0.3030 (0.2436) Acc@1: 87.5000 (91.5698) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:19] [ 0/48] DataTime: 0.156 (0.156) BatchTime: 0.496 (0.496) Loss:  0.1779 (0.1779) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:19] [10/48] DataTime: 0.000 (0.015) BatchTime: 0.331 (0.350) Loss:  0.2676 (0.2324) Acc@1: 87.5000 (91.3352) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:19] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.331 (0.345) Loss:  0.2844 (0.2595) Acc@1: 90.6250 (90.2530) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:19] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.348 (0.343) Loss:  0.2413 (0.2795) Acc@1: 90.6250 (89.3649) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:19] [40/48] DataTime: 0.001 (0.004) BatchTime: 0.323 (0.337) Loss:  0.3832 (0.2905) Acc@1: 85.9375 (89.0625) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:19] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.329 (0.337) Loss:  0.3529 (0.2926) Acc@1: 84.3750 (88.8997) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.179 (0.179) Time: 0.342 (0.342) Loss:  0.2824 (0.2824) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.038) Time: 0.039 (0.131) Loss:  0.0796 (0.3641) Acc@1: 91.6667 (86.6279) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:20] [ 0/48] DataTime: 0.164 (0.164) BatchTime: 0.509 (0.509) Loss:  0.5045 (0.5045) Acc@1: 89.0625 (89.0625) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:20] [10/48] DataTime: 0.001 (0.016) BatchTime: 0.342 (0.350) Loss:  0.2179 (0.3611) Acc@1: 95.3125 (87.9261) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:20] [20/48] DataTime: 0.003 (0.009) BatchTime: 0.336 (0.344) Loss:  0.2431 (0.3550) Acc@1: 92.1875 (87.7232) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:20] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.337 (0.342) Loss:  0.3531 (0.3197) Acc@1: 89.0625 (89.0121) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:20] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.344 (0.341) Loss:  0.2445 (0.3174) Acc@1: 92.1875 (89.1006) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:20] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.329 (0.340) Loss:  0.1914 (0.2996) Acc@1: 90.6250 (89.7786) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.196 (0.196) Time: 0.291 (0.291) Loss:  0.2345 (0.2345) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.036) Time: 0.040 (0.118) Loss:  0.3401 (0.2744) Acc@1: 83.3333 (88.9535) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:21] [ 0/48] DataTime: 0.163 (0.163) BatchTime: 0.498 (0.498) Loss:  0.3275 (0.3275) Acc@1: 85.9375 (85.9375) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:21] [10/48] DataTime: 0.000 (0.015) BatchTime: 0.330 (0.353) Loss:  0.1774 (0.2331) Acc@1: 95.3125 (92.7557) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:21] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.334 (0.346) Loss:  0.3740 (0.2775) Acc@1: 87.5000 (90.9226) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:21] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.344 (0.343) Loss:  0.2909 (0.2793) Acc@1: 89.0625 (90.6754) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:21] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.332 (0.341) Loss:  0.4805 (0.2802) Acc@1: 89.0625 (90.2820) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:21] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.332 (0.341) Loss:  0.3010 (0.2784) Acc@1: 90.6250 (90.3320) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.203 (0.203) Time: 0.292 (0.292) Loss:  0.1644 (0.1644) Acc@1: 93.7500 (93.7500) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.037) Time: 0.040 (0.118) Loss:  0.1517 (0.2920) Acc@1: 91.6667 (90.1163) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:22] [ 0/48] DataTime: 0.160 (0.160) BatchTime: 0.486 (0.486) Loss:  0.2965 (0.2965) Acc@1: 90.6250 (90.6250) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:22] [10/48] DataTime: 0.000 (0.015) BatchTime: 0.343 (0.352) Loss:  0.2365 (0.2582) Acc@1: 93.7500 (90.7670) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:22] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.346 (0.344) Loss:  0.3085 (0.2431) Acc@1: 89.0625 (91.4435) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:22] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.333 (0.342) Loss:  0.1629 (0.2275) Acc@1: 90.6250 (91.8347) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:22] [40/48] DataTime: 0.001 (0.004) BatchTime: 0.331 (0.341) Loss:  0.1206 (0.2290) Acc@1: 96.8750 (91.9588) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:22] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.345 (0.340) Loss:  0.4056 (0.2310) Acc@1: 84.3750 (91.8620) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.228 (0.228) Time: 0.318 (0.318) Loss:  0.4967 (0.4967) Acc@1: 85.9375 (85.9375) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.039) Time: 0.041 (0.122) Loss:  0.1582 (0.2944) Acc@1: 91.6667 (90.4070) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:23] [ 0/48] DataTime: 0.161 (0.161) BatchTime: 0.496 (0.496) Loss:  0.1496 (0.1496) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:23] [10/48] DataTime: 0.001 (0.015) BatchTime: 0.321 (0.341) Loss:  0.1798 (0.2038) Acc@1: 93.7500 (92.6136) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:23] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.336 (0.338) Loss:  0.1320 (0.2221) Acc@1: 96.8750 (92.0387) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:23] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.341 (0.337) Loss:  0.2814 (0.2220) Acc@1: 92.1875 (92.4395) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:23] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.342 (0.337) Loss:  0.1027 (0.2182) Acc@1: 95.3125 (92.3018) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:23] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.331 (0.337) Loss:  0.1407 (0.2234) Acc@1: 92.1875 (91.8294) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.199 (0.199) Time: 0.299 (0.299) Loss:  0.6038 (0.6038) Acc@1: 85.9375 (85.9375) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.034) Time: 0.040 (0.119) Loss:  0.1448 (0.3209) Acc@1: 91.6667 (90.9884) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:24] [ 0/48] DataTime: 0.195 (0.195) BatchTime: 0.536 (0.536) Loss:  0.1293 (0.1293) Acc@1: 95.3125 (95.3125) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:24] [10/48] DataTime: 0.000 (0.018) BatchTime: 0.334 (0.355) Loss:  0.1361 (0.1864) Acc@1: 96.8750 (93.4659) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:24] [20/48] DataTime: 0.001 (0.010) BatchTime: 0.331 (0.347) Loss:  0.2485 (0.2069) Acc@1: 90.6250 (92.2619) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:24] [30/48] DataTime: 0.001 (0.007) BatchTime: 0.340 (0.344) Loss:  0.2046 (0.2095) Acc@1: 90.6250 (92.3891) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:24] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.344 (0.342) Loss:  0.0684 (0.2093) Acc@1: 96.8750 (92.4162) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Train-log: [epoch:24] [47/48] DataTime: 0.000 (0.005) BatchTime: 0.326 (0.341) Loss:  0.2211 (0.2130) Acc@1: 93.7500 (92.3503) Acc@5: 100.0000 (100.0000) lr: 0.005000 
+Val-log: [ 0/6] DataTime: 0.158 (0.158) Time: 0.318 (0.318) Loss:  0.3619 (0.3619) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.030) Time: 0.040 (0.123) Loss:  0.1341 (0.2803) Acc@1: 95.8333 (90.6977) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:25] [ 0/48] DataTime: 0.178 (0.178) BatchTime: 0.506 (0.506) Loss:  0.1331 (0.1331) Acc@1: 95.3125 (95.3125) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:25] [10/48] DataTime: 0.001 (0.017) BatchTime: 0.332 (0.354) Loss:  0.1357 (0.1400) Acc@1: 95.3125 (94.8864) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:25] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.336 (0.346) Loss:  0.2014 (0.1416) Acc@1: 92.1875 (95.3125) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:25] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.344 (0.343) Loss:  0.1365 (0.1458) Acc@1: 96.8750 (95.2117) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:25] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.333 (0.341) Loss:  0.1237 (0.1488) Acc@1: 96.8750 (95.3506) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:25] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.334 (0.341) Loss:  0.0380 (0.1465) Acc@1: 100.0000 (95.3776) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.224 (0.224) Time: 0.313 (0.313) Loss:  0.3043 (0.3043) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.038) Time: 0.040 (0.120) Loss:  0.1242 (0.2267) Acc@1: 91.6667 (93.0233) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:26] [ 0/48] DataTime: 0.171 (0.171) BatchTime: 0.508 (0.508) Loss:  0.1770 (0.1770) Acc@1: 95.3125 (95.3125) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:26] [10/48] DataTime: 0.001 (0.016) BatchTime: 0.343 (0.351) Loss:  0.1696 (0.1409) Acc@1: 96.8750 (95.3125) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:26] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.332 (0.344) Loss:  0.1799 (0.1508) Acc@1: 95.3125 (95.0149) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:26] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.331 (0.342) Loss:  0.0573 (0.1511) Acc@1: 100.0000 (94.8085) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:26] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.317 (0.338) Loss:  0.1238 (0.1449) Acc@1: 95.3125 (94.9314) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:26] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.343 (0.337) Loss:  0.0761 (0.1435) Acc@1: 98.4375 (94.9544) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.144 (0.144) Time: 0.305 (0.305) Loss:  0.2366 (0.2366) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.026) Time: 0.041 (0.120) Loss:  0.1175 (0.2125) Acc@1: 95.8333 (93.0233) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:27] [ 0/48] DataTime: 0.496 (0.496) BatchTime: 0.827 (0.827) Loss:  0.0421 (0.0421) Acc@1: 98.4375 (98.4375) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:27] [10/48] DataTime: 0.000 (0.046) BatchTime: 0.344 (0.381) Loss:  0.0767 (0.1245) Acc@1: 95.3125 (95.1705) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:27] [20/48] DataTime: 0.001 (0.024) BatchTime: 0.334 (0.359) Loss:  0.2559 (0.1356) Acc@1: 92.1875 (95.4613) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:27] [30/48] DataTime: 0.001 (0.017) BatchTime: 0.330 (0.353) Loss:  0.0863 (0.1214) Acc@1: 96.8750 (96.0181) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:27] [40/48] DataTime: 0.000 (0.013) BatchTime: 0.340 (0.349) Loss:  0.0235 (0.1222) Acc@1: 98.4375 (95.8460) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:27] [47/48] DataTime: 0.000 (0.011) BatchTime: 0.331 (0.347) Loss:  0.1588 (0.1235) Acc@1: 92.1875 (95.8008) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.240 (0.240) Time: 0.347 (0.347) Loss:  0.2036 (0.2036) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.041) Time: 0.041 (0.125) Loss:  0.1037 (0.2085) Acc@1: 95.8333 (93.3140) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:28] [ 0/48] DataTime: 0.183 (0.183) BatchTime: 0.509 (0.509) Loss:  0.1532 (0.1532) Acc@1: 93.7500 (93.7500) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:28] [10/48] DataTime: 0.001 (0.017) BatchTime: 0.336 (0.354) Loss:  0.1230 (0.1678) Acc@1: 93.7500 (94.0341) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:28] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.343 (0.346) Loss:  0.2303 (0.1553) Acc@1: 95.3125 (95.0149) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:28] [30/48] DataTime: 0.000 (0.007) BatchTime: 0.336 (0.343) Loss:  0.0465 (0.1449) Acc@1: 100.0000 (95.5141) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:28] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.331 (0.341) Loss:  0.1015 (0.1347) Acc@1: 96.8750 (95.6555) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:28] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.343 (0.341) Loss:  0.0986 (0.1342) Acc@1: 96.8750 (95.6380) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.212 (0.212) Time: 0.309 (0.309) Loss:  0.2411 (0.2411) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.036) Time: 0.040 (0.119) Loss:  0.0770 (0.2102) Acc@1: 95.8333 (93.3140) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:29] [ 0/48] DataTime: 0.175 (0.175) BatchTime: 0.504 (0.504) Loss:  0.1696 (0.1696) Acc@1: 93.7500 (93.7500) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:29] [10/48] DataTime: 0.000 (0.017) BatchTime: 0.342 (0.353) Loss:  0.0807 (0.1076) Acc@1: 96.8750 (96.7330) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:29] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.339 (0.344) Loss:  0.0881 (0.1000) Acc@1: 96.8750 (96.8006) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:29] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.335 (0.342) Loss:  0.1632 (0.1080) Acc@1: 93.7500 (96.4214) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:29] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.335 (0.342) Loss:  0.0887 (0.1178) Acc@1: 96.8750 (96.1890) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:29] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.342 (0.340) Loss:  0.0584 (0.1137) Acc@1: 96.8750 (96.3216) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.181 (0.181) Time: 0.315 (0.315) Loss:  0.2395 (0.2395) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.033) Time: 0.042 (0.122) Loss:  0.0633 (0.2096) Acc@1: 95.8333 (93.3140) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:30] [ 0/48] DataTime: 0.179 (0.179) BatchTime: 0.517 (0.517) Loss:  0.0733 (0.0733) Acc@1: 96.8750 (96.8750) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:30] [10/48] DataTime: 0.000 (0.017) BatchTime: 0.342 (0.351) Loss:  0.1053 (0.1179) Acc@1: 96.8750 (96.1648) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:30] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.327 (0.337) Loss:  0.1233 (0.1284) Acc@1: 95.3125 (95.7589) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:30] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.338 (0.337) Loss:  0.2053 (0.1207) Acc@1: 93.7500 (96.0181) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:30] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.345 (0.337) Loss:  0.2669 (0.1236) Acc@1: 92.1875 (96.0747) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:30] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.330 (0.337) Loss:  0.0974 (0.1213) Acc@1: 96.8750 (96.1589) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.211 (0.211) Time: 0.300 (0.300) Loss:  0.2302 (0.2302) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.036) Time: 0.041 (0.118) Loss:  0.0861 (0.2180) Acc@1: 95.8333 (92.7326) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:31] [ 0/48] DataTime: 0.152 (0.152) BatchTime: 0.479 (0.479) Loss:  0.1011 (0.1011) Acc@1: 95.3125 (95.3125) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:31] [10/48] DataTime: 0.001 (0.014) BatchTime: 0.335 (0.352) Loss:  0.2172 (0.1494) Acc@1: 93.7500 (95.5966) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:31] [20/48] DataTime: 0.001 (0.008) BatchTime: 0.342 (0.344) Loss:  0.0771 (0.1385) Acc@1: 96.8750 (95.9821) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:31] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.333 (0.341) Loss:  0.1696 (0.1282) Acc@1: 95.3125 (96.1694) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:31] [40/48] DataTime: 0.001 (0.004) BatchTime: 0.334 (0.341) Loss:  0.2039 (0.1231) Acc@1: 95.3125 (96.3034) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:31] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.341 (0.340) Loss:  0.1804 (0.1282) Acc@1: 92.1875 (95.9961) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.209 (0.209) Time: 0.329 (0.329) Loss:  0.2561 (0.2561) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.035) Time: 0.041 (0.123) Loss:  0.0637 (0.2113) Acc@1: 100.0000 (93.3140) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:32] [ 0/48] DataTime: 0.168 (0.168) BatchTime: 0.507 (0.507) Loss:  0.1658 (0.1658) Acc@1: 93.7500 (93.7500) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:32] [10/48] DataTime: 0.000 (0.016) BatchTime: 0.345 (0.350) Loss:  0.0444 (0.1074) Acc@1: 98.4375 (96.1648) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:32] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.333 (0.344) Loss:  0.1535 (0.0938) Acc@1: 93.7500 (96.8006) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:32] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.336 (0.343) Loss:  0.1538 (0.1194) Acc@1: 96.8750 (95.8669) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:32] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.340 (0.341) Loss:  0.0747 (0.1184) Acc@1: 98.4375 (95.9223) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:32] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.332 (0.340) Loss:  0.0957 (0.1140) Acc@1: 96.8750 (96.0612) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.230 (0.230) Time: 0.318 (0.318) Loss:  0.2187 (0.2187) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.039) Time: 0.039 (0.122) Loss:  0.0856 (0.2073) Acc@1: 95.8333 (93.0233) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:33] [ 0/48] DataTime: 0.130 (0.130) BatchTime: 0.456 (0.456) Loss:  0.1199 (0.1199) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:33] [10/48] DataTime: 0.001 (0.012) BatchTime: 0.333 (0.352) Loss:  0.1322 (0.1224) Acc@1: 92.1875 (94.7443) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:33] [20/48] DataTime: 0.001 (0.007) BatchTime: 0.337 (0.347) Loss:  0.0910 (0.1167) Acc@1: 98.4375 (95.6101) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:33] [30/48] DataTime: 0.000 (0.005) BatchTime: 0.340 (0.345) Loss:  0.0224 (0.1125) Acc@1: 100.0000 (96.0181) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:33] [40/48] DataTime: 0.000 (0.004) BatchTime: 0.342 (0.344) Loss:  0.0770 (0.1192) Acc@1: 96.8750 (95.7317) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:33] [47/48] DataTime: 0.000 (0.003) BatchTime: 0.319 (0.342) Loss:  0.3247 (0.1262) Acc@1: 90.6250 (95.6380) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.196 (0.196) Time: 0.294 (0.294) Loss:  0.1805 (0.1805) Acc@1: 93.7500 (93.7500) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.035) Time: 0.039 (0.116) Loss:  0.0986 (0.2087) Acc@1: 95.8333 (92.7326) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:34] [ 0/48] DataTime: 0.167 (0.167) BatchTime: 0.483 (0.483) Loss:  0.2066 (0.2066) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:34] [10/48] DataTime: 0.001 (0.016) BatchTime: 0.333 (0.350) Loss:  0.2808 (0.1379) Acc@1: 93.7500 (95.8807) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:34] [20/48] DataTime: 0.002 (0.009) BatchTime: 0.334 (0.345) Loss:  0.0723 (0.1149) Acc@1: 98.4375 (96.5030) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:34] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.342 (0.343) Loss:  0.1293 (0.1129) Acc@1: 95.3125 (96.3710) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:34] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.345 (0.341) Loss:  0.1051 (0.1095) Acc@1: 96.8750 (96.3415) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:34] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.330 (0.341) Loss:  0.4890 (0.1204) Acc@1: 84.3750 (95.9310) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.188 (0.188) Time: 0.308 (0.308) Loss:  0.2314 (0.2314) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.032) Time: 0.040 (0.119) Loss:  0.1071 (0.2198) Acc@1: 95.8333 (92.7326) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:35] [ 0/48] DataTime: 0.166 (0.166) BatchTime: 0.493 (0.493) Loss:  0.1406 (0.1406) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:35] [10/48] DataTime: 0.000 (0.016) BatchTime: 0.340 (0.353) Loss:  0.0686 (0.1035) Acc@1: 98.4375 (96.4489) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:35] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.346 (0.345) Loss:  0.0158 (0.1055) Acc@1: 100.0000 (96.2054) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:35] [30/48] DataTime: 0.001 (0.006) BatchTime: 0.334 (0.342) Loss:  0.1513 (0.1058) Acc@1: 92.1875 (96.2198) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:35] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.331 (0.341) Loss:  0.1242 (0.1075) Acc@1: 96.8750 (96.1890) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:35] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.340 (0.340) Loss:  0.0594 (0.1071) Acc@1: 98.4375 (96.3867) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.229 (0.229) Time: 0.317 (0.317) Loss:  0.1957 (0.1957) Acc@1: 95.3125 (95.3125) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.039) Time: 0.041 (0.120) Loss:  0.0488 (0.2187) Acc@1: 100.0000 (92.7326) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:36] [ 0/48] DataTime: 0.171 (0.171) BatchTime: 0.510 (0.510) Loss:  0.1386 (0.1386) Acc@1: 93.7500 (93.7500) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:36] [10/48] DataTime: 0.000 (0.016) BatchTime: 0.339 (0.352) Loss:  0.0298 (0.0871) Acc@1: 100.0000 (96.8750) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:36] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.331 (0.345) Loss:  0.1336 (0.0803) Acc@1: 93.7500 (97.1726) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:36] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.336 (0.343) Loss:  0.1084 (0.0916) Acc@1: 96.8750 (96.9758) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:36] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.343 (0.342) Loss:  0.2404 (0.1012) Acc@1: 89.0625 (96.6845) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Train-log: [epoch:36] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.331 (0.341) Loss:  0.0311 (0.1057) Acc@1: 100.0000 (96.5495) Acc@5: 100.0000 (100.0000) lr: 0.000500 
+Val-log: [ 0/6] DataTime: 0.246 (0.246) Time: 0.335 (0.335) Loss:  0.2041 (0.2041) Acc@1: 95.3125 (95.3125) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.042) Time: 0.039 (0.124) Loss:  0.0743 (0.2198) Acc@1: 95.8333 (93.3140) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:37] [ 0/48] DataTime: 0.187 (0.187) BatchTime: 0.525 (0.525) Loss:  0.0777 (0.0777) Acc@1: 96.8750 (96.8750) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:37] [10/48] DataTime: 0.001 (0.018) BatchTime: 0.333 (0.352) Loss:  0.1785 (0.1152) Acc@1: 92.1875 (95.3125) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:37] [20/48] DataTime: 0.001 (0.010) BatchTime: 0.329 (0.346) Loss:  0.0821 (0.1131) Acc@1: 96.8750 (95.6101) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:37] [30/48] DataTime: 0.000 (0.007) BatchTime: 0.317 (0.338) Loss:  0.0839 (0.1103) Acc@1: 96.8750 (96.0685) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:37] [40/48] DataTime: 0.001 (0.005) BatchTime: 0.333 (0.337) Loss:  0.1808 (0.1135) Acc@1: 96.8750 (95.8841) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:37] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.343 (0.337) Loss:  0.0579 (0.1100) Acc@1: 98.4375 (95.9961) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Val-log: [ 0/6] DataTime: 0.214 (0.214) Time: 0.332 (0.332) Loss:  0.1928 (0.1928) Acc@1: 95.3125 (95.3125) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.036) Time: 0.041 (0.123) Loss:  0.0585 (0.2139) Acc@1: 100.0000 (93.6047) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:38] [ 0/48] DataTime: 0.196 (0.196) BatchTime: 0.528 (0.528) Loss:  0.2456 (0.2456) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:38] [10/48] DataTime: 0.001 (0.019) BatchTime: 0.331 (0.356) Loss:  0.1223 (0.1154) Acc@1: 98.4375 (96.5909) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:38] [20/48] DataTime: 0.001 (0.010) BatchTime: 0.337 (0.348) Loss:  0.2605 (0.1334) Acc@1: 87.5000 (95.4613) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:38] [30/48] DataTime: 0.001 (0.007) BatchTime: 0.344 (0.344) Loss:  0.1568 (0.1227) Acc@1: 93.7500 (95.7661) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:38] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.335 (0.342) Loss:  0.0293 (0.1163) Acc@1: 100.0000 (95.9985) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:38] [47/48] DataTime: 0.000 (0.005) BatchTime: 0.334 (0.342) Loss:  0.1348 (0.1128) Acc@1: 95.3125 (96.1263) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Val-log: [ 0/6] DataTime: 0.217 (0.217) Time: 0.328 (0.328) Loss:  0.1908 (0.1908) Acc@1: 95.3125 (95.3125) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.037) Time: 0.041 (0.122) Loss:  0.0557 (0.2115) Acc@1: 100.0000 (93.6047) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:39] [ 0/48] DataTime: 0.183 (0.183) BatchTime: 0.508 (0.508) Loss:  0.0810 (0.0810) Acc@1: 96.8750 (96.8750) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:39] [10/48] DataTime: 0.000 (0.017) BatchTime: 0.339 (0.354) Loss:  0.1311 (0.0994) Acc@1: 93.7500 (96.7330) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:39] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.343 (0.345) Loss:  0.1394 (0.1169) Acc@1: 96.8750 (96.1310) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:39] [30/48] DataTime: 0.000 (0.007) BatchTime: 0.335 (0.342) Loss:  0.0520 (0.1045) Acc@1: 98.4375 (96.5726) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:39] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.332 (0.342) Loss:  0.1363 (0.1060) Acc@1: 95.3125 (96.6082) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:39] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.342 (0.341) Loss:  0.0660 (0.1043) Acc@1: 98.4375 (96.6471) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Val-log: [ 0/6] DataTime: 0.375 (0.375) Time: 0.527 (0.527) Loss:  0.1905 (0.1905) Acc@1: 93.7500 (93.7500) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.063) Time: 0.039 (0.155) Loss:  0.0693 (0.2137) Acc@1: 100.0000 (93.3140) Acc@5: 100.0000 (100.0000)
+Train-log: [epoch:40] [ 0/48] DataTime: 0.175 (0.175) BatchTime: 0.517 (0.517) Loss:  0.0489 (0.0489) Acc@1: 98.4375 (98.4375) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:40] [10/48] DataTime: 0.000 (0.017) BatchTime: 0.347 (0.351) Loss:  0.0772 (0.1041) Acc@1: 96.8750 (96.0227) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:40] [20/48] DataTime: 0.001 (0.009) BatchTime: 0.332 (0.344) Loss:  0.0552 (0.1078) Acc@1: 98.4375 (96.2798) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:40] [30/48] DataTime: 0.000 (0.006) BatchTime: 0.336 (0.343) Loss:  0.0843 (0.1123) Acc@1: 96.8750 (96.0181) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:40] [40/48] DataTime: 0.000 (0.005) BatchTime: 0.340 (0.341) Loss:  0.2437 (0.1123) Acc@1: 92.1875 (96.0366) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Train-log: [epoch:40] [47/48] DataTime: 0.000 (0.004) BatchTime: 0.329 (0.340) Loss:  0.0402 (0.1095) Acc@1: 100.0000 (96.2565) Acc@5: 100.0000 (100.0000) lr: 0.000050 
+Val-log: [ 0/6] DataTime: 0.195 (0.195) Time: 0.284 (0.284) Loss:  0.1967 (0.1967) Acc@1: 92.1875 (92.1875) Acc@5: 100.0000 (100.0000)
+Val-log: [ 5/6] DataTime: 0.000 (0.035) Time: 0.040 (0.117) Loss:  0.0586 (0.2129) Acc@1: 100.0000 (93.0233) Acc@5: 100.0000 (100.0000)
+Experiment ended
+Experiment ended
+Using seed = 42
+Using seed = 42
+Experiment ended
+Using seed = 42
+Experiment ended
+Using seed = 42
+=> loading checkpoint '/home/yiran.wu/work_dirs/pytorch_model_benchmark/Flowers-Recognition-resnetv2_50x1_bitm_in21k/model_best.pth.tar'
+=> loading checkpoint '/home/yiran.wu/work_dirs/pytorch_model_benchmark/Flowers-Recognition-resnetv2_50x1_bitm_in21k/model_best.pth.tar'
+=> loading checkpoint '/home/yiran.wu/work_dirs/pytorch_model_benchmark/Flowers-Recognition-resnetv2_50x1_bitm_in21k/model_best.pth.tar'
+=> loading checkpoint '/home/yiran.wu/work_dirs/pytorch_model_benchmark/Flowers-Recognition-resnetv2_50x1_bitm_in21k/model_best.pth.tar'
+Test-log: [ 0/14] DataTime: 0.614 (0.614) Time: 0.724 (0.724) Loss:  0.0407 (0.0407) Acc@1: 98.4375 (98.4375) Acc@5: 100.0000 (100.0000)
+Test-log: [10/14] DataTime: 0.001 (0.061) Time: 0.088 (0.156) Loss:  0.3591 (0.2378) Acc@1: 87.5000 (93.4659) Acc@5: 100.0000 (100.0000)
+Test-log: [13/14] DataTime: 0.000 (0.048) Time: 1.452 (0.239) Loss:  0.0700 (0.2684) Acc@1: 96.8750 (92.9398) Acc@5: 100.0000 (100.0000)
+Test Acc of Top1 is 92.93981481481481
+Test Acc of Top1 is 92.93981481481481
+Test Acc of Top1 is 92.93981481481481
+Test Acc of Top1 is 92.93981481481481
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************

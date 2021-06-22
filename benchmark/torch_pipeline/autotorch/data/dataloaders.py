@@ -484,6 +484,54 @@ def get_pytorch_train_loader(
     )
 
 
+def get_pytorch_train_loader_(
+    data_path,
+    split_dir,
+    image_size,
+    batch_size,
+    one_hot=False,
+    interpolation="bilinear",
+    augmentation=None,
+    mean=IMAGENET_DEFAULT_MEAN,
+    start_epoch=0,
+    workers=5,
+):
+    traindir = os.path.join(data_path, split_dir)
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+
+    transforms_list = transforms.Compose([
+        transforms.RandomResizedCrop(224),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+        normalize,
+        ])
+
+    train_dataset = datasets.ImageFolder(traindir, transforms_list)
+
+    num_classes = len(train_dataset.classes)
+
+    if torch.distributed.is_initialized():
+        train_sampler = torch.utils.data.distributed.DistributedSampler(
+            train_dataset, shuffle=True
+        )
+    else:
+        train_sampler = None
+
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        sampler=train_sampler,
+        batch_size=batch_size,
+        shuffle=(train_sampler is None),
+        num_workers=workers,
+        pin_memory=True,
+        drop_last=True,
+        persistent_workers=True,
+    )
+
+    return train_loader, num_classes
+
+
 def get_pytorch_val_loader(
     data_path,
     split_dir,
@@ -534,6 +582,58 @@ def get_pytorch_val_loader(
     )
 
     return PrefetchedWrapper(val_loader, start_epoch=0, num_classes=num_classes, one_hot=one_hot), num_classes
+
+
+def get_pytorch_val_loader_(
+    data_path,
+    split_dir,
+    image_size,
+    batch_size,
+    one_hot=False,
+    interpolation="bilinear",
+    workers=5,
+    crop_padding=32,
+):
+    interpolation = {"bicubic": Image.BICUBIC, "bilinear": Image.BILINEAR}[
+        interpolation
+    ]
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    valdir = os.path.join(data_path, split_dir)
+    val_dataset = datasets.ImageFolder(
+        valdir,
+        transforms.Compose(
+            [
+                transforms.Resize(
+                    image_size + crop_padding, interpolation=interpolation
+                ),
+                transforms.CenterCrop(image_size),
+                transforms.ToTensor(),
+                normalize,
+            ]
+        ),
+    )
+    num_classes = len(val_dataset.classes)
+
+    if torch.distributed.is_initialized():
+        val_sampler = torch.utils.data.distributed.DistributedSampler(
+            val_dataset, shuffle=False
+        )
+    else:
+        val_sampler = None
+
+    val_loader = torch.utils.data.DataLoader(
+        val_dataset,
+        sampler=val_sampler,
+        batch_size=batch_size,
+        shuffle=(val_sampler is None),
+        num_workers=workers,
+        pin_memory=True,
+        drop_last=False,
+        persistent_workers=True,
+    )
+
+    return val_loader, num_classes
 
 
 class SynteticDataLoader(object):
