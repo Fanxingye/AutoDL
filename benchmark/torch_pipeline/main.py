@@ -95,6 +95,7 @@ def parse_args():
     parser.add_argument('--native-amp', action='store_true', default=False,
                         help='Use Native Torch AMP mixed precision')
     parser.add_argument("--local_rank", default=0, type=int)
+    parser.add_argument('--syn-bn', dest='syn_bn', action='store_true', help='use pre-trained model')
     parser.add_argument('--static-loss-scale', type=float, default=1,
                         help="Static loss scale, positive power of 2 values can improve amp convergence.",)
     parser.add_argument('--dynamic-loss-scale', action="store_true",
