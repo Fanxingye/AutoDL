@@ -237,11 +237,11 @@ def prepare_for_training(args):
         # DistributedDataParallel will use all available devices.
         if args.gpu is not None:
             torch.cuda.set_device(args.gpu)
-            model.cuda(args.gpu)
+            model.cuda(args.gpu).to(memory_format=memory_format)
             # When using a single GPU per process and per
             # DistributedDataParallel, we need to divide the batch size
             # ourselves based on the total number of GPUs we have
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=0)
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=gpu_id)
         else:
             model.cuda()
             # DistributedDataParallel will divide and allocate batch_size to all
@@ -263,6 +263,14 @@ def prepare_for_training(args):
     else:
         model_ema = None
         ema = None
+    
+    # load mode state
+    if model_state is not None:
+        model.load_model_state(model_state)
+
+    if (ema is not None) and (model_state_ema is not None):
+        print("load ema")
+        ema.load_state_dict(model_state_ema)
 
     # define loss function (criterion) and optimizer
     criterion = loss().cuda(args.gpu)
@@ -303,13 +311,6 @@ def prepare_for_training(args):
         growth_interval=100 if args.dynamic_loss_scale else 1000000000,
         enabled=args.amp,
     )
-
-    if model_state is not None:
-        model.load_model_state(model_state)
-
-    if (ema is not None) and (model_state_ema is not None):
-        print("load ema")
-        ema.load_state_dict(model_state_ema)
 
     return (model, criterion, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier,
             start_epoch, num_class)

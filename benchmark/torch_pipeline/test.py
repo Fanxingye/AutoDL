@@ -3,7 +3,7 @@ import os
 import random
 import logging
 import numpy as np
-
+from copy import deepcopy
 import torch
 import torch.nn as nn
 import torch.backends.cudnn as cudnn
@@ -168,7 +168,7 @@ def prepare_for_test(args):
         # DistributedDataParallel will use all available devices.
         if args.gpu is not None:
             torch.cuda.set_device(args.gpu)
-            model.cuda(args.gpu)
+            model.cuda(args.gpu).to(memory_format=memory_format)
             # When using a single GPU per process and per
             # DistributedDataParallel, we need to divide the batch size
             # ourselves based on the total number of GPUs we have
@@ -195,20 +195,17 @@ def prepare_for_test(args):
         model_ema = None
         ema = None
 
-    # define loss function (criterion) and optimizer
-    criterion = loss().cuda(args.gpu)
-
+    # load mode state
     if model_state is not None:
         model.load_model_state(model_state)
+    
 
     if (ema is not None) and (model_state_ema is not None):
         print("load ema")
         ema.load_state_dict(model_state_ema)
 
-    model_and_loss.load_model_state(model_state)
-    if (ema is not None) and (model_state_ema is not None):
-        print("load ema")
-        ema.load_state_dict(model_state_ema)
+    # define loss function (criterion) and optimizer
+    criterion = loss().cuda(args.gpu)
 
     return (model, criterion, test_loader, ema, model_ema, num_class)
 
