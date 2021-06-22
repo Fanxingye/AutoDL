@@ -30,7 +30,7 @@ python multiproc_ddp.py  \
     --model resnet18 \
     --pretrained \
     --epochs 1  \
-    ----multiprocessing-distributed \
+    --multiprocessing-distributed \
     --world-size 1 \
     --rank 0 
 

@@ -230,18 +230,56 @@ def prepare_for_training(args):
     # model
     model = init_network(args.model, num_class, pretrained=args.pretrained)
 
-    # Wrap the model and loss function
-    model_and_loss = ModelAndLoss(model, loss, cuda=True, memory_format=memory_format)
+    if not torch.cuda.is_available():
+        print('using CPU, this will be slow')
+    elif args.distributed:
+        # For multiprocessing distributed, DistributedDataParallel constructor
+        # should always set the single device scope, otherwise,
+        # DistributedDataParallel will use all available devices.
+        if args.gpu is not None:
+            torch.cuda.set_device(args.gpu)
+            model.cuda(args.gpu)
+            # When using a single GPU per process and per
+            # DistributedDataParallel, we need to divide the batch size
+            # ourselves based on the total number of GPUs we have
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=0)
+        else:
+            model.cuda()
+            # DistributedDataParallel will divide and allocate batch_size to all
+            # available GPUs if device_ids are not set
+            model = torch.nn.parallel.DistributedDataParallel(model, output_device=0)
+    elif args.gpu is not None:
+        torch.cuda.set_device(args.gpu)
+        model = model.cuda(args.gpu)
+    else:
+        # DataParallel will divide and allocate batch_size to all available GPUs
+        if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
+            model.features = torch.nn.DataParallel(model.features)
+            model.cuda()
+        else:
+            model = torch.nn.DataParallel(model).cuda()
+
+    # optionally resume from a checkpoint
+    if args.resume is not None:
+        model_state, model_state_ema, optimizer_state, start_epoch, best_prec1 = resum_checkpoint(args.resume)
+    else:
+        model_state = None
+        model_state_ema = None
+        optimizer_state = None
+    
+    # EMA
     if args.use_ema is not None:
-        model_ema = deepcopy(model_and_loss)
+        model_ema = deepcopy(model)
         ema = EMA(args.use_ema)
     else:
         model_ema = None
         ema = None
 
+    # define loss function (criterion) and optimizer
+    criterion = loss().cuda(args.gpu)
     # optimizer and lr_policy
     optimizer = get_optimizer(
-        list(model_and_loss.model.named_parameters()),
+        list(model.named_parameters()),
         args.lr,
         args=args,
         state=optimizer_state,
@@ -277,28 +315,26 @@ def prepare_for_training(args):
         enabled=args.amp,
     )
 
-    if args.distributed:
-        model_and_loss.distributed(args.gpu)
-        if args.syn_bn:
-            model_and_loss.syn_bn()
+    if model_state is not None:
+        model.load_model_state(model_state)
 
-    model_and_loss.load_model_state(model_state)
     if (ema is not None) and (model_state_ema is not None):
         print("load ema")
         ema.load_state_dict(model_state_ema)
 
-    return (model_and_loss, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier,
+    return (model, criterion, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier,
             start_epoch, num_class)
 
 
 def main(args):
     global best_prec1
     best_prec1 = 0
-    model_and_loss, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier, \
+    model, criterion, optimizer, lr_policy, scaler, train_loader, val_loader, ema, model_ema, batch_size_multiplier, \
         start_epoch, num_class = prepare_for_training(args)
 
     train_loop(
-        model_and_loss,
+        model,
+        criterion,
         optimizer,
         scaler,
         lr_policy,

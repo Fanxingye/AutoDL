@@ -126,6 +126,8 @@ def parse_args():
 
 
 def main(args):
+    os.environ['MASTER_ADDR'] = 'localhost'
+    os.environ['MASTER_PORT'] = '12355'
     if args.seed is not None:
         random.seed(args.seed)
         torch.manual_seed(args.seed)
@@ -156,15 +158,15 @@ def main(args):
         args.world_size = ngpus_per_node * args.world_size
         # Use torch.multiprocessing.spawn to launch distributed processes: the
         # main_worker process function
-        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, args))
+        mp.spawn(main_worker, nprocs=ngpus_per_node, args=(ngpus_per_node, logger, args))
     else:
         # Simply call main_worker function
-        main_worker(args.gpu, ngpus_per_node, args)
+        main_worker(args.gpu, ngpus_per_node, logger, args)
 
 
-def main_worker(gpu, ngpus_per_node, args):
-    best_prec1 = 0
+def main_worker(gpu, ngpus_per_node, logger, args):
     global best_prec1
+    best_prec1 = 0
 
     args.gpu = gpu
     if args.gpu is not None:
@@ -217,8 +219,8 @@ def main_worker(gpu, ngpus_per_node, args):
 
     # Create data loaders
     if args.data_backend == "pytorch":
-        get_train_loader = get_pytorch_train_loader
-        get_val_loader = get_pytorch_val_loader
+        get_train_loader = get_pytorch_train_loader_
+        get_val_loader = get_pytorch_val_loader_
     elif args.data_backend == "dali-gpu":
         get_train_loader = get_dali_train_loader(dali_cpu=False)
         get_val_loader = get_dali_val_loader()
@@ -233,7 +235,7 @@ def main_worker(gpu, ngpus_per_node, args):
         exit(1)
 
     # get data loaders
-    train_loader, num_class, train_sampler = get_train_loader(
+    train_loader, num_class = get_train_loader(
         args.data_path,
         "train",
         image_size,
@@ -243,7 +245,6 @@ def main_worker(gpu, ngpus_per_node, args):
         augmentation=args.augmentation,
         start_epoch=start_epoch,
         workers=args.workers,
-        memory_format=memory_format,
     )
     if args.mixup != 0.0:
         train_loader = MixUpWrapper(args.mixup, train_loader)
@@ -256,8 +257,41 @@ def main_worker(gpu, ngpus_per_node, args):
         False,
         interpolation=args.interpolation,
         workers=args.workers,
-        memory_format=memory_format,
     )
+
+    # model
+    model = init_network(args.model, num_class, pretrained=args.pretrained)
+
+    if not torch.cuda.is_available():
+        print('using CPU, this will be slow')
+    elif args.distributed:
+        # For multiprocessing distributed, DistributedDataParallel constructor
+        # should always set the single device scope, otherwise,
+        # DistributedDataParallel will use all available devices.
+        if args.gpu is not None:
+            torch.cuda.set_device(args.gpu)
+            model.cuda(args.gpu)
+            # When using a single GPU per process and per
+            # DistributedDataParallel, we need to divide the batch size
+            # ourselves based on the total number of GPUs we have
+            args.batch_size = int(args.batch_size / ngpus_per_node)
+            #args.workers = int((args.workers + ngpus_per_node - 1) / ngpus_per_node)
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=0)
+        else:
+            model.cuda()
+            # DistributedDataParallel will divide and allocate batch_size to all
+            # available GPUs if device_ids are not set
+            model = torch.nn.parallel.DistributedDataParallel(model, output_device=0)
+    elif args.gpu is not None:
+        torch.cuda.set_device(args.gpu)
+        model = model.cuda(args.gpu)
+    else:
+        # DataParallel will divide and allocate batch_size to all available GPUs
+        if args.arch.startswith('alexnet') or args.arch.startswith('vgg'):
+            model.features = torch.nn.DataParallel(model.features)
+            model.cuda()
+        else:
+            model = torch.nn.DataParallel(model).cuda()
 
     # optionally resume from a checkpoint
     if args.resume is not None:
@@ -266,27 +300,26 @@ def main_worker(gpu, ngpus_per_node, args):
         model_state = None
         model_state_ema = None
         optimizer_state = None
-
-    # model
-    model = init_network(args.model, num_class, pretrained=args.pretrained)
-
-    # Wrap the model and loss function
-    model_and_loss = ModelAndLoss(model, loss, cuda=True, memory_format=memory_format)
+    
+    # EMA
     if args.use_ema is not None:
-        model_ema = deepcopy(model_and_loss)
+        model_ema = deepcopy(model)
         ema = EMA(args.use_ema)
     else:
         model_ema = None
         ema = None
 
+    # define loss function (criterion) and optimizer
+    criterion = loss().cuda(args.gpu)
+
     # optimizer and lr_policy
     optimizer = get_optimizer(
-        list(model_and_loss.model.named_parameters()),
+        list(model.named_parameters()),
         args.lr,
         args=args,
         state=optimizer_state,
     )
-
+    # lr policy
     if args.lr_schedule == "step":
         if args.auto_step:
             step_ratios = [0.6, 0.9]
@@ -317,52 +350,20 @@ def main_worker(gpu, ngpus_per_node, args):
         enabled=args.amp,
     )
 
-    if not torch.cuda.is_available():
-        print('using CPU, this will be slow')
-    elif args.distributed:
-        # For multiprocessing distributed, DistributedDataParallel constructor
-        # should always set the single device scope, otherwise,
-        # DistributedDataParallel will use all available devices.
-        if args.gpu is not None:
-            torch.cuda.set_device(args.gpu)
-            model_and_loss.cuda(args.gpu)
-            # When using a single GPU per process and per
-            # DistributedDataParallel, we need to divide the batch size
-            # ourselves based on the total number of GPUs we have
-            args.batch_size = int(args.batch_size / ngpus_per_node)
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
-        else:
-            model.cuda()
-            # DistributedDataParallel will divide and allocate batch_size to all
-            # available GPUs if device_ids are not set
-            model = torch.nn.parallel.DistributedDataParallel(model)
-    elif args.gpu is not None:
-        torch.cuda.set_device(args.gpu)
-        model = model.cuda(args.gpu)
-    else:
-        # DataParallel will divide and allocate batch_size to all available GPUs
-        model = torch.nn.DataParallel(model).cuda()
-
-    model_and_loss.load_model_state(model_state)
-    if (ema is not None) and (model_state_ema is not None):
-        print("load ema")
-        ema.load_state_dict(model_state_ema)
-    if optimizer_state is not None:
-        optimizer.load_state_dict(optimizer_state)
+    if model_state is not None:
+        model.load_model_state(model_state)
 
     # trining and eval
     train_loop(
-        model_and_loss,
+        model,
+        criterion,
         optimizer,
         scaler,
         lr_policy,
         train_loader,
-        train_sampler,
         val_loader,
-        num_class=num_class,
+        num_class,
         logger=logger,
-        ema=ema,
-        model_ema=model_ema,
         use_amp=args.amp,
         batch_size_multiplier=batch_size_multiplier,
         start_epoch=start_epoch,
@@ -385,6 +386,7 @@ if __name__ == '__main__':
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
         
+    global logger
     logger = logging.getLogger('')
     filehandler = logging.FileHandler(os.path.join(args.output_dir, 'summary.log'))
     streamhandler = logging.StreamHandler()
