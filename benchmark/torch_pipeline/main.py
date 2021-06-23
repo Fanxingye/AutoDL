@@ -241,12 +241,14 @@ def prepare_for_training(args):
             # When using a single GPU per process and per
             # DistributedDataParallel, we need to divide the batch size
             # ourselves based on the total number of GPUs we have
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=gpu_id)
+            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=args.gpu)
         else:
             model.cuda()
             # DistributedDataParallel will divide and allocate batch_size to all
             # available GPUs if device_ids are not set
             model = torch.nn.parallel.DistributedDataParallel(model, output_device=0)
+    else:
+        model.cuda().to(memory_format=memory_format)
 
     # optionally resume from a checkpoint
     if args.resume is not None:
@@ -365,6 +367,7 @@ if __name__ == "__main__":
     cudnn.benchmark = True
     start_time = time.time()
     main(args)
+    
     train_end_time = time.time()
     train_time = train_end_time - start_time
     args.resume = os.path.join(args.output_dir, "model_best.pth.tar")

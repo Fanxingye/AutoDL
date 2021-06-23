@@ -87,27 +87,6 @@ def resum_checkpoint(args, log_info=True):
     return model_state, model_state_ema, optimizer_state, start_epoch, best_prec1
 
 
-def test_load_checkpoint_(args, log_info=True):
-    if os.path.isfile(args.resume):
-        print("=> loading checkpoint '{}'".format(args.resume))
-        checkpoint = torch.load(
-            args.resume, map_location=lambda storage, loc: storage.cuda(args.gpu)
-        )
-        model_state = checkpoint["state_dict"]
-        optimizer_state = checkpoint["optimizer"]
-        if "state_dict_ema" in checkpoint:
-            model_state_ema = checkpoint["state_dict_ema"]
-        else:
-            model_state_ema = None
-    else:
-        print("=> no checkpoint found at '{}'".format(args.resume))
-        model_state = None
-        model_state_ema = None
-        optimizer_state = None
-
-    return model_state, model_state_ema, optimizer_state
-
-
 def test_load_checkpoint(args):
     if os.path.isfile(args.resume):
         print("=> loading checkpoint '{}'".format(args.resume))

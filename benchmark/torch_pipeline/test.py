@@ -147,12 +147,11 @@ def prepare_for_test(args):
         print("Bad databackend picked")
         exit(1)
 
-    test_batch_size = int(args.batch_size / max(args.world_size, 1))
     test_loader, num_class = get_val_loader(
         args.data_path,
         "test",
         image_size,
-        test_batch_size,
+        args.batch_size,
         False,
         interpolation=args.interpolation,
         workers=args.workers,
@@ -163,25 +162,17 @@ def prepare_for_test(args):
     model = init_network(args.model, num_class, pretrained=False)
 
     if args.distributed:
-        # For multiprocessing distributed, DistributedDataParallel constructor
-        # should always set the single device scope, otherwise,
-        # DistributedDataParallel will use all available devices.
-        if args.gpu is not None:
-            torch.cuda.set_device(args.gpu)
-            model.cuda(args.gpu).to(memory_format=memory_format)
-            # When using a single GPU per process and per
-            # DistributedDataParallel, we need to divide the batch size
-            # ourselves based on the total number of GPUs we have
-            model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu], output_device=0)
-        else:
-            model.cuda()
-            # DistributedDataParallel will divide and allocate batch_size to all
-            # available GPUs if device_ids are not set
-            model = torch.nn.parallel.DistributedDataParallel(model, output_device=0)
+        # DistributedDataParallel will divide and allocate batch_size to all
+        # available GPUs if device_ids are not set
+        torch.cuda.set_device(args.gpu)
+        model.cuda(args.gpu).to(memory_format=memory_format)
+        model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu],  output_device=args.gpu)
+    else:
+        model.cuda().to(memory_format=memory_format)
 
     # optionally resume from a checkpoint
     if args.resume is not None:
-       model_state, model_state_ema, optimizer_state = test_load_checkpoint(args.resume)
+       model_state, model_state_ema, optimizer_state = test_load_checkpoint(args)
     else:
         model_state = None
         model_state_ema = None
@@ -197,8 +188,8 @@ def prepare_for_test(args):
 
     # load mode state
     if model_state is not None:
-        model.load_model_state(model_state)
-    
+        print("load model checkpoint")
+        model.load_state_dict(model_state, strict=False)
 
     if (ema is not None) and (model_state_ema is not None):
         print("load ema")
