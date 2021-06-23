@@ -19,9 +19,12 @@ class DefaultConfig:
             'epochs': 50,
             'early_stop_patience': 5,
             'num_workers': 16,
-            'cleanup_disk': False
+            'cleanup_disk': False,
+            'dataset_name': 'default',
+            'framework': 'autogluon'
         },
         'hyperparameter_tune_kwargs': {
+            # TODO need calculate
             'num_trials': 6,
             'max_reward': 1.0,
             'searcher': 'random'
@@ -53,7 +56,7 @@ class ConfigGenerator:
             #  0.01 0.1 1
             space = [base_lr * 1e-1, base_lr * 1e1]
             if framework == Constant.AUTO_GLUON:
-                return ag.Real(*space, log=True)
+                return ag.Real(*space)
         else:
             # 0.01 0.05 0.1 0.5 1
             # if lr > 1.0 or lr < 1e-6:
@@ -63,7 +66,7 @@ class ConfigGenerator:
                 base_lr * 1e1
             ]
             if framework == Constant.AUTO_GLUON:
-                return ag.Categorical(*space)
+                return ag.Categorical(*space), len(ag.Categorical(*space))
         return space
 
     def generate_batch_size_space(self,
@@ -73,7 +76,7 @@ class ConfigGenerator:
         # TODO
         space = [int(batch_size * 5e-1), batch_size, batch_size * 2]
         if framework == Constant.AUTO_GLUON:
-            return ag.Categorical(*space)
+            return ag.Categorical(*space), len(ag.Categorical(*space))
         return space
 
     def generate_model_space(self,
@@ -81,22 +84,25 @@ class ConfigGenerator:
                              framework=Constant.AUTO_GLUON):
         # TODO
         # add more model
-        models = [model]
+        space = [model]
         for extra_model in self.EXTRA_MODELS:
-            models.append(extra_model)
+            space.append(extra_model)
         if framework == Constant.AUTO_GLUON:
-            return ag.Categorical(*models)
-        return models
+            return ag.Categorical(*space), len(ag.Categorical(*space))
+        return space
 
     def generate_wd_space(self,
                           base_wd,
                           framework=Constant.AUTO_GLUON,
-                          log=True):
+                          log=False):
         # TODO
         # add more model
         space = [base_wd * 1e-1, base_wd * 1e1]
         if framework == Constant.AUTO_GLUON:
-            return ag.Real(*space, log=log)
+            if log:
+                return ag.Real(*space, log=log)
+            else:
+                return ag.Categorical(*space), len(ag.Categorical(*space))
         elif framework == Constant.PYTORCH:
             pass
         return space
@@ -129,12 +135,14 @@ class ConfigGenerator:
         "batch_size": generate_batch_size_space,
     }
 
-    def generate_hpo_space(self, config, framework) -> dict:
+    def generate_hpo_space(self, config, framework):
+        num_trials = 1
         for key, value in config.items():
             if self.SPACE_FUNCTION_DICT.__contains__(key):
-                config[key] = self.SPACE_FUNCTION_DICT[key](self, value,
-                                                            framework)
-        return config
+                config[key], trials = self.SPACE_FUNCTION_DICT[key](self, value,
+                                                                    framework)
+                num_trials += trials
+        return config, num_trials
 
     def generate_config(self):
         '''
@@ -148,16 +156,27 @@ class ConfigGenerator:
             config = DefaultConfig.autogluon
             # TODO
             # time estim
-            selected_config = self.generate_hpo_space(selected_config,
-                                                      self.framework)
+            selected_config, num_trials = self.generate_hpo_space(selected_config,
+                                                                  self.framework)
             config["hyperparameters"].update(selected_config)
             config["ngpus_per_trial"] = self.device_limit
+            config["hyperparameter_tune_kwargs"]["num_trials"] = num_trials
             if self.time_limit:
                 config["time_limit"] = self.time_limit
-            return config, self.framework
+            if Constant.DEBUG:
+                config = {'hyperparameters': {'model': 'resnet18_v1b',
+                                              'lr': 0.01,
+                                              'batch_size': 2,
+                                              'epochs': 1, 'early_stop_patience': 1, 'num_workers': 16,
+                                              'cleanup_disk': False, 'dataset_name': self.dataset_name,
+                                              'framework': 'autogluon', 'total_time': 3000},
+                          'hyperparameter_tune_kwargs': {
+                              'num_trials': 1, 'max_reward': 1.0}, 'ngpus_per_trial': 1, 'time_limit': 36000}
+
+                return config, self.framework
 
     def update_config_csv(self, checkpoint_dir):
-        def find_best_autogluon_config():
+        def find_best_autogluon_config(checkpoint_dir):
             _BEST_CHECKPOINT_FILE = 'best_checkpoint.pkl'
             valid_summary_file = 'fit_summary_img_cls.ag'
             _BEST_CONFIG_FILE = 'config.yaml'
@@ -173,7 +192,6 @@ class ConfigGenerator:
                             with open(os.path.join(trial_dir, valid_summary_file), 'r') as f:
                                 val_result = json.load(f)
                                 acc = val_result.get('valid_acc', -1)
-                                print("=" * 30, "Check history trials results: ", trial_dir, acc)
                                 if acc > best_acc and os.path.isfile(os.path.join(trial_dir, _BEST_CHECKPOINT_FILE)):
                                     best_checkpoint = os.path.join(trial_dir, _BEST_CHECKPOINT_FILE)
                                     best_config = os.path.join(trial_dir, _BEST_CONFIG_FILE)
@@ -181,7 +199,7 @@ class ConfigGenerator:
                                     print("=" * 30, "Find a Better config : ", best_config)
                                     best_acc = acc
                         except Exception as e:
-                            print(e)
+                            pass
             config_dict = {}
             if os.path.isfile(best_config):
                 with open(best_config, 'r') as f:
@@ -194,18 +212,29 @@ class ConfigGenerator:
                     config_dict["wd"] = config_yaml.get('train').get('wd')
                     # input_size = config_yaml.get('train').get('input_size')
                     config_dict["early_stop_patience"] = config_yaml.get('train').get('early_stop_patience')
-                    config_dict["total_time"] = val_result.get("total_time")
+                    config_dict["total_time"] = val_result.get("total_time", val_result.get("time"))
                     config_dict["dataset_name"] = self.dataset_name
                     config_dict["framework"] = self.framework
 
             return config_dict
 
         if self.framework == Constant.AUTO_GLUON:
-            best_config = find_best_autogluon_config()
+            best_config = find_best_autogluon_config(checkpoint_dir)
             if best_config:
                 config_pd = pd.read_csv(Constant.DATASET_CONFIGURATION_CSV)
-                config_pd.append(best_config, ignore_index=True)
+                exist_rows = config_pd.loc[config_pd.dataset_name == self.dataset_name]
+                if len(exist_rows) > 0:
+                    config_pd.loc[config_pd.dataset_name == self.dataset_name] = pd.DataFrame.from_dict(best_config,
+                                                                                                        orient='index')
+                else:
+                    config_pd = config_pd.append(best_config, ignore_index=True)
+                print("finish update config ...")
+                print(config_pd)
                 config_pd.to_csv(Constant.DATASET_CONFIGURATION_CSV, index=False)
 
     def yaml_to_csv(self, yaml_path, is_update=False):
         pass
+
+
+if __name__ == '__main__':
+    pd.read_csv("dataset_configuration_debug.csv")

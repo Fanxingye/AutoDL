@@ -60,3 +60,5 @@ class DataAug:
 
     def clear(self):
         shutil.rmtree(self.aug_dir)
+        print(20*"=")
+        print(self.aug_dir)
