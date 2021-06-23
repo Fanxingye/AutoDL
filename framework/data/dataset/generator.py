@@ -16,5 +16,6 @@ def generate_dataset(train_data_dir, val_data_dir, test_data_dir, framework):
         test_dataset = ImagePredictor.Dataset.from_folder(test_data_dir)
     elif framework == Constant.PYTORCH:
         pass
-
+    elif framework == Constant.PYTORCH:
+        pass
     return train_dataset, val_dataset, test_dataset
