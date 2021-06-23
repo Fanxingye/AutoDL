@@ -94,7 +94,7 @@ def main():
                 ngpus_per_trial = int(opt.ngpus_per_trial)
 
             predictor.fit(train_data=train_dataset,
-                        val_data=val_dataset,
+                        tuning_data=val_dataset,
                         hyperparameters=target_hyperparams,
                         hyperparameter_tune_kwargs=tune_hyperparameter,
                         ngpus_per_trial=ngpus_per_trial,
