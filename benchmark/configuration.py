@@ -227,6 +227,7 @@ def gluon_config_choice(dataset, model_choice="default"):
                 'early_stop_patience': 10,
                 'ngpus_per_trial': 4,
                 'cleanup_disk': False,
+                'final_fit': False,
             },
             'hyperparameter_tune_kwargs': {
                 'num_trials':  12,
@@ -245,6 +246,7 @@ def gluon_config_choice(dataset, model_choice="default"):
                 'early_stop_patience': 10,
                 'ngpus_per_trial': 4,
                 'cleanup_disk': False,
+                'final_fit': False,
                 },
             'hyperparameter_tune_kwargs': {
                 'num_trials': 1,
