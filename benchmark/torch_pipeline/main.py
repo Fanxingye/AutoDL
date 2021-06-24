@@ -65,15 +65,16 @@ def parse_args():
     parser.add_argument('--warmup', default=0, type=int, metavar="E", help="number of warmup epochs")
     parser.add_argument('--label-smoothing', default=0.0, type=float, metavar="S", help="label smoothing")
     parser.add_argument('--mixup', default=0.0, type=float, metavar="ALPHA", help="mixup alpha")
-    parser.add_argument('--optimizer', default="sgd", type=str, choices=("sgd", "rmsprop"))
+    parser.add_argument('--optimizer', default="sgd", type=str, choices=("sgd", "rmsprop", "adamw"))
     parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
-    parser.add_argument('--wd', '--weight-decay', default=1e-4, type=float,
-                        metavar='W', help='weight decay (default: 1e-4)',
+    parser.add_argument('--wd', '--weight-decay', default=1e-2, type=float,
+                        metavar='W', help='weight decay (default: 1e-2)',
                         dest='weight_decay')
     parser.add_argument("--bn-weight-decay", action="store_true",
                         help="use weight_decay on batch normalization learnable parameters, (default: false)",)
-    parser.add_argument('--rmsprop-alpha', default=0.9, type=float, help="value of alpha parameter in rmsprop optimizer (default: 0.9)",)
-    parser.add_argument('--rmsprop-eps', default=1e-3, type=float, help="value of eps parameter in rmsprop optimizer (default: 1e-3)",)
+    parser.add_argument('--rmsprop-alpha', default=0.99, type=float, help="value of alpha parameter in rmsprop optimizer (default: 0.99)",)
+    parser.add_argument('--rmsprop-eps', default=1e-8, type=float, help="value of eps parameter in rmsprop optimizer (default: 1e-8)",)
+    parser.add_argument('--adamw-eps', default=1e-8, type=float, help="value of eps parameter in adamw optimizer (default: 1e-8)",)
     parser.add_argument('--nesterov', action="store_true", help="use nesterov momentum, (default: false)",)
     parser.add_argument('--use-ema', default=None, type=float, help="use EMA")
     parser.add_argument('--augmentation', type=str, default=None, 
