@@ -1,5 +1,4 @@
 import os
-import math
 import random
 import pandas
 import numpy as np
@@ -9,6 +8,10 @@ import tensorflow as tf
 import tensorflow_hub as hub
 from scipy.spatial import distance
 from utils.constant import Constant
+
+from .meta_feature_utils import sample_num_strategy # sample strategy
+
+
 
 class DNNFeature:
     def __init__(self, task_config,
@@ -83,8 +86,6 @@ class DNNFeature:
     def _generate_feature(self, save_to_file) -> np.ndarray:
         ''' generate feature vector of the dataset
 
-        Change self.entry from none to np.ndarray
-
         Args:
             save_to_file: whether save file
 
@@ -131,40 +132,7 @@ class DNNFeature:
         df = _remove_zeros(df)
         return df
 
-    def _sample_num_strategy(self, mean: int, total: int) -> int :
-        ''' Strategy when sampling images from datset.
-
-        Logic:
-            1. expect samples to get 10% of images of each class,
-
-            2. expect 5%mean < samples < 10%mean,
-            if less, use lower bound, if more, use upper bound.
-
-            3. expect 10 < samples < 1000.
-            Same as 2.
-
-        Args:
-            mean: mean of total images
-            total: current class image count
-
-        Returns:
-            expected: numbers of samples from this class
-        '''
-        expected = math.ceil(total * 0.1)
-
-        # 0.05mean <= expected  <= 0.1mean
-        expected = max(expected, int(0.05 * mean))
-        expected = min(expected, int(0.10 * mean))
-
-        # 10 <= expected <= 1000
-        expected = min(max(expected, 10), 1000)
-
-        # expected <= total
-        expected = min(expected, total)
-        # print(f'total vs expected: {total}, {expected}')
-        return expected
-
-    def _get_feature_vector(self, im: str) -> np.ndarray:
+    def _get_image_feature_vector(self, im: str) -> np.ndarray:
         ''' Get feature vector of one image
 
         Args:
@@ -203,15 +171,15 @@ class DNNFeature:
 
             im_path = os.path.join(ddir, c)  # path to current class folder
             im_files = os.listdir(im_path)  # image names in the class folder
-            total = len(im_files)
+            class_num = len(im_files)
 
-            sample_num = self._sample_num_strategy(mean, total)
+            sample_num = sample_num_strategy(mean, class_num)
             total_sample += sample_num
-            index = random.sample(range(total), sample_num)
-            print(f"Processing {j}th folder {c}. Sampled {sample_num} from total {total} images.")
+            index = random.sample(range(class_num), sample_num)
+            print(f"Processing {j}th folder {c}. Sampled {sample_num} from total {class_num} images.")
             for i in index :
                 im = os.path.join(im_path, im_files[i])
-                entry += self._get_feature_vector(im)
+                entry += self._get_image_feature_vector(im)
 
         entry /= total_sample
         return entry

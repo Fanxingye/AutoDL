@@ -2,9 +2,19 @@ import os
 import numpy as np
 import pandas as pd
 from scipy.stats import skew, kurtosis, mode
+# from constant import  Constant
+
+from meta_feature_utils import sample_num_strategy # sample strategy
+import random
+import re
+
+import easyocr  # pip install easyocr
+from mtcnn import MTCNN  # pip install mtcnn
+
+
 from PIL import Image
-from types import SimpleNamespace
-from utils.constant import Constant
+
+from numba import cuda
 
 
 class EngineerFeatureData(object):
@@ -60,9 +70,11 @@ class EngineerFeatureData(object):
 
         self.__dict__.update(dict)
 
+import multiprocessing
 
 class EngineerFeature:
-    def __init__(self, task_config, csv_path=Constant.ENGINEER_FEATURES_CSV, save_to_file = False):
+    #Constant.ENGINEER_FEATURES_CSV
+    def __init__(self, task_config, csv_path='', save_to_file = False):
         ''' Calculate engineered meta features to a dataset, such as num of classes, total count of images
 
         Args:
@@ -78,12 +90,21 @@ class EngineerFeature:
             df[pd.DataFrame]: data loaded from csv_path
             entry[np.ndarray]: engineered meta features of current dataset
         '''
+        self._contain_chars = False
+        self._contain_faces = False
+        self._contain_poses = False
+        self._is_xray = False
+
         self.data_name = task_config["data_name"]
         self.data_path = task_config["data_path"]
         self.csv_path = csv_path
 
         self.df = self._load_csv()
         self.entry = self._generate_feature(save_to_file)
+
+        self.contains = self._judge_special_cases(self.data_path)
+
+
 
     def get_engineered_feature(self) -> EngineerFeatureData:
         ''' Wrap entry to current entry in SimpleNamespace and return
@@ -96,6 +117,144 @@ class EngineerFeature:
         dict['name'] = self.data_name
         arg  = EngineerFeatureData(dict)
         return arg
+
+    def contain_chars(self):
+        return self._contain_chars
+
+    def contain_faces(self):
+        return self._contain_faces
+
+    def contain_poses(self):
+        return self._contain_poses
+
+    def is_xray(self):
+        return self._is_xray
+
+
+    def _remove_special_chars(self, input) :
+        input = re.sub('[’!"#$%&\'()*+,-./:;<=>?@，。?★、…【】《》？“”‘’！[\\]^_`{|}~\s]+', "", input)
+        return re.sub(u"([^\u4e00-\u9fa5\u0030-\u0039\u0041-\u005a\u0061-\u007a])", "", input)
+
+    def _init_keypoint_detection_predictor(self):
+        # python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
+        from detectron2 import model_zoo
+        from detectron2.engine import DefaultPredictor
+        from detectron2.config import get_cfg
+
+        cfg = get_cfg()  # get a fresh new config
+        cfg.merge_from_file(model_zoo.get_config_file("COCO-Keypoints/keypoint_rcnn_R_50_FPN_3x.yaml"))
+        cfg.MODEL.ROI_HEADS.SCORE_THRESH_TEST = 0.7  # set threshold for this model
+        cfg.MODEL.WEIGHTS = model_zoo.get_checkpoint_url("COCO-Keypoints/keypoint_rcnn_R_50_FPN_3x.yaml")
+        predictor = DefaultPredictor(cfg)
+        return  predictor
+
+    def _data_has_char(self, images:list, total_sample) -> bool:
+        chars = 0
+        reader = easyocr.Reader(['ch_sim', 'en'])  # need to run only once to load model into memory
+
+        for im in images:
+            res = reader.readtext(im)
+            invalid = 0
+            for i in res :
+                if (self._remove_special_chars(i[1]) == "") :
+                    invalid += 1
+            if len(res) - invalid > 0:
+                chars += 1
+
+        # set threshold
+        if chars / total_sample > 0.9:
+            self._contain_chars = True
+            return True
+        return False
+
+    def _data_has_face(self, images:list, total_sample) -> bool:
+        faces = 0
+        detector = MTCNN()
+        for im in images:
+            im = np.array(Image.open(im).convert('RGB')).astype(np.float32)
+            res = detector.detect_faces(im)
+
+            largest = 0
+            for face in res :
+                curr = face['box'][0] * face['box'][0]
+                largest = curr if curr > largest else largest
+
+            if(largest / 50176 > 0.35):
+                faces +=1
+
+        if faces / total_sample > 0.9:
+            self._contain_faces = True
+            return True
+        return False
+
+
+    def _data_has_pose(self, images:list, total_sample) -> bool:
+        poses = 0
+        predictor = self._init_keypoint_detection_predictor()
+
+        for im in images:
+
+            im = np.array(Image.open(im).convert('RGB')).astype(np.float32)
+            out = predictor(im)
+
+            if len(out['instances'].get_fields()['pred_boxes'].tensor) > 0:
+                poses += 1
+
+        if poses/total_sample > 0.9:
+            self._contain_poses = True
+            return True
+        return False
+
+
+    def _judge_special_cases(self, ddir: str) -> None:
+        ''' Get one vector of feature to one dataset
+
+        Args:
+            ddir: path to the dataset
+
+        Returns:
+            entry: feature vector of one dataset
+        '''
+        print('Start judging dataset special cases.')
+        imPerClass = [len(os.listdir(os.path.join(ddir, i))) for i in os.listdir(ddir)]
+        mean = int(np.mean(imPerClass))
+
+        total_sample = 0
+
+        images = []
+        for j, c in enumerate(os.listdir(ddir)) :
+
+            im_path = os.path.join(ddir, c)  # path to current class folder
+            im_files = os.listdir(im_path)  # image names in the class folder
+            class_num = len(im_files)
+
+            sample_num = sample_num_strategy(mean, class_num)
+            total_sample += sample_num
+            index = random.sample(range(class_num), sample_num)
+
+            for i in index :
+                im = os.path.join(im_path, im_files[i])
+                images.append(im)
+
+        # multiprocessing.Process(target=self._data_has_face(images, total_sample), )
+        if self._data_has_pose(images, total_sample):
+            return
+
+        if self._data_has_char(images, total_sample):
+            return
+
+        device = cuda.get_current_device()
+        device.reset()
+
+        if self._data_has_face(images, total_sample):
+            return
+
+        device = cuda.get_current_device()
+        device.reset()
+
+
+
+
 
     def _generate_feature(self, save_to_file:bool) -> np.ndarray:
         ''' to generate feature
@@ -121,6 +280,7 @@ class EngineerFeature:
             self.df.to_csv(self.csv_path, header=True, index=True)
         return entry
 
+
     def _load_csv(self) -> pd.DataFrame:
         '''
 
@@ -141,6 +301,7 @@ class EngineerFeature:
             df.loc[i] = df.loc[i].astype('float32')
 
         return df
+
 
     def _get_data_features(self, ddir: str, name: str) -> np.ndarray :
         ''' Calculate all the features to the one dataset
