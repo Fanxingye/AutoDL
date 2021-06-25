@@ -53,22 +53,6 @@ class ModelAndLoss(nn.Module):
             self.model.load_state_dict(state, strict=False)
 
 
-def get_optimizer(parameters, lr, args, state=None):
-    if args.optimizer == 'sgd':
-        optimizer = get_sgd_optimizer(parameters, lr, momentum=args.momentum,
-                                      weight_decay=args.weight_decay, nesterov=args.nesterov,
-                                      bn_weight_decay=args.bn_weight_decay)
-    elif args.optimizer == 'rmsprop':
-        optimizer = get_rmsprop_optimizer(parameters, lr, alpha=args.rmsprop_alpha, momentum=args.momentum,
-                                          weight_decay=args.weight_decay,
-                                          eps=args.rmsprop_eps,
-                                          bn_weight_decay=args.bn_weight_decay)
-    if state is not None:
-        optimizer.load_state_dict(state)
-
-    return optimizer
-
-
 def get_train_step(model, criterion, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
     def _step(input, target, optimizer_step=True):
         input_var = Variable(input)
