@@ -76,3 +76,8 @@ RUN cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking > /etc/ssh/ssh_confi
 
 # Install more python packages
 RUN pip install tensorflow_hub
+
+# Intall chars, face detection, pose detection
+RUN pip install easyocr
+RUN pip install mtcnn
+RUN pip install 'git+https://github.com/facebookresearch/detectron2.git'

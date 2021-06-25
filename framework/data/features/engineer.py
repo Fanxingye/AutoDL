@@ -11,6 +11,7 @@ import re
 import easyocr  # pip install easyocr
 from mtcnn import MTCNN  # pip install mtcnn
 
+# python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 
 from PIL import Image
 
@@ -322,8 +323,8 @@ class EngineerFeature:
         heights = []
         widths = []
         areas = []
-        cmode = None
 
+        rgb = 0
         for c in os.listdir(ddir) :
             for i in os.listdir(os.path.join(ddir, c)) :
                 im = Image.open(os.path.join(ddir, c, i))
@@ -332,6 +333,11 @@ class EngineerFeature:
                 widths.append(size[1])
                 areas.append(size[0] * size[1])
                 cmode = im.mode
+                if im.mode == 'RGB' or im.mode == 'RGBA':
+                    rgb +=1
+
+        cmode = 'RGB' if rgb / num_images > 0.5 else 'L'
+
 
         ipc = self._get_list_distribution(imPerClass)
         imh = self._get_list_distribution(np.asarray(heights))
