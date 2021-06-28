@@ -5,7 +5,7 @@ from autogluon.vision import ImagePredictor
 from configs.generator import ConfigGenerator
 from data.augmentation.data_aug import DataAug
 from data.dataset.generator import generate_dataset
-# from data.features.dnn import DNNFeature
+from data.features.dnn import DNNFeature
 from data.features.engineer import EngineerFeature
 from data.utils.data_split import DataSplit
 from utils import utils
