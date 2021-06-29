@@ -15,7 +15,7 @@ def get_optimizer(parameters, lr, args, state=None):
                                           bn_weight_decay=args.bn_weight_decay)
     elif args.optimizer == 'adamw':
         optimizer = get_adamw_optimizer(parameters, lr, weight_decay=args.weight_decay,
-                                         eps = args.adamw_eps, 
+                                         eps=args.adamw_eps,
                                          amsgrad=False,
                                          bn_weight_decay=args.bn_weight_decay)
     if state is not None:
@@ -31,7 +31,7 @@ def get_sgd_optimizer(parameters, lr, momentum, weight_decay, nesterov=False, bn
     else:
         # print(" ! Weight decay NOT applied to BN parameters ")
         bn_params = [v for n, v in parameters if "bn" in n]
-        rest_params = [v for n, v in parameters if not "bn" in n]
+        rest_params = [v for n, v in parameters if "bn" not in n]
         # print(len(bn_params))
         # print(len(rest_params))
 

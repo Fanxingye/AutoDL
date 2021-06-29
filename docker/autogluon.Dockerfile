@@ -56,14 +56,16 @@ RUN pip install numpy && \
     #/tmp/clean-layer.sh
 
 # install gluoncv
-RUN pip uninstall gluoncv
+RUN pip uninstall gluoncv -y
 RUN git clone https://gitee.com/jianzhnie/gluon-cv.git /gluon-cv
 WORKDIR /gluon-cv
 RUN python setup.py install
 
+# upgrade timm 
+RUN pip install --upgrade timm
 # Install tensorboard jypyterlab
 RUN pip install jupyterlab && \
-    pip install tensorboard
+    pip install tensorboa
 
 # Install OpenSSH for MPI to communicate between containers
 RUN apt-get install -y --no-install-recommends openssh-client openssh-server && \
