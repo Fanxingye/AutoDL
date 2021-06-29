@@ -6,7 +6,7 @@ from autocfg import dataclass, field
 
 @dataclass
 class ImageClassification:
-    model : str = 'resnet50_v1'
+    model : str = 'resnet18'
     use_pretrained : bool = True
     use_gn : bool = False
     batch_norm : bool = False
@@ -16,7 +16,7 @@ class ImageClassification:
 @dataclass
 class TrainCfg:
     pretrained_base : bool = True  # whether load the imagenet pre-trained base
-    batch_size : int = 128
+    batch_size : int = 16
     epochs : int = 10
     base_lr : float = 0.1  # learning rate
     decay_factor : float = 0.1  # decay rate of learning rate.

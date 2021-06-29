@@ -8,8 +8,40 @@ import logging
 from datetime import datetime
 import numpy as np
 import pandas as pd
+from gluoncv.utils import random as _random
+from gluoncv.utils.filesystem import temporary_filename
+from gluoncv.auto.estimators.utils import _suggest_load_context
+
 
 logging.basicConfig(level=logging.INFO)
+
+
+def set_default(cfg):
+    """A special hook to register the default values for decorated Estimator.
+
+    Parameters
+    ----------
+    cfg : autocfg.dataclass
+        Default config as dataclass object
+    """
+    def _apply(cls):
+        # docstring
+        cls.__doc__ = str(cls.__doc__) if cls.__doc__ else ''
+        cls.__doc__ += ("\n\nParameters\n"
+                        "----------\n"
+                        "config : str, dict\n"
+                        "  Config used to override default configurations. \n"
+                        "  If `str`, assume config file (.yml, .yaml) is used. \n"
+                        "logger : logger, default is `None`.\n"
+                        "  If not `None`, will use default logging object.\n")
+        cls.__doc__ += '\nDefault configurations: \n--------------------\n'
+        sio = io.StringIO()
+        cfg.save(sio)
+        cls.__doc__ += '\n' + sio.getvalue()
+        cls._default_cfg = cfg
+        cls._default_cfg.freeze()
+        return cls
+    return _apply
 
 
 class BaseEstimator:

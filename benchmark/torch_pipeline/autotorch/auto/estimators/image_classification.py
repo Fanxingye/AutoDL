@@ -25,13 +25,16 @@ from autotorch.models.network import init_network, get_input_size
 from autotorch.optim.optimizers import get_optimizer
 from autotorch.scheduler.lr_scheduler import *
 from autotorch.utils.model import resum_checkpoint
+from autotorch.utils.metrics import AverageMeter, accuracy
 
 import autogluon.core as ag
 from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
+from ..data.dataloader import get_data_loader
 from ..conf import _BEST_CHECKPOINT_FILE
-from gluoncv.auto.estimators.image_classification.utils import EarlyStopperOnPlateau
+from gluoncv.auto.estimators.utils import EarlyStopperOnPlateau
+
 
 
 __all__ = ['ImageClassificationEstimator']
@@ -75,20 +78,20 @@ class ImageClassificationEstimator(BaseEstimator):
         if self._cfg.get('cudnn_benchmark', False):
             torch.backends.cudnn.benchmark = True
 
-        if self.cfg.gpus is not None:
-            cfg._gpu_ids = self.cfg.gpus
+        if self._cfg.gpus is not None:
+            self._cfg.gpu_ids = self._cfg.gpus
         else:
-            cfg._gpu_ids = range(1) if self.cfg.gpus is None else range(self._cfg.gpus)
+            self._cfg.gpu_ids = range(1) if self._cfg.gpus is None else range(self._cfg.gpus)
 
         # init distributed env first, since logger depends on the dist info.
         if self._cfg.launcher == 'none':
-            distributed = False
+            self._cfg.distributed = False
         else:
-            distributed = True
+            self._cfg.distributed = True
             init_dist(self._cfg.launcher, backend='nccl')
             # re-set gpu_ids with distributed training mode
             _, world_size = get_dist_info()
-            self_cfg.gpu_ids = range(world_size)
+            self._cfg.gpu_ids = range(world_size)
 
     def _fit(self, train_data, val_data, time_limit=math.inf):
         tic = time.time()
@@ -101,6 +104,7 @@ class ImageClassificationEstimator(BaseEstimator):
             self.last_train = len(train_data)
         else:
             self.last_train = train_data
+        self._init_dist_envs()
         self._init_trainer()
         self._time_elapsed += time.time() - tic
         return self._resume_fit(train_data, val_data, time_limit=time_limit)
@@ -156,7 +160,7 @@ class ImageClassificationEstimator(BaseEstimator):
                                                         epoch,
                                                         use_amp=use_amp,
                                                         batch_size_multiplier=batch_size_multiplier,
-                                                        logger=None,
+                                                        logger=self._logger,
                                                         log_interval=10)
 
             post_tic = time.time()
@@ -170,9 +174,9 @@ class ImageClassificationEstimator(BaseEstimator):
                                                 model,
                                                 criterion,
                                                 num_class,
-                                                use_amp=use_amp
-                                                logger=None,
-                                                log_name="Val-log"
+                                                use_amp=use_amp,
+                                                logger=self._logger,
+                                                log_name="Val-log",
                                                 log_interval=10
                                                 )
             early_stopper.update(top1_val)
@@ -414,7 +418,7 @@ class ImageClassificationEstimator(BaseEstimator):
         else:
             lr_decay_epoch = [int(i) for i in self._cfg.train.lr_decay_epoch.split(',')]
 
-        if self._cfg.lr_schedule_mode = "step":
+        if self._cfg.lr_schedule_mode == "step":
             lr_policy = lr_step_policy(base_lr=base_lr, steps=lr_decay_epoch,
                 decay_factor=decay_factor, warmup_length=warmup_epochs, logger=logger)
         elif self._cfg.lr_schedule == "cosine":
@@ -437,7 +441,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 except TypeError:
                     pass
         
-    def __init__network(self, **kwargs):
+    def _init_network(self, **kwargs):
         load_only = kwargs.get('load_only', False)
         if not self.num_class:
             raise ValueError('This is a classification problem and we are not able to create network when `num_class` is unknown. \
@@ -512,19 +516,3 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _predict_proba(self, x, ctx_id=0):
         return df
-
-
-class ImageListDataset(Dataset):
-    """An internal image list dataset for batch predict"""
-    def __init__(self, imlist, fn):
-        self._imlist = imlist
-        self._fn = fn
-
-    def __getitem__(self, idx):
-        img = self._fn(self._imlist[idx])[0]
-        return img
-
-    def __len__(self):
-        return len(self._imlist)
-
-
