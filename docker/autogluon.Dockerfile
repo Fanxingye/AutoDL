@@ -55,6 +55,9 @@ RUN pip install numpy && \
     pip install matplotlib
     #/tmp/clean-layer.sh
 
+# Intall chars, face detection, pose detection
+RUN pip install tensorflow_hub tf-models-official jieba easyocr mtcnn tensorflow-text 'git+https://github.com/facebookresearch/detectron2.git'
+
 # install gluoncv
 RUN pip uninstall gluoncv -y
 RUN git clone https://gitee.com/jianzhnie/gluon-cv.git /gluon-cv
@@ -75,6 +78,3 @@ RUN apt-get install -y --no-install-recommends openssh-client openssh-server && 
 RUN cat /etc/ssh/ssh_config | grep -v StrictHostKeyChecking > /etc/ssh/ssh_config.new && \
     echo "    StrictHostKeyChecking no" >> /etc/ssh/ssh_config.new && \
     mv /etc/ssh/ssh_config.new /etc/ssh/ssh_config
-
-# Install more python packages
-RUN pip install tensorflow_hub

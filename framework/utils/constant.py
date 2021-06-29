@@ -13,7 +13,7 @@ class Constant:
     AUTO_GLUON = "autogluon"
     PYTORCH = "pytorch"
     BERT_PREPROCESS_MODEL = os.path.join(ASSET_DIR, "bert_zh_preprocess_3")
-    BERT_CHECKPOINT = os.path.join(ASSET_DIR, "chinese_L-12_H-768_A-12", 'bert_model.ckpt')
+    BERT_CHECKPOINT = os.path.join(ASSET_DIR, "chinese_L-12_H-768_A-12/tmp/temp_dir/raw/", 'bert_model.ckpt')
 
 
 if __name__ == '__main__':
