@@ -110,3 +110,7 @@ framework/bit_models/
 framework/checkpoint
 framework/work_dir
 framework/asset/test_dataset/split
+*.csv
+checkpoint/
+*.out/
+benchmark/report.csv
