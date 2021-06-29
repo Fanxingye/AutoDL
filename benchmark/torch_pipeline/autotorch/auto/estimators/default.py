@@ -54,9 +54,12 @@ class ValidCfg:
     batch_size : int = 128
     num_workers : int = 4
 
+
 @dataclass
 class ImageClassificationCfg:
     img_cls : ImageClassification = field(default_factory=ImageClassification)
     train : TrainCfg = field(default_factory=TrainCfg)
     valid : ValidCfg = field(default_factory=ValidCfg)
     gpus : Union[Tuple, list] = (0, )  # gpu individual ids, not necessarily consecutive
+    launcher : str = 'pytorch'
+    cudnn_benchmark : bool = True

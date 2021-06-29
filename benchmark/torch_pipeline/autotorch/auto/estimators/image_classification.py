@@ -16,6 +16,7 @@ import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.utils.data
 import torch.utils.data.distributed
+from mmcv.runner import get_dist_info, init_dist
 from autotorch.data import *
 from autotorch.data.mixup import NLLMultiLabelSmooth, MixUpWrapper
 from autotorch.data.smoothing import LabelSmoothing
@@ -68,6 +69,26 @@ class ImageClassificationEstimator(BaseEstimator):
             else:
                 assert isinstance(optimizer, torch.optim.Optimizer)
         self._optimizer = optimizer
+
+    def _init_dist_envs():
+        # set cudnn_benchmark
+        if self._cfg.get('cudnn_benchmark', False):
+            torch.backends.cudnn.benchmark = True
+
+        if self.cfg.gpus is not None:
+            cfg._gpu_ids = self.cfg.gpus
+        else:
+            cfg._gpu_ids = range(1) if self.cfg.gpus is None else range(self._cfg.gpus)
+
+        # init distributed env first, since logger depends on the dist info.
+        if self._cfg.launcher == 'none':
+            distributed = False
+        else:
+            distributed = True
+            init_dist(self._cfg.launcher, backend='nccl')
+            # re-set gpu_ids with distributed training mode
+            _, world_size = get_dist_info()
+            self_cfg.gpu_ids = range(world_size)
 
     def _fit(self, train_data, val_data, time_limit=math.inf):
         tic = time.time()

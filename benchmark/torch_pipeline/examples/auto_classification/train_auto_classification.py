@@ -3,11 +3,8 @@ import argparse
 import logging
 
 import autogluon.core as ag
-from gluoncv.auto.tasks import ImageClassification
-from gluoncv.auto.estimators import ImageClassificationEstimator
-from d8.image_classification import Dataset
-
-os.environ['MXNET_ENABLE_GPU_P2P'] = '0'
+from autotorch.auto.data import TorchImageClassificationDataset
+from autotorch.auto.estimators import ImageClassificationEstimator
 
 
 if __name__ == '__main__':
@@ -37,7 +34,7 @@ if __name__ == '__main__':
     }
 
     # specify learning task
-    task = ImageClassification(config)
+    
 
     # specify dataset
     dataset = Dataset.get(args.dataset)
