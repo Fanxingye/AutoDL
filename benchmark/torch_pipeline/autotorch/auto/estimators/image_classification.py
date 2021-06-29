@@ -24,10 +24,9 @@ from autotorch.models.network import init_network, get_input_size
 from autotorch.optim.optimizers import get_optimizer
 from autotorch.scheduler.lr_scheduler import *
 from autotorch.utils.model import resum_checkpoint
-from autotorch.training import train_loop
 
 import autogluon.core as ag
-from .base_estimator import BaseEstimator
+from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
 from gluoncv.auto.estimators.image_classification.utils import EarlyStopperOnPlateau
@@ -42,6 +41,7 @@ REGRESSION = problem_type_constants.REGRESSION
 __all__ = ['ImageClassificationEstimator']
 
 
+@set_default(ImageClassificationCfg())
 class ImageClassificationEstimator(BaseEstimator):
     """Estimator implementation for Image Classification.
 
@@ -53,26 +53,25 @@ class ImageClassificationEstimator(BaseEstimator):
         Optional logger for this estimator, can be `None` when default setting is used.
     reporter : callable
         The reporter for metric checkpointing.
-    net : mx.gluon.Block
+    net : torch.Module
         The custom network. If defined, the model name in config will be ignored so your
         custom network will be used for training rather than pulling it from model zoo.
     """
     Dataset = TorchImageClassificationDataset
 
-    def __init__(self, config, logger=None, reporter=None, net=None, optimizer=None, problem_type=None):
+    def __init__(self, config, logger=None, reporter=None, net=None, optimizer=None):
         super(ImageClassificationEstimator, self).__init__(config, logger=logger, reporter=reporter, name=None)
-        if problem_type is None:
-            problem_type = MULTICLASS
-        self._problem_type = problem_type
         self.last_train = None
         self.input_size = self._cfg.train.input_size
-        self._feature_net = None
+
+        if net is not None:
+            assert isinstance(net, torch.nn.Module), f"given custom network {type(net)}, torch.nn.Module expected"
 
         if optimizer is not None:
             if isinstance(optimizer, str):
                 pass
             else:
-                assert isinstance(optimizer, optim)
+                assert isinstance(optimizer, torch.optim.Optimizer)
         self._optimizer = optimizer
 
     def _fit(self, train_data, val_data, time_limit=math.inf):
@@ -86,6 +85,7 @@ class ImageClassificationEstimator(BaseEstimator):
             self.last_train = len(train_data)
         else:
             self.last_train = train_data
+        self._init_trainer()
         self._time_elapsed += time.time() - tic
         return self._resume_fit(train_data, val_data, time_limit=time_limit)
 
@@ -93,8 +93,6 @@ class ImageClassificationEstimator(BaseEstimator):
         tic = time.time()
         if max(self._cfg.train.start_epoch, self.epoch) >= self._cfg.train.epochs:
             return {'time', self._time_elapsed}
-        if self._problem_type != REGRESSION and (not self.classes or not self.num_class):
-            raise ValueError('This is a classification problem and we are not able to determine classes of dataset')
 
         num_workers = self._cfg.train.num_workers
         train_loader, val_loader = get_data_loader(self._cfg.train.data_dir,
@@ -109,7 +107,6 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _train_loop(self, train_data, val_data, time_limit=math.inf):
         start_tic = time.time()
-        criterion, optimizer, lr_policy, scaler = self._init_trainer()
 
         self._logger.info('Start training from [Epoch %d]', max(self._cfg.train.start_epoch, self.epoch))
         early_stopper = EarlyStopperOnPlateau(
@@ -133,52 +130,52 @@ class ImageClassificationEstimator(BaseEstimator):
                 break
 
             tic = time.time()
-            last_tic = time.time()
-            losses_m, top1_m, top5_m = train_epoch(train_loader,
-                                            model,
-                                            criterion,
-                                            optimizer,
-                                            scaler,
-                                            lr_scheduler,
-                                            num_class,
-                                            epoch,
-                                            use_amp=use_amp,
-                                            batch_size_multiplier=batch_size_multiplier,
-                                            logger=None,
-                                            log_interval=10)
+            losses_m, top1_m, top5_m = self._train_epoch(train_loader,
+                                                        model,
+                                                        criterion,
+                                                        optimizer,
+                                                        scaler,
+                                                        lr_scheduler,
+                                                        num_class,
+                                                        epoch,
+                                                        use_amp=use_amp,
+                                                        batch_size_multiplier=batch_size_multiplier,
+                                                        logger=None,
+                                                        log_interval=10)
 
+            post_tic = time.time()
             steps_per_epoch = len(train_loader)
             throughput = int(self.batch_size * steps_per_epoch /(time.time() - tic))
 
             self._logger.info('[Epoch %d] training: %s=%f', epoch, train_metric_name, train_metric_score)
             self._logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f', epoch, throughput, time.time()-tic)
 
-            top1_val, top5_val = validate_epoch(
-                val_loader,
-                model,
-                criterion,
-                num_class,
-                logger=None,
-                "Val-log",
-                use_amp=use_amp,
-            )
+            top1_val, top5_val = self._val_epoch(val_loader,
+                                                model,
+                                                criterion,
+                                                num_class,
+                                                use_amp=use_amp
+                                                logger=None,
+                                                log_name="Val-log"
+                                                log_interval=10
+                                                )
             early_stopper.update(top1_val)
             self._logger.info('[Epoch %d] validation: top1=%f top5=%f', epoch, top1_val, top5_val)
             if top1_val > self._best_acc:
                 cp_name = os.path.join(self._logdir, _BEST_CHECKPOINT_FILE)
                 self._logger.info('[Epoch %d] Current best top-1: %f vs previous %f, saved to %s',
                                     self.epoch, top1_val, self._best_acc, cp_name)
-            
+
                 self.save(cp_name)
-                self._best_acc = top1_val        
+                self._best_acc = top1_val
                 if self._reporter:
                     self._reporter(epoch=epoch, acc_reward=top1_val)
-            self._time_elapsed += time.time() - post_tic
+            self._time_elapsed += time.time() - tic
 
-            return {'train_acc': train_metric_score, 'valid_acc': self._best_acc,
-                    'time': self._time_elapsed, 'checkpoint': cp_name}
+        return {'train_acc': train_metric_score, 'valid_acc': self._best_acc,
+                'time': self._time_elapsed, 'checkpoint': cp_name}
 
-    def train_step(self, model, criterion, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
+    def _train_step(self, model, criterion, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
         def step_fn(input, target, optimizer_step=True):
             input_var = Variable(input)
             target_var = Variable(target)
@@ -208,7 +205,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         return step_fn()
 
-    def val_step(self, model, criterion, use_amp=False, top_k=1):
+    def _val_step(self, model, criterion, use_amp=False, top_k=1):
         def step_fn(input, target):
             input_var = Variable(input)
             target_var = Variable(target)
@@ -232,7 +229,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         return step_fn
 
-    def train_epoch(self,
+    def _train_epoch(self,
                     train_loader,
                     model,
                     criterion,
@@ -260,7 +257,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         optimizer : callable
           Function to call for each batch.
-        
+
         scaler  : scaler
 
 
@@ -324,18 +321,18 @@ class ImageClassificationEstimator(BaseEstimator):
                             log_name, epoch+1, i, steps_per_epoch, data_time=data_time_m,
                             batch_time=batch_time_m,
                             loss=losses_m, top1=top1_m, top5=top5_m, lr=learning_rate))
-        
+
         return losses_m.avg, top1_m.avg, top5_m.avg
 
-    def validate_epoch(self,
-                        val_loader,
-                        model,
-                        criterion,
-                        num_class,
-                        use_amp=False,
-                        logger=None,
-                        logger_name='Val-log',
-                        log_interval=10):
+    def _val_epoch(self,
+                    val_loader,
+                    model,
+                    criterion,
+                    num_class,
+                    use_amp=False,
+                    logger=None,
+                    logger_name='Val-log',
+                    log_interval=10):
 
         batch_time_m = AverageMeter('Time', ':6.3f')
         data_time_m = AverageMeter('Data', ':6.3f')
@@ -402,7 +399,7 @@ class ImageClassificationEstimator(BaseEstimator):
             lr_decay_epoch = [int(i) for i in self._cfg.train.lr_decay_epoch.split(',')]
 
         if self._cfg.lr_schedule_mode = "step":
-            lr_scheuler = lr_step_policy(base_lr=base_lr, steps=lr_decay_epoch,
+            lr_policy = lr_step_policy(base_lr=base_lr, steps=lr_decay_epoch,
                 decay_factor=decay_factor, warmup_length=warmup_epochs, logger=logger)
         elif self._cfg.lr_schedule == "cosine":
             lr_policy = lr_cosine_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch,
@@ -423,15 +420,14 @@ class ImageClassificationEstimator(BaseEstimator):
                     optimizer = get_optimizer(self.net.named_parameters())
                 except TypeError:
                     pass
-
-        return criterion, optimizer, lr_policy, scaler
-
+        
     def __init__network(self, **kwargs):
         load_only = kwargs.get('load_only', False)
-        if not self.num_class and self._problem_type != REGRESSION:
+        if not self.num_class:
             raise ValueError('This is a classification problem and we are not able to create network when `num_class` is unknown. \
                 It should be inferred from dataset or resumed from saved states.')
         assert len(self.classes) == self.num_class
+        
         valid_gpus = []
         if self._cfg.gpus:
             valid_gpus = self._validate_gpus(self._cfg.gpus)
@@ -444,17 +440,21 @@ class ImageClassificationEstimator(BaseEstimator):
 
         self.ctx = [int(i) for i in valid_gpus]
 
-        model_name = self._cfg.img_cls.model_name.lower()
-        input_size = self.input_size
-        self.input_size = model_inputsize.get('input_size', 224)
-
+        # network
+        if self._custom_net is None:
+            model_name = self._cfg.img_cls.model_name.lower()
+            input_size = self.input_size
+            self.input_size = model_inputsize.get('input_size', 224)
+        else:
+            self._logger.debug('Custom network specified, ignore the model name in config...')
+            self.net = copy.deepcopy(self._custom_net)
+            model_name = ''
+            self.input_size = input_size = self._cfg.train.input_size
+    
         if input_size != self.input_size:
             self._logger.info(f'Change input size to {self.input_size}, given model type: {model_name}')
 
         use_pretrained = not load_only and self._cfg.img_cls.use_pretrained
-        if self._problem_type == REGRESSION:
-            self.num_class = 0
-
         if model_name:
             self.net = init_network(model_name, num_class=self.num_class, pretrained=use_pretrained)
 
