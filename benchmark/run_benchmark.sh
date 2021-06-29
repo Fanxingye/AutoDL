@@ -18,15 +18,29 @@ python benchmark.py \
     --report_path /home/robin/jianzh/automl/autodl/benchmark \
     --dataset  hymenoptera \
     --model_config  'default' \
-    --batch-size 8 \
-    --num_epochs 1 \
+    --batch-size 32 \
+    --num_epochs 10 \
+    --num_trials 1 \
     --train_framework autogluon 
+
+## use docker 
+python benchmark.py \
+    --data_path /home/image_data/hymenoptera/split/train \
+    --output_path /home/autodl/benchmark \
+    --report_path /home/automl/autodl/benchmark \
+    --dataset  hymenoptera \
+    --model_config  'default_hpo' \
+    --batch-size 16 \
+    --num_epochs 10 \
+    --num_trials 4 \
+    --train_framework autogluon 
+
 
 ## on aiarts
 python benchmark.py \
     --data_path /data/AutoML_compete/Flowers-Recognition/split/train \
-    --output_path /home/yiran.wu/work_dirs/autodl_benchmark \
-    --report_path /home/yiran.wu/work_dirs/autodl_benchmark \
+    --output_path /data/autodl/benchmark \
+    --report_path /data/autodl/benchmark \
     --dataset  Flowers-Recognition \
     --batch-size 32 \
     --num_epochs 10 \

@@ -29,14 +29,9 @@ import autogluon.core as ag
 from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
+from ..conf import _BEST_CHECKPOINT_FILE
 from gluoncv.auto.estimators.image_classification.utils import EarlyStopperOnPlateau
-from gluoncv.utils.filesystem import try_import
-problem_type_constants = try_import(package='autogluon.core.constants',
-                                    fromlist=['MULTICLASS', 'BINARY', 'REGRESSION'],
-                                    message='Failed to import problem type constants from autogluon.core.')
-MULTICLASS = problem_type_constants.MULTICLASS
-BINARY = problem_type_constants.BINARY
-REGRESSION = problem_type_constants.REGRESSION
+
 
 __all__ = ['ImageClassificationEstimator']
 

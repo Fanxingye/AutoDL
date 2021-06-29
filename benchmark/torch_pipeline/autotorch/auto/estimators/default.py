@@ -25,14 +25,12 @@ class TrainCfg:
     lr_schedule_mode : str = 'step'  # learning rate scheduler mode. options are step, poly and cosine
     warmup_lr : float = 0.0  # starting warmup learning rate.
     warmup_epochs : int = 0  # number of warmup epochs
-    num_training_samples : int = 1281167
     num_workers : int = 4
     wd : float = 0.0001
     momentum : float = 0.9
     dtype : str = 'float32'
     input_size : int = 224
     crop_ratio : float = 0.875
-    use_rec : bool = False
     data_dir : str = '~/.mxnet/datasets/imagenet'
     mixup : bool = False
     no_wd : bool = False
