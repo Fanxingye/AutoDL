@@ -24,7 +24,7 @@ from autotorch.models.network import init_network, get_input_size
 from autotorch.optim.optimizers import get_optimizer
 from autotorch.scheduler.lr_scheduler import *
 from autotorch.utils.model import resum_checkpoint
-from autotorch.training import ModelAndLoss, train_loop
+from autotorch.training import train_loop
 
 import autogluon.core as ag
 from .base_estimator import BaseEstimator
@@ -86,7 +86,6 @@ class ImageClassificationEstimator(BaseEstimator):
             self.last_train = len(train_data)
         else:
             self.last_train = train_data
-        self._init_trainer()
         self._time_elapsed += time.time() - tic
         return self._resume_fit(train_data, val_data, time_limit=time_limit)
 
@@ -98,20 +97,285 @@ class ImageClassificationEstimator(BaseEstimator):
             raise ValueError('This is a classification problem and we are not able to determine classes of dataset')
 
         num_workers = self._cfg.train.num_workers
-
-        train_dataset = train_data.to_pytorch()
-        val_dataset = val_data.to_pytorch()
-        train_loader, val_loader, self.batch_fn = get_data_loader(self._cfg.train.data_dir,
-                                                                    self.batch_size, num_workers,
-                                                                    self.input_size,
-                                                                    self._cfg.train.crop_ratio,
-                                                                    train_dataset=train_dataset,
-                                                                    val_dataset=val_dataset)
+        train_loader, val_loader = get_data_loader(self._cfg.train.data_dir,
+                                                    self.batch_size, num_workers,
+                                                    self.input_size,
+                                                    self._cfg.train.crop_ratio,
+                                                    self._cfg.train.data_augment,
+                                                    train_dataset=train_data,
+                                                    val_dataset=val_data)
         self._time_elapsed += time.time() - tic
         return self._train_loop(train_loader, val_loader, time_limit=time_limit)
 
     def _train_loop(self, train_data, val_data, time_limit=math.inf):
-        return None
+        start_tic = time.time()
+        criterion, optimizer, lr_policy, scaler = self._init_trainer()
+
+        self._logger.info('Start training from [Epoch %d]', max(self._cfg.train.start_epoch, self.epoch))
+        early_stopper = EarlyStopperOnPlateau(
+            patience=self._cfg.train.early_stop_patience,
+            min_delta=self._cfg.train.early_stop_min_delta,
+            baseline_value=self._cfg.train.early_stop_baseline,
+            max_value=self._cfg.train.early_stop_max_value)
+
+        self._time_elapsed += time.time() - start_tic
+
+        for self.epoch in range(max(self._cfg.train.start_epoch, self.epoch), self._cfg.train.epochs):
+            epoch = self.epoch
+
+            if self._best_acc >= 1.0:
+                self._logger.info('[Epoch {}] Early stopping as acc is reaching 1.0'.format(epoch))
+                break
+
+            should_stop, stop_message = early_stopper.get_early_stop_advice()
+            if should_stop:
+                self._logger.info('[Epoch {}] '.format(epoch) + stop_message)
+                break
+
+            tic = time.time()
+            last_tic = time.time()
+            losses_m, top1_m, top5_m = train_epoch(train_loader,
+                                            model,
+                                            criterion,
+                                            optimizer,
+                                            scaler,
+                                            lr_scheduler,
+                                            num_class,
+                                            epoch,
+                                            use_amp=use_amp,
+                                            batch_size_multiplier=batch_size_multiplier,
+                                            logger=None,
+                                            log_interval=10)
+
+            steps_per_epoch = len(train_loader)
+            throughput = int(self.batch_size * steps_per_epoch /(time.time() - tic))
+
+            self._logger.info('[Epoch %d] training: %s=%f', epoch, train_metric_name, train_metric_score)
+            self._logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f', epoch, throughput, time.time()-tic)
+
+            top1_val, top5_val = validate_epoch(
+                val_loader,
+                model,
+                criterion,
+                num_class,
+                logger=None,
+                "Val-log",
+                use_amp=use_amp,
+            )
+            early_stopper.update(top1_val)
+            self._logger.info('[Epoch %d] validation: top1=%f top5=%f', epoch, top1_val, top5_val)
+            if top1_val > self._best_acc:
+                cp_name = os.path.join(self._logdir, _BEST_CHECKPOINT_FILE)
+                self._logger.info('[Epoch %d] Current best top-1: %f vs previous %f, saved to %s',
+                                    self.epoch, top1_val, self._best_acc, cp_name)
+            
+                self.save(cp_name)
+                self._best_acc = top1_val        
+                if self._reporter:
+                    self._reporter(epoch=epoch, acc_reward=top1_val)
+            self._time_elapsed += time.time() - post_tic
+
+            return {'train_acc': train_metric_score, 'valid_acc': self._best_acc,
+                    'time': self._time_elapsed, 'checkpoint': cp_name}
+
+    def train_step(self, model, criterion, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
+        def step_fn(input, target, optimizer_step=True):
+            input_var = Variable(input)
+            target_var = Variable(target)
+
+            with autocast(enabled=use_amp):
+                output = model(input_var)
+                loss = criterion(output, target_var)
+                loss /= batch_size_multiplier
+
+                prec1, prec5 = accuracy(output, target, topk=(1, min(top_k, 5)))
+                if torch.distributed.is_initialized():
+                    reduced_loss = reduce_tensor(loss.data)
+                    prec1 = reduce_tensor(prec1)
+                    prec5 = reduce_tensor(prec5)
+                else:
+                    reduced_loss = loss.data
+
+            scaler.scale(loss).backward()
+            if optimizer_step:
+                scaler.step(optimizer)
+                scaler.update()
+                optimizer.zero_grad()
+
+            torch.cuda.synchronize()
+
+            return reduced_loss, prec1, prec5
+
+        return step_fn()
+
+    def val_step(self, model, criterion, use_amp=False, top_k=1):
+        def step_fn(input, target):
+            input_var = Variable(input)
+            target_var = Variable(target)
+
+            with torch.no_grad(), autocast(enabled=use_amp):
+                output = model(input_var)
+                loss = criterion(output, target_var)
+
+                prec1, prec5 = accuracy(output.data, target, topk=(1, min(5, top_k)))
+
+                if torch.distributed.is_initialized():
+                    reduced_loss = reduce_tensor(loss.data)
+                    prec1 = reduce_tensor(prec1)
+                    prec5 = reduce_tensor(prec5)
+                else:
+                    reduced_loss = loss.data
+
+            torch.cuda.synchronize()
+
+            return reduced_loss, prec1, prec5
+
+        return step_fn
+
+    def train_epoch(self,
+                    train_loader,
+                    model,
+                    criterion,
+                    optimizer,
+                    scaler,
+                    lr_scheduler,
+                    num_class,
+                    epoch,
+                    use_amp=False,
+                    batch_size_multiplier=1,
+                    logger=None,
+                    log_interval=10):
+        """Compute a single epoch of train or validation.
+
+        Parameters
+        ----------
+        train_loader : torch Dataset or None
+          The initialized dataset to loop over. If None, skip this step.
+
+        model :  model
+          Whether to set the module to train mode or not.
+
+        criterion : str
+          Prefix to use when saving to the history.
+
+        optimizer : callable
+          Function to call for each batch.
+        
+        scaler  : scaler
+
+
+        **fit_params : dict
+          Additional parameters passed to the ``step_fn``.
+        """
+
+        batch_time_m = AverageMeter('BatchTime', ':6.3f')
+        data_time_m = AverageMeter('DataTime', ':6.3f')
+        losses_m = AverageMeter('Loss', ':.4e')
+        top1_m = AverageMeter('Acc@1', ':6.2f')
+        top5_m = AverageMeter('Acc@5', ':6.2f')
+
+        step = self.train_step(
+            model,
+            criterion,
+            optimizer,
+            scaler=scaler,
+            use_amp=use_amp,
+            batch_size_multiplier=batch_size_multiplier,
+            top_k=self.num_class
+        )
+
+        model.train()
+        optimizer.zero_grad()
+        steps_per_epoch = len(train_loader)
+        end = time.time()
+
+        for i, (input, target) in enumerate(train_loader):
+            input = input.cuda()
+            target = target.cuda()
+
+            bs = input.size(0)
+            lr_scheduler(optimizer, i, epoch)
+            data_time = time.time() - end
+
+            optimizer_step = ((i + 1) % batch_size_multiplier) == 0
+            loss, prec1, prec5 = step(input, target, optimizer_step=optimizer_step)
+
+            it_time = time.time() - end
+
+            batch_time_m.update(it_time)
+            data_time_m.update(data_time)
+            losses_m.update(loss.item(), bs)
+            top1_m.update(prec1.item(), bs)
+            top5_m.update(prec5.item(), bs)
+
+            end = time.time()
+            if ((i+1) % log_interval == 0) or (i == steps_per_epoch - 1):
+                if not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0:
+                    learning_rate = optimizer.param_groups[0]["lr"]
+                    log_name = 'Train-log'
+                    logger.info(
+                        "{0}: [epoch:{1:>2d}] [{2:>2d}/{3}] "
+                        'DataTime: {data_time.val:.3f} ({data_time.avg:.3f}) '
+                        'BatchTime: {batch_time.val:.3f} ({batch_time.avg:.3f}) '
+                        'Loss: {loss.val:>7.4f} ({loss.avg:>6.4f}) '
+                        'Acc@1: {top1.val:>7.4f} ({top1.avg:>7.4f}) '
+                        'Acc@5: {top5.val:>7.4f} ({top5.avg:>7.4f}) '
+                        'lr: {lr:>4.6f} '.format(
+                            log_name, epoch+1, i, steps_per_epoch, data_time=data_time_m,
+                            batch_time=batch_time_m,
+                            loss=losses_m, top1=top1_m, top5=top5_m, lr=learning_rate))
+        
+        return losses_m.avg, top1_m.avg, top5_m.avg
+
+    def validate_epoch(self,
+                        val_loader,
+                        model,
+                        criterion,
+                        num_class,
+                        use_amp=False,
+                        logger=None,
+                        logger_name='Val-log',
+                        log_interval=10):
+
+        batch_time_m = AverageMeter('Time', ':6.3f')
+        data_time_m = AverageMeter('Data', ':6.3f')
+        losses_m = AverageMeter('Loss', ':.4e')
+        top1_m = AverageMeter('Acc@1', ':6.2f')
+        top5_m = AverageMeter('Acc@5', ':6.2f')
+
+        step = self.val_step(model, criterion, use_amp=use_amp, top_k=num_class)
+        # switch to evaluate mode
+        model.eval()
+        steps_per_epoch = len(val_loader)
+        end = time.time()
+        data_iter = enumerate(val_loader)
+
+        for i, (input, target) in data_iter:
+            bs = input.size(0)
+            data_time = time.time() - end
+            loss, prec1, prec5 = step(input, target)
+            it_time = time.time() - end
+            end = time.time()
+
+            batch_time_m.update(it_time)
+            data_time_m.update(data_time)
+            losses_m.update(loss.item(),  bs)
+            top1_m.update(prec1.item(), bs)
+            top5_m.update(prec5.item(), bs)
+
+            if ((i+1) % log_interval == 0) or (i == steps_per_epoch - 1):
+                if not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0:
+                    logger.info(
+                        '{0}: [{1:>2d}/{2}] '
+                        'DataTime: {data_time.val:.3f} ({data_time.avg:.3f}) '
+                        'Time: {batch_time.val:.3f} ({batch_time.avg:.3f}) '
+                        'Loss: {loss.val:>7.4f} ({loss.avg:>6.4f}) '
+                        'Acc@1: {top1.val:>7.4f} ({top1.avg:>7.4f}) '
+                        'Acc@5: {top5.val:>7.4f} ({top5.avg:>7.4f})'.format(
+                            logger_name, i, steps_per_epoch, data_time=data_time_m,
+                            batch_time=batch_time_m,
+                            loss=losses_m, top1=top1_m, top5=top5_m))
+        return top1_m.avg, top5_m.avg
 
     def _init_trainer(self):
         if self.last_train is None:
@@ -136,15 +400,15 @@ class ImageClassificationEstimator(BaseEstimator):
             lr_decay_epoch = list(range(lr_decay_period, self._cfg.train.epochs, lr_decay_period))
         else:
             lr_decay_epoch = [int(i) for i in self._cfg.train.lr_decay_epoch.split(',')]
-            
+
         if self._cfg.lr_schedule_mode = "step":
             lr_scheuler = lr_step_policy(base_lr=base_lr, steps=lr_decay_epoch,
                 decay_factor=decay_factor, warmup_length=warmup_epochs, logger=logger)
         elif self._cfg.lr_schedule == "cosine":
-            lr_policy = lr_cosine_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch, 
+            lr_policy = lr_cosine_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch,
                 end_lr=self._cfg.train.end_lr, logger=logger)
         elif self._cfg.lr_schedule == "linear":
-            lr_policy = lr_linear_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epochs, 
+            lr_policy = lr_linear_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epochs,
                 logger=logger)
 
         if self._optimizer is None:
@@ -152,7 +416,47 @@ class ImageClassificationEstimator(BaseEstimator):
             optimizer_params = {'wd': self._cfg.train.wd,
                                 'momentum': self._cfg.train.momentum,
                                 'lr_scheduler': lr_scheduler}
+        else:
+            optimizer = self._optimizer
+            if isinstance(optimizer, str):
+                try:
+                    optimizer = get_optimizer(self.net.named_parameters())
+                except TypeError:
+                    pass
 
+        return criterion, optimizer, lr_policy, scaler
+
+    def __init__network(self, **kwargs):
+        load_only = kwargs.get('load_only', False)
+        if not self.num_class and self._problem_type != REGRESSION:
+            raise ValueError('This is a classification problem and we are not able to create network when `num_class` is unknown. \
+                It should be inferred from dataset or resumed from saved states.')
+        assert len(self.classes) == self.num_class
+        valid_gpus = []
+        if self._cfg.gpus:
+            valid_gpus = self._validate_gpus(self._cfg.gpus)
+            if not valid_gpus:
+                self._logger.warning(
+                    'No gpu detected, fallback to cpu. You can ignore this warning if this is intended.')
+            elif len(valid_gpus) != len(self._cfg.gpus):
+                self._logger.warning(
+                    f'Loaded on gpu({valid_gpus}), different from gpu({self._cfg.gpus}).')
+
+        self.ctx = [int(i) for i in valid_gpus]
+
+        model_name = self._cfg.img_cls.model_name.lower()
+        input_size = self.input_size
+        self.input_size = model_inputsize.get('input_size', 224)
+
+        if input_size != self.input_size:
+            self._logger.info(f'Change input size to {self.input_size}, given model type: {model_name}')
+
+        use_pretrained = not load_only and self._cfg.img_cls.use_pretrained
+        if self._problem_type == REGRESSION:
+            self.num_class = 0
+
+        if model_name:
+            self.net = init_network(model_name, num_class=self.num_class, pretrained=use_pretrained)
 
     def evaluate(self, val_data, metric_name=None):
         return self._evaluate(val_data, metric_name=metric_name)
