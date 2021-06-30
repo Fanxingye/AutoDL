@@ -19,7 +19,7 @@ if __name__ == '__main__':
     config = {}
 
     # specify learning task
-    train_data, valid_data, _ = TorchImageClassificationDataset.from_folders(
+    train_data, _, valid_data = TorchImageClassificationDataset.from_folders(
     'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
     
     # fit auto estimator
@@ -27,7 +27,3 @@ if __name__ == '__main__':
     print(classifier._cfg)
     # evaluate auto estimator
     classifier.fit(train_data, valid_data)
-    logging.info('evaluation: top1={}, top5={}'.format(top1, top5))
-
-    # save and load auto estimator
-    classifier.save('classifier.pkl')

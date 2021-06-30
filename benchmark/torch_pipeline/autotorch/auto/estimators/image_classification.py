@@ -15,6 +15,8 @@ import torch.nn as nn
 from torch.cuda.amp import autocast
 from torch.autograd import Variable
 import torch.utils.data.distributed
+from torch.nn.parallel import DistributedDataParallel as DDP
+
 from mmcv.runner import get_dist_info, init_dist
 from autotorch.data.mixup import NLLMultiLabelSmooth, MixUpWrapper
 from autotorch.data.smoothing import LabelSmoothing
@@ -93,7 +95,7 @@ class ImageClassificationEstimator(BaseEstimator):
         if self.distributed:
             torch.cuda.set_device(self.gpu_ids)
             self.net = self.net.cuda(self.gpu_ids)
-            self.net = torch.nn.parallel.DistributedDataParallel(self.net, device_ids=[self.gpu_ids], output_device=self.gpu_ids)
+            self.net = DDP(self.net, device_ids=[self.gpu_ids], output_device=self.gpu_ids)
         else:
             torch.cuda.set_device(self.gpu_ids)
             self.net = self.net.cuda(self.gpu_ids)
@@ -120,7 +122,8 @@ class ImageClassificationEstimator(BaseEstimator):
             return {'time', self._time_elapsed}
 
         num_workers = self._cfg.train.num_workers
-        train_loader, val_loader = get_data_loader(data_dir=self._cfg.train.data_dir,
+        train_loader, val_loader = get_data_loader(
+                                                data_dir=self._cfg.train.data_dir,
                                                 batch_size=self.batch_size,
                                                 num_workers=num_workers,
                                                 input_size=self.input_size,
@@ -211,8 +214,7 @@ class ImageClassificationEstimator(BaseEstimator):
                     self._reporter(epoch=epoch, acc_reward=top1_val)
             self._time_elapsed += time.time() - tic
 
-        return {'train_acc': top1_m, 'valid_acc': self._best_acc,
-                'time': self._time_elapsed, 'checkpoint': cp_name}
+        return {'train_acc': top1_m, 'valid_acc': self._best_acc, 'time': self._time_elapsed, 'checkpoint': cp_name}
 
     def _train_step(self, model, criterion, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
         def step_fn(input, target, optimizer_step=True):
@@ -244,10 +246,7 @@ class ImageClassificationEstimator(BaseEstimator):
         return step_fn
 
     def _val_step(self, model, criterion, use_amp=False, top_k=1):
-        def step_fn(input, target):
-            input_var = Variable(input)
-            target_var = Variable(target)
-
+        def step_fn(input, target):valid_data
             with torch.no_grad(), autocast(enabled=use_amp):
                 output = model(input_var)
                 loss = criterion(output, target_var)
@@ -267,7 +266,8 @@ class ImageClassificationEstimator(BaseEstimator):
 
         return step_fn
 
-    def _train_epoch(self,
+    def _train_epoch(
+                    self,
                     train_loader,
                     model,
                     criterion,
@@ -372,9 +372,10 @@ class ImageClassificationEstimator(BaseEstimator):
                             batch_time=batch_time_m,
                             loss=losses_m, top1=top1_m, top5=top5_m, lr=learning_rate))
 
-        return losses_m.avg, top1_m.avg, top5_m.avg
+        return losses_m.avg, top1_m.avg/100.0, top5_m.avg/100.0
 
-    def _val_epoch(self,
+    def _val_epoch(
+                    self,
                     val_loader,
                     model,
                     criterion,
@@ -443,10 +444,10 @@ class ImageClassificationEstimator(BaseEstimator):
                         'Loss: {loss.val:>7.4f} ({loss.avg:>6.4f}) '
                         'Acc@1: {top1.val:>7.4f} ({top1.avg:>7.4f}) '
                         'Acc@5: {top5.val:>7.4f} ({top5.avg:>7.4f})'.format(
-                            log_name, i, steps_per_epoch, data_time=data_time_m,
+                            log_name, i+1, steps_per_epoch, data_time=data_time_m,
                             batch_time=batch_time_m,
                             loss=losses_m, top1=top1_m, top5=top5_m))
-        return top1_m.avg, top5_m.avg
+        return top1_m.avg/100.0, top5_m.avg/100.0
 
     def _init_trainer(self):
         if self.last_train is None:
@@ -460,7 +461,6 @@ class ImageClassificationEstimator(BaseEstimator):
 
         batch_size = self._cfg.train.batch_size
         self.batch_size = batch_size
-        num_batches = train_size // batch_size
 
         base_lr = self._cfg.train.base_lr
         warmup_epochs = self._cfg.train.warmup_epochs
@@ -473,19 +473,16 @@ class ImageClassificationEstimator(BaseEstimator):
             lr_decay_epoch = [int(i) for i in self._cfg.train.lr_decay_epoch.split(',')]
 
         if self._cfg.train.lr_schedule_mode == "step":
-            lr_policy = lr_step_policy(base_lr=base_lr, steps=lr_decay_epoch,
-                decay_factor=decay_factor, warmup_length=warmup_epochs, logger=self._logger)
+            lr_policy = lr_step_policy(base_lr=base_lr, steps=lr_decay_epoch, decay_factor=decay_factor, warmup_length=warmup_epochs, logger=self._logger)
         elif self._cfg.train.lr_schedule_mode == "cosine":
-            lr_policy = lr_cosine_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch,
-                end_lr=self._cfg.train.end_lr, logger=self._logger)
+            lr_policy = lr_cosine_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch, end_lr=self._cfg.train.end_lr, logger=self._logger)
         elif self._cfg.train.lr_schedule_mode == "linear":
-            lr_policy = lr_linear_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epochs,
-                logger=self._logger)
+            lr_policy = lr_linear_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epochs, logger=self._logger)
 
         if self._optimizer is None:
-            optimizer = optim.SGD(params=self.net.parameters(), lr=base_lr,
-                                    momentum=self._cfg.train.momentum, weight_decay=self._cfg.train.weight_decay,
-                                    nesterov=self._cfg.train.nesterov)
+            optimizer = optim.SGD(params=self.net.parameters(), lr=base_lr, 
+                                momentum=self._cfg.train.momentum, weight_decay=self._cfg.train.weight_decay, 
+                                nesterov=self._cfg.train.nesterov)
         else:
             optimizer = self._optimizer
             if isinstance(optimizer, str):
