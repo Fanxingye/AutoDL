@@ -15,6 +15,8 @@ import torch.nn as nn
 import torch.backends.cudnn as cudnn
 import torch.distributed as dist
 import torch.utils.data
+from torch.cuda.amp import autocast
+from torch.autograd import Variable
 import torch.utils.data.distributed
 from mmcv.runner import get_dist_info, init_dist
 from autotorch.data import *
@@ -25,6 +27,7 @@ from autotorch.models.network import init_network, get_input_size
 from autotorch.optim.optimizers import get_optimizer
 from autotorch.scheduler.lr_scheduler import *
 from autotorch.utils.model import resum_checkpoint
+from autotorch.utils.model import reduce_tensor, save_checkpoint
 from autotorch.utils.metrics import AverageMeter, accuracy
 
 import autogluon.core as ag
@@ -65,6 +68,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         if net is not None:
             assert isinstance(net, torch.nn.Module), f"given custom network {type(net)}, torch.nn.Module expected"
+        self._custom_net = net
 
         if optimizer is not None:
             if isinstance(optimizer, str):
@@ -73,25 +77,33 @@ class ImageClassificationEstimator(BaseEstimator):
                 assert isinstance(optimizer, torch.optim.Optimizer)
         self._optimizer = optimizer
 
-    def _init_dist_envs():
+    def _init_dist_envs(self):
         # set cudnn_benchmark
         if self._cfg.get('cudnn_benchmark', False):
             torch.backends.cudnn.benchmark = True
 
         if self._cfg.gpus is not None:
-            self._cfg.gpu_ids = self._cfg.gpus
+            self.gpu_ids = self._cfg.gpus
         else:
-            self._cfg.gpu_ids = range(1) if self._cfg.gpus is None else range(self._cfg.gpus)
+            self.gpu_ids = range(1) if self._cfg.gpus is None else range(self._cfg.gpus)
 
         # init distributed env first, since logger depends on the dist info.
         if self._cfg.launcher == 'none':
-            self._cfg.distributed = False
+            self.distributed = False
         else:
-            self._cfg.distributed = True
+            self.distributed = True
             init_dist(self._cfg.launcher, backend='nccl')
             # re-set gpu_ids with distributed training mode
             _, world_size = get_dist_info()
-            self._cfg.gpu_ids = range(world_size)
+            self.gpu_ids = range(world_size)
+
+        if self.distributed:
+            torch.cuda.set_device(self.gpu_ids)
+            self.net = self.net.cuda(self.gpu_ids)
+            self.net = torch.nn.parallel.DistributedDataParallel(self.net, device_ids=[self.gpu_ids], output_device=self.gpu_ids)
+        else:
+            torch.cuda.set_device(self.gpu_ids)
+            self.net = self.net.cuda(self.gpu_ids)
 
     def _fit(self, train_data, val_data, time_limit=math.inf):
         tic = time.time()
@@ -150,31 +162,31 @@ class ImageClassificationEstimator(BaseEstimator):
                 break
 
             tic = time.time()
-            losses_m, top1_m, top5_m = self._train_epoch(train_loader,
-                                                        model,
-                                                        criterion,
-                                                        optimizer,
-                                                        scaler,
-                                                        lr_scheduler,
-                                                        num_class,
-                                                        epoch,
-                                                        use_amp=use_amp,
-                                                        batch_size_multiplier=batch_size_multiplier,
+            losses_m, top1_m, top5_m = self._train_epoch(train_loader=train_data,
+                                                        model=self.net,
+                                                        criterion=self.criterion,
+                                                        optimizer=self.optimizer,
+                                                        scaler=self.scaler,
+                                                        lr_scheduler=self.lr_policy,
+                                                        num_class=self.num_class,
+                                                        epoch=epoch,
+                                                        use_amp=self._cfg.train.amp,
+                                                        batch_size_multiplier=1,
                                                         logger=self._logger,
                                                         log_interval=10)
 
-            post_tic = time.time()
-            steps_per_epoch = len(train_loader)
-            throughput = int(self.batch_size * steps_per_epoch /(time.time() - tic))
+            # post_tic = time.time()
+            # # steps_per_epoch = len(train_loader)
+            # # throughput = int(self.batch_size * steps_per_epoch /(time.time() - tic))
 
-            self._logger.info('[Epoch %d] training: %s=%f', epoch, train_metric_name, train_metric_score)
-            self._logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f', epoch, throughput, time.time()-tic)
+            # self._logger.info('[Epoch %d] training: %s=%f', epoch, train_metric_name, train_metric_score)
+            # # self._logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f', epoch, throughput, time.time()-tic)
 
-            top1_val, top5_val = self._val_epoch(val_loader,
-                                                model,
-                                                criterion,
-                                                num_class,
-                                                use_amp=use_amp,
+            top1_val, top5_val = self._val_epoch(val_loader=val_data,
+                                                model=self.net,
+                                                criterion=self.criterion,
+                                                num_class=self.num_class,
+                                                use_amp=self._cfg.train.amp,
                                                 logger=self._logger,
                                                 log_name="Val-log",
                                                 log_interval=10
@@ -222,8 +234,7 @@ class ImageClassificationEstimator(BaseEstimator):
             torch.cuda.synchronize()
 
             return reduced_loss, prec1, prec5
-
-        return step_fn()
+        return step_fn
 
     def _val_step(self, model, criterion, use_amp=False, top_k=1):
         def step_fn(input, target):
@@ -291,7 +302,7 @@ class ImageClassificationEstimator(BaseEstimator):
         top1_m = AverageMeter('Acc@1', ':6.2f')
         top5_m = AverageMeter('Acc@5', ':6.2f')
 
-        step = self.train_step(
+        step = self._train_step(
             model,
             criterion,
             optimizer,
@@ -360,7 +371,7 @@ class ImageClassificationEstimator(BaseEstimator):
         top1_m = AverageMeter('Acc@1', ':6.2f')
         top5_m = AverageMeter('Acc@5', ':6.2f')
 
-        step = self.val_step(model, criterion, use_amp=use_amp, top_k=num_class)
+        step = self._val_step(model, criterion, use_amp=use_amp, top_k=num_class)
         # switch to evaluate mode
         model.eval()
         steps_per_epoch = len(val_loader)
@@ -411,43 +422,62 @@ class ImageClassificationEstimator(BaseEstimator):
         base_lr = self._cfg.train.base_lr
         warmup_epochs = self._cfg.train.warmup_epochs
         decay_factor = self._cfg.train.decay_factor
-        lr_decay_period = self._cfg.train._lr_decay_period
+        lr_decay_period = self._cfg.train.lr_decay_period
 
         if self._cfg.train.lr_decay_period > 0:
             lr_decay_epoch = list(range(lr_decay_period, self._cfg.train.epochs, lr_decay_period))
         else:
             lr_decay_epoch = [int(i) for i in self._cfg.train.lr_decay_epoch.split(',')]
 
-        if self._cfg.lr_schedule_mode == "step":
+        if self._cfg.train.lr_schedule_mode == "step":
             lr_policy = lr_step_policy(base_lr=base_lr, steps=lr_decay_epoch,
-                decay_factor=decay_factor, warmup_length=warmup_epochs, logger=logger)
-        elif self._cfg.lr_schedule == "cosine":
+                decay_factor=decay_factor, warmup_length=warmup_epochs, logger=self._logger)
+        elif self._cfg.train.lr_schedule_mode == "cosine":
             lr_policy = lr_cosine_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch,
-                end_lr=self._cfg.train.end_lr, logger=logger)
-        elif self._cfg.lr_schedule == "linear":
+                end_lr=self._cfg.train.end_lr, logger=self._logger)
+        elif self._cfg.train.lr_schedule_mode == "linear":
             lr_policy = lr_linear_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epochs,
-                logger=logger)
+                logger=self._logger)
 
         if self._optimizer is None:
-            optimizer = optim.SGD
-            optimizer_params = {'wd': self._cfg.train.wd,
-                                'momentum': self._cfg.train.momentum,
-                                'lr_scheduler': lr_scheduler}
+            optimizer = optim.SGD(params=self.net.parameters(), lr=base_lr,
+                                    momentum=self._cfg.train.momentum, weight_decay=self._cfg.train.weight_decay,
+                                    nesterov=self._cfg.train.nesterov)
         else:
             optimizer = self._optimizer
             if isinstance(optimizer, str):
                 try:
-                    optimizer = get_optimizer(self.net.named_parameters())
+                    optimizer = get_optimizer(optimizer, lr=base_lr)
                 except TypeError:
                     pass
-        
+        # init loss function
+        loss = nn.CrossEntropyLoss
+        if self._cfg.train.mixup:
+            loss = lambda: NLLMultiLabelSmooth(self._cfg.train.mixup_alpha)
+        elif self._cfg.train.label_smoothing:
+            loss = lambda: LabelSmoothing(self._cfg.train.mixup_alpha)
+
+        # amp trainng
+        scaler = torch.cuda.amp.GradScaler(
+            init_scale=self._cfg.train.static_loss_scale,
+            growth_factor=2,
+            backoff_factor=0.5,
+            growth_interval=100 if self._cfg.train.dynamic_loss_scale else 1000000000,
+            enabled=self._cfg.train.amp,
+        )
+
+        self.scaler = scaler
+        self.lr_policy = lr_policy
+        self.optimizer = optimizer
+        self.criterion = loss().cuda()
+
     def _init_network(self, **kwargs):
         load_only = kwargs.get('load_only', False)
         if not self.num_class:
             raise ValueError('This is a classification problem and we are not able to create network when `num_class` is unknown. \
                 It should be inferred from dataset or resumed from saved states.')
         assert len(self.classes) == self.num_class
-        
+
         valid_gpus = []
         if self._cfg.gpus:
             valid_gpus = self._validate_gpus(self._cfg.gpus)
@@ -464,13 +494,13 @@ class ImageClassificationEstimator(BaseEstimator):
         if self._custom_net is None:
             model_name = self._cfg.img_cls.model_name.lower()
             input_size = self.input_size
-            self.input_size = model_inputsize.get('input_size', 224)
+            self.input_size = get_input_size(model_name)
         else:
             self._logger.debug('Custom network specified, ignore the model name in config...')
             self.net = copy.deepcopy(self._custom_net)
             model_name = ''
             self.input_size = input_size = self._cfg.train.input_size
-    
+
         if input_size != self.input_size:
             self._logger.info(f'Change input size to {self.input_size}, given model type: {model_name}')
 

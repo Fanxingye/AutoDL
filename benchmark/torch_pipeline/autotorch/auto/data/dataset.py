@@ -50,7 +50,7 @@ class _TorchImageClassificationDataset(TorchDataset):
         if self._has_label:
             label = self._dataset['label'][idx]
         if self.transform is not None:
-            img, label = self.transform(img, label)
+            img = self.transform(img)
         return img, label
 
 
