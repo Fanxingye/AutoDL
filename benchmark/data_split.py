@@ -102,11 +102,11 @@ def mkdir(dir):
         os.makedirs(dir)
 
 
-def split_train_file():
-    opt = parse_args()
+def split_train_file(opt):
     train_path = "split/train/"
     val_path = "split/val/"
     val_ratio = 0.1
+    test_ratio = 0.0
 
     train_path = os.path.join(opt.data_dir, train_path)
     val_path = os.path.join(opt.data_dir, val_path)
@@ -119,17 +119,16 @@ def split_train_file():
             if len(img_cls_list) > 0:
                 mkdir(val_path + img_cls)
                 if opt.sampling_strategy == "random":
-                    train_list, val_list = random_split(img_cls_list, test_size=val_ratio)
+                    train_list, val_list, test_list = random_split(img_cls_list, val_ratio=val_ratio, test_ratio=test_ratio)
                 elif opt.sampling_strategy == "balanced":
-                    train_list, val_list = balanced_split(img_cls_list, test_size=val_ratio)
+                    train_list, val_list, test_list = balanced_split(img_cls_list, val_ratio=val_ratio, test_ratio=test_ratio)
 
             move_images(train_path, val_path, img_cls, val_list)
 
     print("All images have been processed.")
 
 
-def main():
-    opt = parse_args()
+def main(opt):
     train_path = "split/train/"
     val_path = "split/val/"
     test_path = "split/test/"
@@ -163,4 +162,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    opt = parse_args()
+    if opt.split_test:
+        main(opt)
+    else:
+        split_train_file(opt)
