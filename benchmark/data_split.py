@@ -1,4 +1,5 @@
 import os
+import math
 import shutil
 import argparse
 import numpy as np
@@ -35,22 +36,36 @@ def has_file_allowed_extension(filename, extensions=IMG_EXTENSIONS):
     return filename.lower().endswith(extensions)
 
 
-def balanced_split(all_data_list, test_size=0.1):
-    assert 0 <= test_size < 1.0
+def balanced_split(all_data_list, val_ratio=0.1, test_ratio=0.1):
+    assert 0 <= val_ratio < 1.0
+    assert 0 <= test_ratio < 1.0
+    assert 0 < val_ratio + test_ratio < 1.0
     random.shuffle(all_data_list)
-    test_nums = int(len(all_data_list) * test_size)
-    train = all_data_list[test_nums:]
-    test = all_data_list[:test_nums]
-    return train, test
+
+    val_nums = math.ceil(len(all_data_list) * val_ratio)
+    test_nums = math.ceil(len(all_data_list) * test_ratio)
+
+    val = all_data_list[:val_nums]
+    test = all_data_list[val_nums:(val_nums + test_nums)]
+    train = all_data_list[(val_nums + test_nums):]
+    return train, val, test
 
 
-def random_split(all_data_list, test_size=0.1):
-    assert 0 <= test_size < 1.0
-    test_mask = np.random.rand(len(all_data_list)) < test_size
+def random_split(all_data_list, val_ratio=0.1, test_ratio=0.1):
+    assert 0 <= val_ratio < 1.0
+    assert 0 <= test_ratio < 1.0
+    assert 0 < val_ratio + test_ratio < 1.0
+
+    mask = np.random.rand(len(all_data_list))
+    test_mask = mask < test_ratio
+    val_mask = (test_ratio < mask) & (mask < test_ratio + val_ratio)
+    train_mask = mask > (test_ratio + val_ratio)
+
     all_data_list = np.array(all_data_list)
+    train = all_data_list[train_mask]
     test = all_data_list[test_mask]
-    train = all_data_list[~test_mask]
-    return train, test
+    val = all_data_list[val_mask]
+    return train, val, test
 
 
 def copy_images(root_dir, dest_dir, classes, img_list):
@@ -87,11 +102,11 @@ def mkdir(dir):
         os.makedirs(dir)
 
 
-def split_train_file():
-    opt = parse_args()
+def split_train_file(opt):
     train_path = "split/train/"
     val_path = "split/val/"
     val_ratio = 0.1
+    test_ratio = 0.0
 
     train_path = os.path.join(opt.data_dir, train_path)
     val_path = os.path.join(opt.data_dir, val_path)
@@ -104,23 +119,25 @@ def split_train_file():
             if len(img_cls_list) > 0:
                 mkdir(val_path + img_cls)
                 if opt.sampling_strategy == "random":
-                    train_list, val_list = random_split(img_cls_list, test_size=val_ratio)
+                    train_list, val_list, test_list = random_split(img_cls_list, val_ratio=val_ratio, test_ratio=test_ratio)
                 elif opt.sampling_strategy == "balanced":
-                    train_list, val_list = balanced_split(img_cls_list, test_size=val_ratio)
+                    train_list, val_list, test_list = balanced_split(img_cls_list, val_ratio=val_ratio, test_ratio=test_ratio)
 
             move_images(train_path, val_path, img_cls, val_list)
 
     print("All images have been processed.")
 
 
-def main():
-    opt = parse_args()
+def main(opt):
     train_path = "split/train/"
+    val_path = "split/val/"
     test_path = "split/test/"
-    test_ratio = 0.2
+    val_ratio = 0.1
+    test_ratio = 0.1
 
     pic_path = os.path.join(opt.data_dir, opt.dataset)
     train_path = os.path.join(opt.data_dir, train_path)
+    val_path = os.path.join(opt.data_dir, val_path)
     test_path = os.path.join(opt.data_dir, test_path)
 
     for img_cls in os.listdir(pic_path):
@@ -130,20 +147,23 @@ def main():
             img_cls_list = [name for name in img_cls_list if has_file_allowed_extension(name)]
             if len(img_cls_list) > 0:
                 mkdir(train_path + img_cls)
+                mkdir(val_path + img_cls)
                 mkdir(test_path + img_cls)
                 if opt.sampling_strategy == "random":
-                    train_list, test_list = random_split(img_cls_list, test_size=test_ratio)
+                    train_list, val_list, test_list = random_split(img_cls_list, val_ratio=val_ratio, test_ratio=test_ratio)
                 elif opt.sampling_strategy == "balanced":
-                    train_list, test_list = balanced_split(img_cls_list, test_size=test_ratio)
+                    train_list, val_list, test_list = balanced_split(img_cls_list, val_ratio=val_ratio, test_ratio=test_ratio)
 
             copy_images(pic_path, train_path, img_cls, train_list)
+            copy_images(pic_path, val_path, img_cls, val_list)
             copy_images(pic_path, test_path, img_cls, test_list)
-
+        
     print("All images have been processed.")
 
 
 if __name__ == '__main__':
     opt = parse_args()
     if opt.split_test:
-        main()
-    split_train_file()
+        main(opt)
+    else:
+        split_train_file(opt)

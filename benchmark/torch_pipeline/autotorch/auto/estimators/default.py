@@ -6,7 +6,7 @@ from autocfg import dataclass, field
 
 @dataclass
 class ImageClassification:
-    model : str = 'resnet50_v1'
+    model : str = 'resnet18'
     use_pretrained : bool = True
     use_gn : bool = False
     batch_norm : bool = False
@@ -16,7 +16,7 @@ class ImageClassification:
 @dataclass
 class TrainCfg:
     pretrained_base : bool = True  # whether load the imagenet pre-trained base
-    batch_size : int = 128
+    batch_size : int = 16
     epochs : int = 10
     base_lr : float = 0.1  # learning rate
     decay_factor : float = 0.1  # decay rate of learning rate.
@@ -25,14 +25,12 @@ class TrainCfg:
     lr_schedule_mode : str = 'step'  # learning rate scheduler mode. options are step, poly and cosine
     warmup_lr : float = 0.0  # starting warmup learning rate.
     warmup_epochs : int = 0  # number of warmup epochs
-    num_training_samples : int = 1281167
     num_workers : int = 4
     wd : float = 0.0001
     momentum : float = 0.9
     dtype : str = 'float32'
     input_size : int = 224
     crop_ratio : float = 0.875
-    use_rec : bool = False
     data_dir : str = '~/.mxnet/datasets/imagenet'
     mixup : bool = False
     no_wd : bool = False
@@ -56,9 +54,12 @@ class ValidCfg:
     batch_size : int = 128
     num_workers : int = 4
 
+
 @dataclass
 class ImageClassificationCfg:
     img_cls : ImageClassification = field(default_factory=ImageClassification)
     train : TrainCfg = field(default_factory=TrainCfg)
     valid : ValidCfg = field(default_factory=ValidCfg)
     gpus : Union[Tuple, list] = (0, )  # gpu individual ids, not necessarily consecutive
+    launcher : str = 'pytorch'
+    cudnn_benchmark : bool = True
