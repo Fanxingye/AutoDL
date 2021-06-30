@@ -129,28 +129,19 @@ class ImageClassificationEstimator(BaseEstimator):
                                                 train_dataset=train_data,
                                                 val_dataset=val_data)
         self._time_elapsed += time.time() - tic
-        return self._train_loop(train_loader, 
-                                val_loader, 
-                                model=self.net,,
-                                criterion=self.criterion,
-                                optimizer=self.optimizer,
-                                scaler=self.scaler,
-                                lr_scheduler=self.lr_policy,
-                                num_class=self.num_class,
-                                use_amp=self._cfg.train.amp,,
-                                batch_size_multiplier=1,
-                                logger=None,
-                                time_limit=time_limit)
-
+        return self._train_loop(model=self.net, criterion=self.criterion, optimizer=self.optimizer,
+                                scaler=self.scaler, lr_scheduler=self.lr_policy, train_loader=train_loader,
+                                val_loader=val_loader, num_class=self.num_class, use_amp=self._cfg.train.amp,
+                                batch_size_multiplier=1, logger=self._logger, time_limit=time_limit)
 
     def _train_loop(self,
-                    train_loader,
-                    val_loader,
                     model,
                     criterion,
                     optimizer,
                     scaler,
                     lr_scheduler,
+                    train_loader,
+                    val_loader,
                     num_class,
                     use_amp=False,
                     batch_size_multiplier=1,
@@ -178,19 +169,19 @@ class ImageClassificationEstimator(BaseEstimator):
                 break
 
             tic = time.time()
-            losses_m, top1_m, top5_m = self._train_epoch(train_loader=train_loader,
-                                                        model=self.net,
-                                                        criterion=self.criterion,
-                                                        optimizer=self.optimizer,
-                                                        scaler=self.scaler,
-                                                        lr_scheduler=self.lr_policy,
-                                                        num_class=self.num_class,
-                                                        epoch=epoch,
-                                                        use_amp=self._cfg.train.amp,
-                                                        batch_size_multiplier=1,
-                                                        logger=self._logger,
-                                                        log_interval=10
-                                                        )
+            losses_m, top1_m, top5_m = self._train_epoch(
+                                                        train_loader,
+                                                        model,
+                                                        criterion,
+                                                        optimizer,
+                                                        scaler,
+                                                        lr_scheduler,
+                                                        num_class,
+                                                        epoch,
+                                                        use_amp=use_amp,
+                                                        batch_size_multiplier=batch_size_multiplier,
+                                                        logger=logger,
+                                                        log_interval=10)
 
             steps_per_epoch = len(train_loader)
             throughput = int(self.batch_size * steps_per_epoch / (time.time() - tic))
@@ -198,15 +189,15 @@ class ImageClassificationEstimator(BaseEstimator):
             self._logger.info('[Epoch %d] training: loss=%f, top1=%f, top5=%f' % (epoch, losses_m, top1_m, top5_m))
             self._logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f', epoch, throughput, time.time()-tic)
 
-            top1_val, top5_val = self._val_epoch(val_loader=val_loader,
-                                                model=self.net,
-                                                criterion=self.criterion,
-                                                num_class=self.num_class,
-                                                use_amp=self._cfg.train.amp,
-                                                logger=self._logger,
+            top1_val, top5_val = self._val_epoch(
+                                                val_loader,
+                                                model,
+                                                criterion,
+                                                num_class,
+                                                use_amp=use_amp,
+                                                logger=logger,
                                                 log_name="Val-log",
-                                                log_interval=1
-                                                )
+                                                log_interval=10)
             early_stopper.update(top1_val)
             self._logger.info('[Epoch %d] validation: top1=%f top5=%f', epoch, top1_val, top5_val)
             if top1_val > self._best_acc:
@@ -220,7 +211,7 @@ class ImageClassificationEstimator(BaseEstimator):
                     self._reporter(epoch=epoch, acc_reward=top1_val)
             self._time_elapsed += time.time() - tic
 
-        return {'train_acc': train_metric_score, 'valid_acc': self._best_acc,
+        return {'train_acc': top1_m, 'valid_acc': self._best_acc,
                 'time': self._time_elapsed, 'checkpoint': cp_name}
 
     def _train_step(self, model, criterion, optimizer, scaler, use_amp=False, batch_size_multiplier=1, top_k=1):
@@ -428,6 +419,9 @@ class ImageClassificationEstimator(BaseEstimator):
         data_iter = enumerate(val_loader)
 
         for i, (input, target) in data_iter:
+            input = input.cuda()
+            target = target.cuda()
+
             bs = input.size(0)
             data_time = time.time() - end
             loss, prec1, prec5 = step(input, target)
