@@ -12,32 +12,25 @@ import numpy as np
 import torch
 from torch import optim
 import torch.nn as nn
-import torch.backends.cudnn as cudnn
-import torch.distributed as dist
-import torch.utils.data
 from torch.cuda.amp import autocast
 from torch.autograd import Variable
 import torch.utils.data.distributed
 from mmcv.runner import get_dist_info, init_dist
-from autotorch.data import *
 from autotorch.data.mixup import NLLMultiLabelSmooth, MixUpWrapper
 from autotorch.data.smoothing import LabelSmoothing
 from autotorch.models.model_zoo import get_model_list
 from autotorch.models.network import init_network, get_input_size
 from autotorch.optim.optimizers import get_optimizer
-from autotorch.scheduler.lr_scheduler import *
-from autotorch.utils.model import resum_checkpoint
+from autotorch.scheduler.lr_scheduler import lr_step_policy, lr_linear_policy, lr_cosine_policy
 from autotorch.utils.model import reduce_tensor, save_checkpoint
 from autotorch.utils.metrics import AverageMeter, accuracy
 
-import autogluon.core as ag
 from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
 from ..data.dataloader import get_data_loader
 from ..conf import _BEST_CHECKPOINT_FILE
 from gluoncv.auto.estimators.utils import EarlyStopperOnPlateau
-
 
 
 __all__ = ['ImageClassificationEstimator']
@@ -127,17 +120,42 @@ class ImageClassificationEstimator(BaseEstimator):
             return {'time', self._time_elapsed}
 
         num_workers = self._cfg.train.num_workers
-        train_loader, val_loader = get_data_loader(self._cfg.train.data_dir,
-                                                    self.batch_size, num_workers,
-                                                    self.input_size,
-                                                    self._cfg.train.crop_ratio,
-                                                    self._cfg.train.data_augment,
-                                                    train_dataset=train_data,
-                                                    val_dataset=val_data)
+        train_loader, val_loader = get_data_loader(data_dir=self._cfg.train.data_dir,
+                                                batch_size=self.batch_size,
+                                                num_workers=num_workers,
+                                                input_size=self.input_size,
+                                                crop_ratio=self._cfg.train.crop_ratio,
+                                                data_augment=self._cfg.train.data_augment,
+                                                train_dataset=train_data,
+                                                val_dataset=val_data)
         self._time_elapsed += time.time() - tic
-        return self._train_loop(train_loader, val_loader, time_limit=time_limit)
+        return self._train_loop(train_loader, 
+                                val_loader, 
+                                model=self.net,,
+                                criterion=self.criterion,
+                                optimizer=self.optimizer,
+                                scaler=self.scaler,
+                                lr_scheduler=self.lr_policy,
+                                num_class=self.num_class,
+                                use_amp=self._cfg.train.amp,,
+                                batch_size_multiplier=1,
+                                logger=None,
+                                time_limit=time_limit)
 
-    def _train_loop(self, train_data, val_data, time_limit=math.inf):
+
+    def _train_loop(self,
+                    train_loader,
+                    val_loader,
+                    model,
+                    criterion,
+                    optimizer,
+                    scaler,
+                    lr_scheduler,
+                    num_class,
+                    use_amp=False,
+                    batch_size_multiplier=1,
+                    logger=None,
+                    time_limit=math.inf):
         start_tic = time.time()
 
         self._logger.info('Start training from [Epoch %d]', max(self._cfg.train.start_epoch, self.epoch))
@@ -148,10 +166,8 @@ class ImageClassificationEstimator(BaseEstimator):
             max_value=self._cfg.train.early_stop_max_value)
 
         self._time_elapsed += time.time() - start_tic
-
         for self.epoch in range(max(self._cfg.train.start_epoch, self.epoch), self._cfg.train.epochs):
             epoch = self.epoch
-
             if self._best_acc >= 1.0:
                 self._logger.info('[Epoch {}] Early stopping as acc is reaching 1.0'.format(epoch))
                 break
@@ -162,7 +178,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 break
 
             tic = time.time()
-            losses_m, top1_m, top5_m = self._train_epoch(train_loader=train_data,
+            losses_m, top1_m, top5_m = self._train_epoch(train_loader=train_loader,
                                                         model=self.net,
                                                         criterion=self.criterion,
                                                         optimizer=self.optimizer,
@@ -173,23 +189,23 @@ class ImageClassificationEstimator(BaseEstimator):
                                                         use_amp=self._cfg.train.amp,
                                                         batch_size_multiplier=1,
                                                         logger=self._logger,
-                                                        log_interval=10)
+                                                        log_interval=10
+                                                        )
 
-            # post_tic = time.time()
-            # # steps_per_epoch = len(train_loader)
-            # # throughput = int(self.batch_size * steps_per_epoch /(time.time() - tic))
+            steps_per_epoch = len(train_loader)
+            throughput = int(self.batch_size * steps_per_epoch / (time.time() - tic))
 
-            # self._logger.info('[Epoch %d] training: %s=%f', epoch, train_metric_name, train_metric_score)
-            # # self._logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f', epoch, throughput, time.time()-tic)
+            self._logger.info('[Epoch %d] training: loss=%f, top1=%f, top5=%f' % (epoch, losses_m, top1_m, top5_m))
+            self._logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f', epoch, throughput, time.time()-tic)
 
-            top1_val, top5_val = self._val_epoch(val_loader=val_data,
+            top1_val, top5_val = self._val_epoch(val_loader=val_loader,
                                                 model=self.net,
                                                 criterion=self.criterion,
                                                 num_class=self.num_class,
                                                 use_amp=self._cfg.train.amp,
                                                 logger=self._logger,
                                                 log_name="Val-log",
-                                                log_interval=10
+                                                log_interval=1
                                                 )
             early_stopper.update(top1_val)
             self._logger.info('[Epoch %d] validation: top1=%f top5=%f', epoch, top1_val, top5_val)
@@ -290,7 +306,19 @@ class ImageClassificationEstimator(BaseEstimator):
           Function to call for each batch.
 
         scaler  : scaler
+            amp scaling factor
 
+        lr_scheduler : LRScheduler
+            LRScheduler  Policy
+
+        num_class :  int
+            number of classes
+
+        epoch: int
+            Currently training Epochs
+
+        use_amp: bool = False
+            if use half-persion traing
 
         **fit_params : dict
           Additional parameters passed to the ``step_fn``.
@@ -342,14 +370,14 @@ class ImageClassificationEstimator(BaseEstimator):
                     learning_rate = optimizer.param_groups[0]["lr"]
                     log_name = 'Train-log'
                     logger.info(
-                        "{0}: [epoch:{1:>2d}] [{2:>2d}/{3}] "
+                        "{0}: [Epoch:{1:>2d}] [{2:>2d}/{3}] "
                         'DataTime: {data_time.val:.3f} ({data_time.avg:.3f}) '
                         'BatchTime: {batch_time.val:.3f} ({batch_time.avg:.3f}) '
                         'Loss: {loss.val:>7.4f} ({loss.avg:>6.4f}) '
                         'Acc@1: {top1.val:>7.4f} ({top1.avg:>7.4f}) '
                         'Acc@5: {top5.val:>7.4f} ({top5.avg:>7.4f}) '
                         'lr: {lr:>4.6f} '.format(
-                            log_name, epoch+1, i, steps_per_epoch, data_time=data_time_m,
+                            log_name, epoch, i+1, steps_per_epoch, data_time=data_time_m,
                             batch_time=batch_time_m,
                             loss=losses_m, top1=top1_m, top5=top5_m, lr=learning_rate))
 
@@ -362,9 +390,30 @@ class ImageClassificationEstimator(BaseEstimator):
                     num_class,
                     use_amp=False,
                     logger=None,
-                    logger_name='Val-log',
+                    log_name='Val-log',
                     log_interval=10):
+        """Compute a single epoch of train or validation.
 
+        Parameters
+        ----------
+        train_loader : torch Dataset or None
+          The initialized dataset to loop over. If None, skip this step.
+
+        model :  model
+          Whether to set the module to train mode or not.
+
+        criterion : str
+          Prefix to use when saving to the history.
+
+        num_class :  int
+            number of classes
+
+        use_amp: bool = False
+            if use half-persion traing
+
+        **fit_params : dict
+          Additional parameters passed to the ``step_fn``.
+        """
         batch_time_m = AverageMeter('Time', ':6.3f')
         data_time_m = AverageMeter('Data', ':6.3f')
         losses_m = AverageMeter('Loss', ':.4e')
@@ -400,7 +449,7 @@ class ImageClassificationEstimator(BaseEstimator):
                         'Loss: {loss.val:>7.4f} ({loss.avg:>6.4f}) '
                         'Acc@1: {top1.val:>7.4f} ({top1.avg:>7.4f}) '
                         'Acc@5: {top5.val:>7.4f} ({top5.avg:>7.4f})'.format(
-                            logger_name, i, steps_per_epoch, data_time=data_time_m,
+                            log_name, i, steps_per_epoch, data_time=data_time_m,
                             batch_time=batch_time_m,
                             loss=losses_m, top1=top1_m, top5=top5_m))
         return top1_m.avg, top5_m.avg

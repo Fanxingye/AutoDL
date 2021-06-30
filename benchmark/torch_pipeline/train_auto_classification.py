@@ -26,7 +26,7 @@ if __name__ == '__main__':
     classifier = ImageClassificationEstimator(config)
     print(classifier._cfg)
     # evaluate auto estimator
-    top1, top5 = classifier.fit(train_data, valid_data)
+    classifier.fit(train_data, valid_data)
     logging.info('evaluation: top1={}, top5={}'.format(top1, top5))
 
     # save and load auto estimator
