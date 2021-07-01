@@ -4,28 +4,25 @@ import time
 import os
 import math
 import copy
-
 from PIL import Image
 import pandas as pd
 import numpy as np
-
 import torch
 from torch import optim
 import torch.nn as nn
 from torch.cuda.amp import autocast
 from torch.autograd import Variable
 import torch.utils.data.distributed
-from torchvision import datasets, transforms
+from torchvision import transforms
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from mmcv.runner import get_dist_info, init_dist
-from autotorch.data.mixup import NLLMultiLabelSmooth, MixUpWrapper
+from autotorch.data.mixup import NLLMultiLabelSmooth
 from autotorch.data.smoothing import LabelSmoothing
-from autotorch.models.model_zoo import get_model_list
 from autotorch.models.network import init_network, get_input_size
 from autotorch.optim.optimizers import get_optimizer
 from autotorch.scheduler.lr_scheduler import lr_step_policy, lr_linear_policy, lr_cosine_policy
-from autotorch.utils.model import reduce_tensor, save_checkpoint
+from autotorch.utils.model import reduce_tensor
 from autotorch.utils.metrics import AverageMeter, accuracy
 
 from .base_estimator import BaseEstimator, set_default
@@ -80,9 +77,9 @@ class ImageClassificationEstimator(BaseEstimator):
             torch.backends.cudnn.benchmark = True
 
         if self._cfg.gpus is not None:
-            self.gpu_ids = self._cfg.gpus
+            self.gpu_ids = 0
         else:
-            self.gpu_ids = range(1) if self._cfg.gpus is None else range(self._cfg.gpus)
+            self.gpu_ids = 0
 
         # init distributed env first, since logger depends on the dist info.
         if self._cfg.launcher == 'none':
@@ -681,16 +678,3 @@ class ImageClassificationEstimator(BaseEstimator):
     def _predict_proba(self, x, ctx_id=0):
         return df
 
-
-class ImageListDataset():
-    """An internal image list dataset for batch predict"""
-    def __init__(self, imlist, fn):
-        self._imlist = imlist
-        self._fn = fn
-
-    def __getitem__(self, idx):
-        img = self._fn(self._imlist[idx])[0]
-        return img
-
-    def __len__(self):
-        return len(self._imlist)

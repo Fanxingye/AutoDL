@@ -20,20 +20,11 @@ from autogluon.core.decorator import sample_config
 from autogluon.core.scheduler.resource import get_cpu_count, get_gpu_count
 from autogluon.core.task.base import BaseTask
 from autogluon.core.searcher import RandomSearcher
-from ...utils.filesystem import try_import
-
-from ..estimators.base_estimator import BaseEstimator
+from ..estimators import BaseEstimator
 from ..estimators import ImageClassificationEstimator
 from .utils import config_to_nested
-from ..data.dataset import ImageClassificationDataset
-from ..estimators.conf import _BEST_CHECKPOINT_FILE
-
-problem_type_constants = try_import(package='autogluon.core.constants',
-                                    fromlist=['MULTICLASS', 'BINARY', 'REGRESSION'],
-                                    message='Failed to import problem type constants from autogluon.core.')
-MULTICLASS = problem_type_constants.MULTICLASS
-BINARY = problem_type_constants.BINARY
-REGRESSION = problem_type_constants.REGRESSION
+from ..data.dataset import TorchImageClassificationDataset
+from ..conf import _BEST_CHECKPOINT_FILE
 
 
 __all__ = ['ImageClassification', 'ImagePrediction']
@@ -73,10 +64,14 @@ def _train_image_classification(args, reporter):
     """
     tic = time.time()
     try:
-        task_id = int(args.task_id)
-    except:
+        logging.info("=" * 100)
+        logging.info("Start to training image classification trial %s ", args.task_id)
+        task_id = str(args.task_id)
+    except Exception as e:
+        logging.info(e)
+        logging.info("*" * 100)
+        logging.info("Can not get task_id,  set task_id to 0")
         task_id = 0
-    problem_type = args.pop('problem_type', MULTICLASS)
     final_fit = args.pop('final_fit', False)
     # train, val data
     train_data = args.pop('train_data')
@@ -105,7 +100,7 @@ def _train_image_classification(args, reporter):
                 'time': 0, 'train_acc': -1, 'valid_acc': -1}
 
     try:
-        valid_summary_file = 'fit_summary_img_cls.ag'
+        valid_summary_file = 'fit_summary_img_cls.json'
         estimator_cls = args.pop('estimator', None)
         assert estimator_cls == ImageClassificationEstimator
         if final_fit:
@@ -122,13 +117,17 @@ def _train_image_classification(args, reporter):
                         with open(os.path.join(log_dir, dd, valid_summary_file), 'r') as f:
                             result = json.load(f)
                             acc = result.get('valid_acc', -1)
+                            print("=" * 30, "Check history trials results: ", log_dir, dd, acc)
                             if acc > best_acc and os.path.isfile(os.path.join(log_dir, dd, _BEST_CHECKPOINT_FILE)):
                                 best_checkpoint = os.path.join(log_dir, dd, _BEST_CHECKPOINT_FILE)
+                                print("=" * 30, "Find a Better checkpoint : ", best_checkpoint)
                                 best_acc = acc
-                    except:
+                    except IOError as exc:
+                        raise RuntimeError('Failed to find valid checkpoint file') from exc
                         pass
                 if best_checkpoint:
                     estimator = estimator_cls.load(best_checkpoint)
+                    print("=" * 30, "Set %s model checkpoint from %s" % (estimator, best_checkpoint))
             if estimator is None:
                 if wall_clock_tick < tic:
                     result.update({'traceback': 'timeout'})
@@ -141,8 +140,7 @@ def _train_image_classification(args, reporter):
             args['log_dir'] = trial_log_dir
             custom_net = args.pop('custom_net', None)
             custom_optimizer = args.pop('custom_optimizer', None)
-            estimator = estimator_cls(args, problem_type=problem_type, reporter=reporter,
-                                      net=custom_net, optimizer=custom_optimizer)
+            estimator = estimator_cls(args, reporter=reporter, net=custom_net, optimizer=custom_optimizer)
             # training
             result = estimator.fit(train_data=train_data, val_data=val_data, time_limit=wall_clock_tick-tic)
             with open(os.path.join(trial_log_dir, valid_summary_file), 'w') as f:
@@ -158,7 +156,7 @@ def _train_image_classification(args, reporter):
                 with open(json_file_name, 'w') as json_file:
                     json_file.write(json_str)
                 logging.info('Config and result in this trial have been saved to %s.', json_file_name)
-    except:
+    except RuntimeError:
         import traceback
         return {'traceback': traceback.format_exc(), 'args': str(args),
                 'time': time.time() - tic, 'train_acc': -1, 'valid_acc': -1}
@@ -181,19 +179,15 @@ class ImageClassification(BaseTask):
         The custom network. If defined, the model name in config will be ignored so your
         custom network will be used for training rather than pulling it from model zoo.
     """
-    Dataset = ImageClassificationDataset
+    Dataset = TorchImageClassificationDataset
 
-    def __init__(self, config=None, logger=None, problem_type=None):
+    def __init__(self, config=None, logger=None):
         super(ImageClassification, self).__init__()
-        if problem_type is None:
-            problem_type = MULTICLASS
-        self._problem_type = problem_type
         self._fit_summary = {}
         self._logger = logger if logger is not None else logging.getLogger(__name__)
         self._logger.setLevel(logging.INFO)
         self._fit_summary = {}
         self._results = {}
-
 
         # cpu and gpu setting
         cpu_count = get_cpu_count()
@@ -231,13 +225,11 @@ class ImageClassification(BaseTask):
         else:
             raise ValueError('Please specify `nthreads_per_trial` and `ngpus_per_trial` '
                              'given that dist workers are available')
-
-
         # additional configs
         config['num_workers'] = nthreads_per_trial
         config['gpus'] = [int(i) for i in range(ngpus_per_trial)]
-        config['seed'] = config.get('seed', np.random.randint(32,767))
-        config['final_fit'] = False
+        config['seed'] = config.get('seed', np.random.randint(32, 767))
+        config['final_fit'] = config.get('cleanup_disk', False)
         self._cleanup_disk = config.get('cleanup_disk', True)
         self._config = config
 
@@ -256,7 +248,7 @@ class ImageClassification(BaseTask):
             'dist_ip_addrs': config.get('dist_ip_addrs', None),
             'searcher': self.search_strategy,
             'search_options': self.search_options,
-            'max_reward': config.get('max_reward', 0.95)}
+            'max_reward': config.get('max_reward', 1.0)}
         if self.search_strategy == 'hyperband':
             self.scheduler_options.update({
                 'searcher': 'random',
@@ -349,7 +341,6 @@ class ImageClassification(BaseTask):
         config['val_data'] = val_data
         config['wall_clock_tick'] = wall_clock_tick
         config['log_dir'] = os.path.join(config.get('log_dir', os.getcwd()), str(uuid.uuid4())[:8])
-        config['problem_type'] = self._problem_type
         _train_image_classification.register_args(**config)
 
         start_time = time.time()
