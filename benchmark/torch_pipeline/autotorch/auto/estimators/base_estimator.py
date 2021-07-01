@@ -2,6 +2,7 @@
 # pylint: disable=bare-except
 import os
 import math
+import dill
 import pickle
 import io
 import logging
@@ -303,7 +304,8 @@ class BaseEstimator:
             The file name for storing the full state.
         """
         with open(filename, 'wb') as fid:
-            pickle.dump(self, fid)
+            # pickle.dump(self, fid)
+            dill.dump(self, fid)
         self._logger.debug('Pickled to %s', filename)
 
     @classmethod
@@ -325,7 +327,8 @@ class BaseEstimator:
             will be [gpu(0), gpu(2), gpu(4)...]
         """
         with open(filename, 'rb') as fid:
-            obj = pickle.load(fid)
+            # obj = pickle.load(fid)
+            obj = dill.load(fid)
             obj._logger.debug('Unpickled from %s', filename)
             new_ctx = _suggest_load_context(obj.net, ctx, obj.ctx)
             obj.reset_ctx(new_ctx)

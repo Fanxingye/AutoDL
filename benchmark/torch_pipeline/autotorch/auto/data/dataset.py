@@ -28,6 +28,8 @@ class _TorchImageClassificationDataset(TorchDataset):
     ----------
     dataset : ImageClassificationDataset
         DataFrame as ImageClassificationDataset.
+    transform : Torchvision Transform function
+        torch function for image transformation
 
     """
     def __init__(self, dataset, transform=None):

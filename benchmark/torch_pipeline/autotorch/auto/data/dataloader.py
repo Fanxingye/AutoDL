@@ -8,6 +8,26 @@ from .dataset import TorchImageClassificationDataset
 
 
 def get_data_loader(data_dir, batch_size, num_workers, input_size, crop_ratio, data_augment, train_dataset=None, val_dataset=None):
+    """AutoPytorch ImageClassification data loaders
+    Parameters:
+    -----------
+    data_dir : 
+        data_dir
+    batch_size : 
+        batch_szie
+    num_workers: 
+        4
+    input_size:
+         224
+    crop_ratio  :
+        0.875
+    data_augment : 
+        None
+    train_dataset : 
+        TorchImageClassificationDataset
+    val_dataset   : 
+        TorchImageClassificationDataset
+    """
     normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     jitter_param = 0.4
     crop_ratio = crop_ratio if crop_ratio > 0 else 0.875
