@@ -586,21 +586,75 @@ class ImageClassificationEstimator(BaseEstimator):
 
         return top1_val, top5_val
 
-    def _predict_preprocess(self, img):
+    def _predict_preprocess(self, x):
         resize = int(math.ceil(self.input_size / self._cfg.train.crop_ratio))
-        if isinstance(img, str):
-            out = self._predict_preprocess(transform_eval(
-                    Image.open(img), resize_short=resize, crop_size=self.input_size))
-        elif isinstance(img, Image.Image):
-            x = self._predict_preprocess(x)
+        if isinstance(x, str):
+            x = self._predict_preprocess(transform_eval(
+                    Image.open(x), resize_short=resize, crop_size=self.input_size))
+        elif isinstance(x, Image.Image):
+            x = self._predict_preprocess(np.array(x))
         elif isinstance(x, np.ndarray):
-            NotImplementedError
+            if len(x.shape) == 3 and x.shape[-1] == 3:
+                x = transform_eval(x, resize_short=resize, crop_size=self.input_size)
+            elif len(x.shape) == 4 and x.shape[1] == 3:
+                expected = (self.input_size, self.input_size)
+                assert x.shape[2:] == expected, "Expected: {}, given {}".format(expected, x.shape[2:])
+            elif len(x.shape) == 2:
+                # gray image to rgb
+                x = np.stack([x]*3, axis=0)
             else:
                 raise ValueError('array input with shape (h, w, 3) or (n, 3, h, w) is required for predict')
-        return None
+            x = transform_eval(x, resize_short=resize, crop_size=self.input_size)
+        return x
 
     def _predict(self, x, ctx_id=0, with_proba=False):
+        if with_proba:
+            return self._predict_proba(x, ctx_id=ctx_id)
+        x = self._predict_preprocess(x)
+        if isinstance(x, pd.DataFrame):
+            bs = self._cfg.valid.batch_size
+            self.net.hybridize()
+            results = []
+            topK = min(5, self.num_class)
+            loader = torch.utils.data.DataLoader(TorchImageClassificationDataset(x, self._predict_preprocess),
+                                                batch_size=bs,
+                                                shuffle=False,
+                                                num_workers=self._cfg.valid.num_workers,
+                                                pin_memory=True)
+            idx = 0
+            data_iter = enumerate(loader)
+            for i, (input, _) in data_iter:
+                input = input.cuda()
+                input_var = Variable(input)
+                with torch.no_grad():
+                    logits = self.net(input_var)
+                _, pred_ids = torch.max(logits, 1)
+                for j in range(len(logits)):
+                    id = pred_ids[j]
+                    prob = logits[j, id].numpy()
+                    results.append({'class': self.classes[id],
+                                    'score': prob,
+                                    'id': id,
+                                    'image': x[idx]})
+                    idx += 1
+            return pd.DataFrame(results)
+        elif not isinstance(x, torch.Tensor):
+            raise ValueError('Input is not supported: {}'.format(type(x)))
+        assert len(x.shape) == 4 and x.shape[1] == 3, "Expect input to be (n, 3, h, w), given {}".format(x.shape)
+        x = x.cuda()
+        with torch.no_grad():
+            logit = self.net(x)
+            _, pred_id = torch.max(logit, 1)
+        if isinstance(pred_id, list):
+            id = pred_id[0]
+        else:
+            id = pred_id
+        prob = logit[0, id].numpy()
+        df = pd.DataFrame({'class': self.classes[id],
+                        'score': prob,
+                        'id': id})
         return df
+
 
     def _get_feature_net(self):
         """Get the network slice for feature extraction only"""
@@ -626,3 +680,17 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _predict_proba(self, x, ctx_id=0):
         return df
+
+
+class ImageListDataset():
+    """An internal image list dataset for batch predict"""
+    def __init__(self, imlist, fn):
+        self._imlist = imlist
+        self._fn = fn
+
+    def __getitem__(self, idx):
+        img = self._fn(self._imlist[idx])[0]
+        return img
+
+    def __len__(self):
+        return len(self._imlist)
