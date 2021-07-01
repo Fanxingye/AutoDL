@@ -11,7 +11,7 @@ def get_data_loader(data_dir, batch_size, num_workers, input_size, crop_ratio, d
     """AutoPytorch ImageClassification data loaders
     Parameters:
     -----------
-    data_dir: 
+    data_dir : 
         data_dir
     batch_size : 
         batch_szie

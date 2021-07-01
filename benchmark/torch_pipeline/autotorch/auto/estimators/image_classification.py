@@ -15,6 +15,7 @@ import torch.nn as nn
 from torch.cuda.amp import autocast
 from torch.autograd import Variable
 import torch.utils.data.distributed
+from torchvision import datasets, transforms
 from torch.nn.parallel import DistributedDataParallel as DDP
 
 from mmcv.runner import get_dist_info, init_dist
@@ -31,6 +32,7 @@ from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
 from ..data.dataloader import get_data_loader
+from ..data.transforms import transform_eval
 from ..conf import _BEST_CHECKPOINT_FILE
 from gluoncv.auto.estimators.utils import EarlyStopperOnPlateau
 
@@ -246,7 +248,10 @@ class ImageClassificationEstimator(BaseEstimator):
         return step_fn
 
     def _val_step(self, model, criterion, use_amp=False, top_k=1):
-        def step_fn(input, target):valid_data
+        def step_fn(input, target):
+            input_var = Variable(input)
+            target_var = Variable(target)
+
             with torch.no_grad(), autocast(enabled=use_amp):
                 output = model(input_var)
                 loss = criterion(output, target_var)
@@ -447,6 +452,7 @@ class ImageClassificationEstimator(BaseEstimator):
                             log_name, i+1, steps_per_epoch, data_time=data_time_m,
                             batch_time=batch_time_m,
                             loss=losses_m, top1=top1_m, top5=top5_m))
+        self.net = model
         return top1_m.avg/100.0, top5_m.avg/100.0
 
     def _init_trainer(self):
@@ -480,8 +486,8 @@ class ImageClassificationEstimator(BaseEstimator):
             lr_policy = lr_linear_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epochs, logger=self._logger)
 
         if self._optimizer is None:
-            optimizer = optim.SGD(params=self.net.parameters(), lr=base_lr, 
-                                momentum=self._cfg.train.momentum, weight_decay=self._cfg.train.weight_decay, 
+            optimizer = optim.SGD(params=self.net.parameters(), lr=base_lr,
+                                momentum=self._cfg.train.momentum, weight_decay=self._cfg.train.weight_decay,
                                 nesterov=self._cfg.train.nesterov)
         else:
             optimizer = self._optimizer
@@ -553,10 +559,44 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _evaluate(self, val_data, metric_name=None):
         """Test on validation dataset."""
-        return None, None
 
-    def _predict_preprocess(self, x):
         resize = int(math.ceil(self.input_size / self._cfg.train.crop_ratio))
+        normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        transform_test = transforms.Compose([
+            transforms.Resize(resize),
+            transforms.CenterCrop(self.input_size),
+            transforms.ToTensor(),
+            normalize
+        ])
+        if not isinstance(val_data, torch.utils.data.DataLoader):
+            if hasattr(val_data, 'to_pytorch'):
+                val_data = val_data.to_pytorch(transform_test)
+            val_loader = torch.utils.data.DataLoader(val_data,
+                                                    batch_size=self._cfg.valid.batch_size,
+                                                    shuffle=False,
+                                                    num_workers=self._cfg.valid.num_workers,
+                                                    pin_memory=True)
+
+        top1_val, top5_val = self._val_epoch(val_loader,
+                                            model=self.net,
+                                            criterion=self.criterion,
+                                            num_class=self.num_class,
+                                            use_amp=False,
+                                            logger=self._logger)
+
+        return top1_val, top5_val
+
+    def _predict_preprocess(self, img):
+        resize = int(math.ceil(self.input_size / self._cfg.train.crop_ratio))
+        if isinstance(img, str):
+            out = self._predict_preprocess(transform_eval(
+                    Image.open(img), resize_short=resize, crop_size=self.input_size))
+        elif isinstance(img, Image.Image):
+            x = self._predict_preprocess(x)
+        elif isinstance(x, np.ndarray):
+            NotImplementedError
+            else:
+                raise ValueError('array input with shape (h, w, 3) or (n, 3, h, w) is required for predict')
         return None
 
     def _predict(self, x, ctx_id=0, with_proba=False):
