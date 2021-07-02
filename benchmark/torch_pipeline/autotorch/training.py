@@ -5,7 +5,6 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-from autotorch.optim.optimizers import get_sgd_optimizer, get_rmsprop_optimizer
 from autotorch.models.common import EMA
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.cuda.amp import autocast
