@@ -64,6 +64,7 @@ class ImagePredictor(object):
         self._log_dir = log_dir
         self._verbosity = verbosity
         self._classifier = None
+        self._label_cleaner = None
         self._fit_summary = {}
         self._label = label
         self._label_inner = 'label'
@@ -244,17 +245,12 @@ class ImagePredictor(object):
             if self._problem_type == REGRESSION:
                 # options: rmse
                 self._eval_metric = 'rmse'
-                logger.log(
-                    20,
-                    'ImagePredictor sets rmse as default eval_metric for regression problems.'
-                )
+                logger.log(20, 'ImagePredictor sets rmse as default eval_metric for regression problems.')
             else:
                 # options: accuracy
                 self._eval_metric = 'accuracy'
-                logger.log(
-                    20,
-                    'ImagePredictor sets accuracy as default eval_metric for classification problems.'
-                )
+                logger.log(20, 'ImagePredictor sets accuracy as default eval_metric for classification problems.')
+
         # init/validate kwargs
         kwargs = self._validate_kwargs(kwargs)
         # unpack
@@ -266,8 +262,7 @@ class ImagePredictor(object):
         scheduler = kwargs['hyperparameter_tune_kwargs']['scheduler']
         searcher = kwargs['hyperparameter_tune_kwargs']['searcher']
         max_reward = kwargs['hyperparameter_tune_kwargs']['max_reward']
-        scheduler_options = kwargs['hyperparameter_tune_kwargs'][
-            'scheduler_options']
+        scheduler_options = kwargs['hyperparameter_tune_kwargs']['scheduler_options']
         # deep copy to avoid inplace overwrite
         train_data = copy.deepcopy(train_data)
         tuning_data = copy.deepcopy(tuning_data)
@@ -282,8 +277,7 @@ class ImagePredictor(object):
         if time_limit == 'auto':
             # no presets, no user specified time_limit
             time_limit = 7200
-            logger.log(20,
-                       f'`time_limit=auto` set to `time_limit={time_limit}`.')
+            logger.log(20, f'`time_limit=auto` set to `time_limit={time_limit}`.')
 
         # data sanity check
         train_data = self._validate_data(train_data)
@@ -309,18 +303,14 @@ class ImagePredictor(object):
             tuning_data = tuning_data.reset_index(drop=True)
             tuning_data_validated = True
 
-        train_data = self._validate_data(train_data)
         if isinstance(train_data, self.Dataset):
             train_data = self.Dataset(train_data, classes=train_data.classes)
         if tuning_data is not None and not tuning_data_validated:
             tuning_data = self._validate_data(tuning_data)
             # converting to internal label set
-            _set_valid_labels(
-                tuning_data,
-                self._label_cleaner.transform(_get_valid_labels(tuning_data)))
+            _set_valid_labels(tuning_data, self._label_cleaner.transform(_get_valid_labels(tuning_data)))
             if isinstance(tuning_data, self.Dataset):
-                tuning_data = self.Dataset(tuning_data,
-                                           classes=tuning_data.classes)
+                tuning_data = self.Dataset(tuning_data, classes=tuning_data.classes)
 
         if self._classifier is not None:
             logging.getLogger("ImageClassificationEstimator").propagate = True
@@ -331,8 +321,7 @@ class ImagePredictor(object):
                                                      random_state,
                                                      resume=False)
             if hasattr(self._classifier, 'fit_history'):
-                self._fit_summary[
-                    'fit_history'] = self._classifier.fit_history()
+                self._fit_summary['fit_history'] = self._classifier.fit_history()
             return self
 
         # new HPO task
@@ -345,8 +334,7 @@ class ImagePredictor(object):
         config = {
             'log_dir': self._log_dir,
             'num_trials': 99999 if num_trials is None else max(1, num_trials),
-            'time_limits':
-            2147483647 if time_limit is None else max(1, time_limit),
+            'time_limits': 2147483647 if time_limit is None else max(1, time_limit),
             'searcher': searcher,
             # needed for gluon-cv TODO: remove after gluon-cv is updated https://github.com/dmlc/gluon-cv/issues/1633
             'search_strategy': searcher,
