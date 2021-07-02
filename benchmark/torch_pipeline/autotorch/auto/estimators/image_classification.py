@@ -16,6 +16,7 @@ import torch.utils.data.distributed
 from torchvision import transforms
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.nn.functional as F
+from timm.models.layers.classifier import ClassifierHead
 
 from mmcv.runner import get_dist_info, init_dist
 from autotorch.data.mixup import NLLMultiLabelSmooth
@@ -614,7 +615,6 @@ class ImageClassificationEstimator(BaseEstimator):
             return self._predict_proba(x, ctx_id=ctx_id)
         x = self._predict_preprocess(x)
         if isinstance(x, pd.DataFrame):
-            print("*"*10)
             bs = self._cfg.valid.batch_size
             results = []
             resize = int(math.ceil(self.input_size / self._cfg.train.crop_ratio))
@@ -649,7 +649,6 @@ class ImageClassificationEstimator(BaseEstimator):
                     idx += 1
             return pd.DataFrame(results)
         elif isinstance(x, list):
-            print("="*10)
             results = []
             idx = 0
             input = torch.cat(x)
@@ -678,7 +677,7 @@ class ImageClassificationEstimator(BaseEstimator):
         id = pred_id[0].cpu().numpy()
         logit = logit.cpu().numpy()
         prob = logit[0, id]
-        df = pd.DataFrame({'image_index': idx,
+        df = pd.DataFrame({'image_index': 0,
                             'class': self.classes[id],
                             'score': prob,
                             'id': id}, index = [0])
@@ -691,20 +690,83 @@ class ImageClassificationEstimator(BaseEstimator):
             return self._feature_net
         self._feature_net = copy.copy(self.net)
         fc_layer_found = False
-        for fc_name in ('output', 'fc'):
+        for fc_name in ('fc', 'classifier', 'head', 'classif'):
             fc_layer = getattr(self._feature_net, fc_name, None)
             if fc_layer is not None:
                 fc_layer_found = True
                 break
+        new_fc_layer = nn.Identity()
         if fc_layer_found:
-            self._feature_net.register_child(nn.Identity(), fc_name)
-            super(gluon.Block, self._feature_net).__setattr__(fc_name, nn.Identity())
-            self.net.__setattr__(fc_name, fc_layer)
+            if isinstance(fc_layer, ClassifierHead):
+                head_fc = getattr(fc_layer, 'fc', None)
+                assert head_fc is not None, "Can not find the fc layer in ClassifierHead"
+                setattr(fc_layer, 'fc', new_fc_layer)
+                setattr(self._feature_net, fc_name, fc_layer)
+
+            elif isinstance(fc_layer, (nn.Linear, nn.Conv2d)):
+                setattr(self._feature_net, fc_name, new_fc_layer)
+            else:
+                raise TypeError(f'Invalid FC layer type {type(fc_layer)} found, expected (Conv2d, Linear)...')
         else:
-            raise RuntimeError('Unable to modify the last fc layer in network, (output, fc) expected...')
+            raise RuntimeError('Unable to modify the last fc layer in network, (fc, classifier, ClassifierHead) expected...')
         return self._feature_net
 
     def _predict_feature(self, x, ctx_id=0):
+        x = self._predict_preprocess(x)
+        feature_net = self._get_feature_net()
+        if isinstance(x, pd.DataFrame):
+            bs = self._cfg.valid.batch_size
+            results = []
+            resize = int(math.ceil(self.input_size / self._cfg.train.crop_ratio))
+            normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            transform_test = transforms.Compose([
+                transforms.Resize(resize),
+                transforms.CenterCrop(self.input_size),
+                transforms.ToTensor(),
+                normalize
+            ])
+            predict_set = TorchImageClassificationDataset.to_pytorch(x, transform_test)
+            loader = torch.utils.data.DataLoader(predict_set,
+                                                batch_size=2,
+                                                shuffle=False,
+                                                num_workers=0,
+                                                pin_memory=True)
+            idx = 0
+            data_iter = enumerate(loader)
+            for i, (input, _) in data_iter:
+                input = input.cuda()
+                input_var = Variable(input)
+                with torch.no_grad():
+                    output_features = feature_net(input_var)
+                for j in range(output_features.shape[0]):
+                    feature = output_features[j]
+                    results.append({'image_index': idx,
+                                    'feature': feature})
+                    idx += 1
+            return pd.DataFrame(results)
+        elif isinstance(x, list):
+            results = []
+            idx = 0
+            input = torch.cat(x)
+            input = input.cuda()
+            input_var = Variable(input)
+            with torch.no_grad():
+                output_features = feature_net(input_var)
+            for j in range(output_features.shape[0]):
+                feature = output_features[j]
+                results.append({'image_index': idx,
+                                'feature': feature})
+                idx += 1
+            return pd.DataFrame(results)
+        elif not isinstance(x, torch.Tensor):
+            raise ValueError('Input is not supported: {}'.format(type(x)))
+        assert len(x.shape) == 4 and x.shape[1] == 3, "Expect input to be (n, 3, h, w), given {}".format(x.shape)
+        x = x.cuda()
+        input_var = Variable(x)
+        with torch.no_grad():
+            feature = feature_net(input_var)
+        df = pd.DataFrame([{'image_index': 0,
+                            'feature': feature}], index = [0])
         return df
 
     def _predict_proba(self, x, ctx_id=0):

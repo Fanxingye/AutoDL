@@ -23,7 +23,7 @@ if __name__ == '__main__':
     train_data, _, valid_data = TorchImageClassificationDataset.from_folders(
     'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
     
-    # test_data = TorchImageClassificationDataset.from_folder("/data/AutoML_compete/Store-type-recognition/split/test/")
+    test_data = TorchImageClassificationDataset.from_folder("/data/AutoML_compete/Store-type-recognition/split/test/")
     
     # assert isinstance(train_data, TorchImageClassificationDataset), "DataSet Type Error"
 
@@ -44,9 +44,10 @@ if __name__ == '__main__':
         'time_limits': 60*60
         }
     classifier.fit(valid_data, valid_data)
-    # img_path = ["/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg",
-    #             "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/3475870145_685a19116d.jpg",
-    #             "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/909609509_a05ccb8127.jpg"]
+    img_path = ["/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg",
+                "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/3475870145_685a19116d.jpg",
+                "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/909609509_a05ccb8127.jpg"]
+    # img_path = "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg"
     
     search_args = {'lr': ag.Categorical(1e-3, 1e-2),
                 'num_trials': 1,
@@ -59,5 +60,5 @@ if __name__ == '__main__':
     # task = ImageClassification(search_args)
     # task.load("/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-01-2021/best_checkpoint.pkl")
     # predictor = task.fit(train_data, valid_data)
-    df = classifier.predict(valid_data)
+    df = classifier.predict_feature(test_data)
     print(df)

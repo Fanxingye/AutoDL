@@ -40,14 +40,5 @@ def transform_eval(imgs, resize_short=256, crop_size=224,
         transforms.Normalize(mean, std)
     ])
     
-    print(type(imgs))
-    if isinstance(imgs, list):
-        print(">"*10)
-        res = [transform_fn(img) for img in imgs]
-    else:
-        print("<"*10)
-        res = [transform_fn(imgs).unsqueeze(0)]
-
-    if len(res) == 1:
-        return res[0]
+    res = transform_fn(imgs).unsqueeze(0)
     return res

@@ -1,3 +1,4 @@
+import copy
 from .model_zoo import get_model, get_model_list
 from .model_inputsize import model_inputsize
 import torch.nn as nn
@@ -50,16 +51,43 @@ def init_network(model_name, num_class, pretrained=False):
     return net
 
 
+def get_feature_net(net):
+    """Get the network slice for feature extraction only"""
+    feature_net = copy.copy(net)
+    fc_layer_found = False
+    for fc_name in ('fc', 'classifier', 'head', 'classif'):
+        fc_layer = getattr(feature_net, fc_name, None)
+        if fc_layer is not None:
+            fc_layer_found = True
+            break
+    new_fc_layer = nn.Identity()
+    if fc_layer_found:
+        if isinstance(fc_layer, ClassifierHead):
+            head_fc = getattr(fc_layer, 'fc', None)
+            assert head_fc is not None, "Can not find the fc layer in ClassifierHead"
+            setattr(fc_layer, 'fc', new_fc_layer)
+            setattr(feature_net, fc_name, fc_layer)
+
+        elif isinstance(fc_layer, (nn.Linear, nn.Conv2d)):
+            setattr(feature_net, fc_name, new_fc_layer)
+        else:
+            raise TypeError(f'Invalid FC layer type {type(fc_layer)} found, expected (Conv2d, Linear)...')
+    else:
+        raise RuntimeError('Unable to modify the last fc layer in network, (fc, classifier, ClassifierHead) expected...')
+    return feature_net
+
 if __name__ == '__main__':
     model_names = get_model_list()
-    model_names = ['resnetv2_50x1_bitm']
+    # model_names = ['resnetv2_50x1_bitm']
+    model_names = ['resnet18']
     for name in model_names:
         try:
             print("=" * 10, name)
             net = init_network(name, 2)
+            feature_net = get_feature_net(net)
             fc_layer_found = False
             for fc_name in ('fc', 'classifier', 'head', 'classif'):
-                fc_layer = getattr(net, fc_name, None)
+                fc_layer = getattr(feature_net, fc_name, None)
                 if fc_layer is not None:
                     fc_layer_found = True
                     break
@@ -67,7 +95,7 @@ if __name__ == '__main__':
                 print("===" * 10, fc_name)
                 print(fc_layer)
             else:
-                print(net)
+                print(feature_net)
         except NotImplementedError:
             print("Error " * 10)
             net = get_model(name)
