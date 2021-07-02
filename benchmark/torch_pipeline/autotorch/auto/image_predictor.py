@@ -10,6 +10,7 @@ import pandas as pd
 from autotorch.auto.task import ImageClassification as ImageClassification
 from autotorch.models import get_model_list
 from autotorch.auto.utils.error_handler import TorchErrorCatcher
+
 from autogluon.core.constants import MULTICLASS, BINARY, REGRESSION
 from autogluon.core.data.label_cleaner import LabelCleaner
 from autogluon.core.utils import set_logger_verbosity
@@ -238,9 +239,7 @@ class ImagePredictor(object):
         if self._problem_type is None:
             # options: multiclass, binary, regression
             self._problem_type = MULTICLASS
-        assert self._problem_type in (
-            MULTICLASS, BINARY,
-            REGRESSION), f"Invalid problem_type: {self._problem_type}"
+        assert self._problem_type in (MULTICLASS, BINARY, REGRESSION), f"Invalid problem_type: {self._problem_type}"
         if self._eval_metric is None:
             if self._problem_type == REGRESSION:
                 # options: rmse
@@ -291,14 +290,8 @@ class ImagePredictor(object):
         _set_valid_labels(train_data, train_labels_cleaned)
         tuning_data_validated = False
         if tuning_data is None:
-            train_data, tuning_data, _, _ = generate_train_test_split(
-                X=train_data,
-                y=train_data[self._label_inner],
-                problem_type=self._problem_type,
-                test_size=holdout_frac)
-            logger.info(
-                'Randomly split train_data into train[%d]/validation[%d] splits.',
-                len(train_data), len(tuning_data))
+            train_data, tuning_data, _, _ = generate_train_test_split(X=train_data, y=train_data[self._label_inner], problem_type=self._problem_type, test_size=holdout_frac)
+            logger.info('Randomly split train_data into train[%d]/validation[%d] splits.', len(train_data), len(tuning_data))
             train_data = train_data.reset_index(drop=True)
             tuning_data = tuning_data.reset_index(drop=True)
             tuning_data_validated = True
@@ -315,11 +308,7 @@ class ImagePredictor(object):
         if self._classifier is not None:
             logging.getLogger("ImageClassificationEstimator").propagate = True
             self._classifier._logger.setLevel(log_level)
-            self._fit_summary = self._classifier.fit(train_data,
-                                                     tuning_data,
-                                                     1 - holdout_frac,
-                                                     random_state,
-                                                     resume=False)
+            self._fit_summary = self._classifier.fit(train_data, tuning_data, 1 - holdout_frac, random_state, resume=False)
             if hasattr(self._classifier, 'fit_history'):
                 self._fit_summary['fit_history'] = self._classifier.fit_history()
             return self
@@ -328,9 +317,7 @@ class ImagePredictor(object):
         if time_limit is not None and num_trials is None:
             num_trials = 99999
         if time_limit is None and num_trials is None:
-            raise ValueError(
-                '`time_limit` and `num_trials` can not be `None` at the same time, '
-                'otherwise the training will not be terminated gracefully.')
+            raise ValueError('`time_limit` and `num_trials` can not be `None` at the same time, ''otherwise the training will not be terminated gracefully.')
         config = {
             'log_dir': self._log_dir,
             'num_trials': 99999 if num_trials is None else max(1, num_trials),
@@ -352,8 +339,7 @@ class ImagePredictor(object):
         if isinstance(hyperparameters, dict):
             if 'batch_size' in hyperparameters:
                 bs = hyperparameters['batch_size']
-                _check_gpu_memory_presets(bs, ngpus_per_trial, 4,
-                                          256)  # 256MB per sample
+                _check_gpu_memory_presets(bs, ngpus_per_trial, 4, 256)  # 256MB per sample
             net = hyperparameters.pop('net', None)
             if net is not None:
                 config['custom_net'] = net
@@ -363,9 +349,7 @@ class ImagePredictor(object):
             # check if hyperparameters overwriting existing config
             for k, v in hyperparameters.items():
                 if k in config:
-                    raise ValueError(
-                        f'Overwriting {k} = {config[k]} to {v} by hyperparameters is ambiguous.'
-                    )
+                    raise ValueError(f'Overwriting {k} = {config[k]} to {v} by hyperparameters is ambiguous.')
             config.update(hyperparameters)
         if scheduler_options is not None:
             config.update(scheduler_options)
@@ -385,17 +369,13 @@ class ImagePredictor(object):
             min_value = ngpus_per_trial
         else:
             min_value = 1
-        bs = sanitize_batch_size(config.get('batch_size', 16),
-                                 min_value=min_value,
-                                 max_value=len(train_data))
+        bs = sanitize_batch_size(config.get('batch_size', 16), min_value=min_value, max_value=len(train_data))
         config['batch_size'] = bs
         # verbosity
         if log_level > logging.INFO:
-            logging.getLogger(
-                'autotorch.auto.tasks.image_classification').propagate = False
+            logging.getLogger('autotorch.auto.tasks.image_classification').propagate = False
             logging.getLogger("ImageClassificationEstimator").propagate = False
-            logging.getLogger("ImageClassificationEstimator").setLevel(
-                log_level)
+            logging.getLogger("ImageClassificationEstimator").setLevel(log_level)
         task = ImageClassification(config=config)
         # GluonCV can't handle these separately - patching created config
         task.search_strategy = scheduler
@@ -406,8 +386,7 @@ class ImagePredictor(object):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             with TorchErrorCatcher() as err:
-                self._classifier = task.fit(train_data, tuning_data,
-                                            1 - holdout_frac, random_state)
+                self._classifier = task.fit(train_data, tuning_data, 1 - holdout_frac, random_state)
             if err.exc_value is not None:
                 raise RuntimeError(err.exc_value + err.hint)
         self._classifier._logger.setLevel(log_level)
@@ -423,10 +402,7 @@ class ImagePredictor(object):
             # TODO(zhreshold): allow custom label column without this renaming trick
             if self._label != self._label_inner and self._label in data.columns:
                 # data is deepcopied so it's okay to overwrite directly
-                data = data.rename(columns={
-                    self._label_inner: '_unused_label',
-                    self._label: self._label_inner},
-                    errors='ignore')
+                data = data.rename(columns={self._label_inner: '_unused_label', self._label: self._label_inner}, errors='ignore')
         if not (hasattr(data, 'classes') and hasattr(data, 'to_pytorch')):
             if isinstance(data, pd.DataFrame):
                 # raw dataframe, try to add metadata automatically
@@ -477,40 +453,27 @@ class ImagePredictor(object):
         """validate and initialize default kwargs"""
         kwargs['holdout_frac'] = kwargs.get('holdout_frac', 0.1)
         if not (0 < kwargs['holdout_frac'] < 1.0):
-            raise ValueError(
-                f'Range error for `holdout_frac`, expected to be within range (0, 1), given {kwargs["holdout_frac"]}'
-            )
+            raise ValueError(f'Range error for `holdout_frac`, expected to be within range (0, 1), given {kwargs["holdout_frac"]}')
         kwargs['random_state'] = kwargs.get('random_state', None)
         kwargs['nthreads_per_trial'] = kwargs.get('nthreads_per_trial', None)
         kwargs['ngpus_per_trial'] = kwargs.get('ngpus_per_trial', None)
-        if kwargs['ngpus_per_trial'] is not None and kwargs[
-                'ngpus_per_trial'] > 0:
+        if kwargs['ngpus_per_trial'] is not None and kwargs['ngpus_per_trial'] > 0:
             detected_gpu = get_gpu_count()
             if detected_gpu < kwargs['ngpus_per_trial']:
-                raise ValueError(
-                    f"Insufficient detected # gpus {detected_gpu} vs requested {kwargs['ngpus_per_trial']}"
-                )
+                raise ValueError(f"Insufficient detected # gpus {detected_gpu} vs requested {kwargs['ngpus_per_trial']}")
         # tune kwargs
         hpo_tune_args = kwargs.get('hyperparameter_tune_kwargs', {})
         hpo_tune_args['num_trials'] = hpo_tune_args.get('num_trials', 1)
         hpo_tune_args['searcher'] = hpo_tune_args.get('searcher', 'random')
         if not hpo_tune_args['searcher'] in ('random', 'bayesopt', 'grid'):
-            raise ValueError(
-                f"Invalid searcher: {hpo_tune_args['searcher']}, supported: ('random', 'bayesopt', 'grid')"
-            )
+            raise ValueError(f"Invalid searcher: {hpo_tune_args['searcher']}, supported: ('random', 'bayesopt', 'grid')")
         hpo_tune_args['scheduler'] = hpo_tune_args.get('scheduler', 'local')
         if not hpo_tune_args['scheduler'] in ('fifo', 'local'):
-            raise ValueError(
-                f"Invalid searcher: {hpo_tune_args['searcher']}, supported: ('fifo', 'local')"
-            )
+            raise ValueError(f"Invalid searcher: {hpo_tune_args['searcher']}, supported: ('fifo', 'local')")
         hpo_tune_args['max_reward'] = hpo_tune_args.get('max_reward', None)
-        if hpo_tune_args[
-                'max_reward'] is not None and hpo_tune_args['max_reward'] < 0:
-            raise ValueError(
-                f"Expected `max_reward` to be a positive float number between 0 and 1.0, given {hpo_tune_args['max_reward']}"
-            )
-        hpo_tune_args['scheduler_options'] = hpo_tune_args.get(
-            'scheduler_options', None)
+        if hpo_tune_args['max_reward'] is not None and hpo_tune_args['max_reward'] < 0:
+            raise ValueError(f"Expected `max_reward` to be a positive float number between 0 and 1.0, given {hpo_tune_args['max_reward']}")
+        hpo_tune_args['scheduler_options'] = hpo_tune_args.get('scheduler_options', None)
         kwargs['hyperparameter_tune_kwargs'] = hpo_tune_args
         return kwargs
 
@@ -534,19 +497,14 @@ class ImagePredictor(object):
             the returned dataframe will contain `images` column, and all results are concatenated.
         """
         if self._classifier is None:
-            raise RuntimeError(
-                'Classifier is not initialized, try `fit` first.')
+            raise RuntimeError('Classifier is not initialized, try `fit` first.')
         assert self._label_cleaner is not None
         y_pred_proba = self._classifier.predict(data, with_proba=True)
         if isinstance(data, pd.DataFrame):
             y_pred_proba.index = data.index
         if self._problem_type in [MULTICLASS, BINARY]:
-            y_pred_proba[list(
-                self._label_cleaner.cat_mappings_dependent_var.values(
-                ))] = y_pred_proba['image_proba'].to_list()
-            ret = y_pred_proba.drop(['image', 'image_proba'],
-                                    axis=1,
-                                    errors='ignore')
+            y_pred_proba[list(self._label_cleaner.cat_mappings_dependent_var.values())] = y_pred_proba['image_proba'].to_list()
+            ret = y_pred_proba.drop(['image', 'image_proba'], axis=1, errors='ignore')
         elif self._problem_type == REGRESSION:
             ret = y_pred_proba['prediction']
         if as_pandas:
@@ -576,8 +534,7 @@ class ImagePredictor(object):
             return self.predict_proba(data, as_pandas)
 
         if self._classifier is None:
-            raise RuntimeError(
-                'Classifier is not initialized, try `fit` first.')
+            raise RuntimeError('Classifier is not initialized, try `fit` first.')
         assert self._label_cleaner is not None
         proba = self._classifier.predict(data)
         if 'image' in proba.columns:
@@ -587,19 +544,16 @@ class ImagePredictor(object):
             if index_name is None:
                 # TODO: This crashes if a feature is already named 'index'.
                 index_name = 'index'
-            y_pred = proba.loc[proba.groupby(
-                ["image"])["score"].idxmax()].reset_index(drop=True)
+            y_pred = proba.loc[proba.groupby(["image"])["score"].idxmax()].reset_index(drop=True)
             idx_to_image_map = data[['image']]
             idx_to_image_map = idx_to_image_map.reset_index(drop=False)
             y_pred = idx_to_image_map.merge(y_pred, on='image')
             y_pred = y_pred.set_index(index_name).rename_axis(None)
-            ret = self._label_cleaner.inverse_transform(y_pred['id'].rename(
-                self._label))
+            ret = self._label_cleaner.inverse_transform(y_pred['id'].rename(self._label))
         else:
             # single image
             ret = proba.loc[[proba["score"].idxmax()]]
-            ret = self._label_cleaner.inverse_transform(ret['id'].rename(
-                self._label))
+            ret = self._label_cleaner.inverse_transform(ret['id'].rename(self._label))
         if as_pandas:
             return ret
         else:
@@ -624,8 +578,7 @@ class ImagePredictor(object):
             the returned dataframe will contain `images` column, and all results are concatenated.
         """
         if self._classifier is None:
-            raise RuntimeError(
-                'Classifier is not initialized, try `fit` first.')
+            raise RuntimeError('Classifier is not initialized, try `fit` first.')
         ret = self._classifier.predict_feature(data)
         if as_pandas:
             return ret
@@ -643,13 +596,11 @@ class ImagePredictor(object):
         if self._classifier is None:
             raise RuntimeError('Classifier not initialized, try `fit` first.')
         assert self._train_classes is not None
-        if isinstance(data, pd.DataFrame) and not isinstance(
-                data, ImageClassification.Dataset):
+        if isinstance(data, pd.DataFrame) and not isinstance(data, ImageClassification.Dataset):
             assert self._label in data.columns, f'{self._label} is not present in evaluation data'
             # note that evaluation data must use the same classes as training data, otherwise incorrect result
             if self._problem_type in [MULTICLASS, BINARY]:
-                data = ImageClassification.Dataset(data,
-                                                   classes=self._train_classes)
+                data = ImageClassification.Dataset(data, classes=self._train_classes)
             else:
                 data = ImageClassification.Dataset(data, classes=[])
         return self._classifier.evaluate(data, metric_name=self._eval_metric)
@@ -698,13 +649,8 @@ class ImagePredictor(object):
             return [mx.gpu(i) for i in range(mx.context.num_gpus())]
         if isinstance(mode, (list, tuple)):
             if not all(isinstance(i, int) for i in mode):
-                raise ValueError(
-                    'Requires integer gpu id, given {}'.format(mode))
-            return [
-                mx.gpu(i) for i in mode if i in range(mx.context.num_gpus())
-            ]
-        return None
-
+                raise ValueError('Requires integer gpu id, given {}'.format(mode))
+            return [mx.gpu(i) for i in mode if i in range(mx.context.num_gpus())]
     @classmethod
     def load(cls, path, ctx='auto'):
         """Load the state from disk copy.
