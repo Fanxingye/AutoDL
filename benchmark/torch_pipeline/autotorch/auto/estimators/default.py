@@ -17,7 +17,7 @@ class ImageClassification:
 class TrainCfg:
     pretrained_base : bool = True  # whether load the imagenet pre-trained base
     batch_size : int = 32
-    epochs : int = 10
+    epochs : int = 1
     base_lr : float = 0.01  # learning rate
     decay_factor : float = 0.1  # decay rate of learning rate.
     lr_decay_period : int = 0

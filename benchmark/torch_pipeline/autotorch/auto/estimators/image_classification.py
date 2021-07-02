@@ -15,6 +15,7 @@ from torch.autograd import Variable
 import torch.utils.data.distributed
 from torchvision import transforms
 from torch.nn.parallel import DistributedDataParallel as DDP
+import torch.nn.functional as F
 
 from mmcv.runner import get_dist_info, init_dist
 from autotorch.data.mixup import NLLMultiLabelSmooth
@@ -588,8 +589,12 @@ class ImageClassificationEstimator(BaseEstimator):
         if isinstance(x, str):
             x = self._predict_preprocess(transform_eval(
                     Image.open(x), resize_short=resize, crop_size=self.input_size))
+        elif isinstance(x, list):
+            x = [self._predict_preprocess(transform_eval(
+                    Image.open(v), resize_short=resize, crop_size=self.input_size)) for v in x]
         elif isinstance(x, Image.Image):
-            x = self._predict_preprocess(np.array(x))
+            x = self._predict_preprocess(transform_eval(
+                    x, resize_short=resize, crop_size=self.input_size))
         elif isinstance(x, np.ndarray):
             if len(x.shape) == 3 and x.shape[-1] == 3:
                 x = transform_eval(x, resize_short=resize, crop_size=self.input_size)
@@ -601,7 +606,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 x = np.stack([x]*3, axis=0)
             else:
                 raise ValueError('array input with shape (h, w, 3) or (n, 3, h, w) is required for predict')
-            x = transform_eval(x, resize_short=resize, crop_size=self.input_size)
+            x = transform_eval(Image.fromarray(x), resize_short=resize, crop_size=self.input_size)
         return x
 
     def _predict(self, x, ctx_id=0, with_proba=False):
@@ -609,14 +614,22 @@ class ImageClassificationEstimator(BaseEstimator):
             return self._predict_proba(x, ctx_id=ctx_id)
         x = self._predict_preprocess(x)
         if isinstance(x, pd.DataFrame):
+            print("*"*10)
             bs = self._cfg.valid.batch_size
-            self.net.hybridize()
             results = []
-            topK = min(5, self.num_class)
-            loader = torch.utils.data.DataLoader(TorchImageClassificationDataset(x, self._predict_preprocess),
-                                                batch_size=bs,
+            resize = int(math.ceil(self.input_size / self._cfg.train.crop_ratio))
+            normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+            transform_test = transforms.Compose([
+                transforms.Resize(resize),
+                transforms.CenterCrop(self.input_size),
+                transforms.ToTensor(),
+                normalize
+            ])
+            predict_set = TorchImageClassificationDataset.to_pytorch(x, transform_test)
+            loader = torch.utils.data.DataLoader(predict_set,
+                                                batch_size=2,
                                                 shuffle=False,
-                                                num_workers=self._cfg.valid.num_workers,
+                                                num_workers=0,
                                                 pin_memory=True)
             idx = 0
             data_iter = enumerate(loader)
@@ -624,32 +637,51 @@ class ImageClassificationEstimator(BaseEstimator):
                 input = input.cuda()
                 input_var = Variable(input)
                 with torch.no_grad():
-                    logits = self.net(input_var)
+                    logits = F.softmax(self.net(input_var))
                 _, pred_ids = torch.max(logits, 1)
                 for j in range(len(logits)):
-                    id = pred_ids[j]
-                    prob = logits[j, id].numpy()
-                    results.append({'class': self.classes[id],
+                    id = pred_ids[j].cpu().numpy()
+                    prob = logits[j, id].cpu().numpy()
+                    results.append({'image_index': idx,
+                                    'class': self.classes[id],
                                     'score': prob,
-                                    'id': id,
-                                    'image': x[idx]})
+                                    'id': id})
                     idx += 1
             return pd.DataFrame(results)
+        elif isinstance(x, list):
+            print("="*10)
+            results = []
+            idx = 0
+            input = torch.cat(x)
+            input = input.cuda()
+            input_var = Variable(input)
+            with torch.no_grad():
+                logits = F.softmax(self.net(input_var))
+                _, pred_ids = torch.max(logits, 1)
+                for j in range(len(logits)):
+                    id = pred_ids[j].cpu().numpy()
+                    prob = logits[j, id].cpu().numpy()
+                    results.append({'image_index': idx,
+                                    'class': self.classes[id],
+                                    'score': prob,
+                                    'id': id})
+                    idx += 1
+            return pd.DataFrame(results)
+
         elif not isinstance(x, torch.Tensor):
             raise ValueError('Input is not supported: {}'.format(type(x)))
         assert len(x.shape) == 4 and x.shape[1] == 3, "Expect input to be (n, 3, h, w), given {}".format(x.shape)
         x = x.cuda()
         with torch.no_grad():
-            logit = self.net(x)
+            logit = F.softmax(self.net(x))
             _, pred_id = torch.max(logit, 1)
-        if isinstance(pred_id, list):
-            id = pred_id[0]
-        else:
-            id = pred_id
-        prob = logit[0, id].numpy()
-        df = pd.DataFrame({'class': self.classes[id],
-                        'score': prob,
-                        'id': id})
+        id = pred_id[0].cpu().numpy()
+        logit = logit.cpu().numpy()
+        prob = logit[0, id]
+        df = pd.DataFrame({'image_index': idx,
+                            'class': self.classes[id],
+                            'score': prob,
+                            'id': id}, index = [0])
         return df
 
 
