@@ -143,6 +143,7 @@ def config_to_nested(config):
 
     cfg_map = estimator._default_cfg.asdict()
 
+
     def _recursive_update(config, key, value, auto_strs, auto_ints):
         for k, v in config.items():
             if k in auto_strs:
