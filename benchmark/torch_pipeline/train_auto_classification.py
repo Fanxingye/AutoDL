@@ -30,13 +30,15 @@ if __name__ == '__main__':
     # # evaluate auto estimator
     # classifier.fit(train_data, valid_data)
 
-    search_args = {'lr': ag.Categorical(1e-3, 1e-2),
-                'num_trials': 1,
-                'epochs': 2,
-                'num_workers': 4,
-                'batch_size': ag.Categorical(4, 8),
-                'search_strategy': 'random',
-                'time_limits': 60*60}
-
+    search_args = {
+        'lr': ag.Categorical(1e-3, 1e-2),
+        'num_trials': 2,
+        'epochs': 2,
+        'num_workers': 4,
+        'batch_size': ag.Categorical(4, 8),
+        'search_strategy': 'random',
+        'log_dir': 'checkpoint',
+        'time_limits': 60*60
+        }
     task = ImageClassification(search_args)
     predictor = task.fit(train_data, valid_data)
