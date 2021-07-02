@@ -32,7 +32,7 @@ from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
 from ..data.dataloader import get_data_loader
 from ..data.transforms import transform_eval
-from ..conf import _BEST_CHECKPOINT_FILE
+from .conf import _BEST_CHECKPOINT_FILE
 from gluoncv.auto.estimators.utils import EarlyStopperOnPlateau
 
 

@@ -13,4 +13,5 @@ train_dataset, _, test_dataset = ImagePredictor.Dataset.from_folders('https://au
 predictor = ImagePredictor()
 # since the original dataset does not provide validation split, the `fit` function splits it randomly with 90/10 ratio
 predictor.fit(train_dataset, hyperparameters={'model': ag.Categorical('resnet18_v1b', 'mobilenetv3'), 'epochs': 2},
+                            task="imagclassification", dataset="Leaf-Classification", log_dir="checkpoint",
                             nthreads_per_trial=16)  # you can trust the default config, we reduce the # epoch to save some build time
