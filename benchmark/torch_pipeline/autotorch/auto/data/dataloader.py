@@ -12,21 +12,21 @@ def get_data_loader(data_dir, batch_size, num_workers, input_size, crop_ratio, d
     """AutoPytorch ImageClassification data loaders
     Parameters:
     -----------
-    data_dir : 
+    data_dir: 
         data_dir
-    batch_size : 
+    batch_size: 
         batch_szie
     num_workers: 
         4
     input_size:
          224
-    crop_ratio  :
+    crop_ratio:
         0.875
-    data_augment : 
+    data_augment:
         None
-    train_dataset : 
+    train_dataset: 
         TorchImageClassificationDataset
-    val_dataset   : 
+    val_dataset:
         TorchImageClassificationDataset
     """
     normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
@@ -52,14 +52,14 @@ def get_data_loader(data_dir, batch_size, num_workers, input_size, crop_ratio, d
         train_dataset = datasets.ImageFolder(os.path.join(data_dir, 'train'), transform_train)
     else:
         assert isinstance(train_dataset, pd.DataFrame), "DataSet Type Error"
-        # assert isinstance(train_dataset, TorchImageClassificationDataset), "DataSet Type Error"
+        assert isinstance(train_dataset, TorchImageClassificationDataset), "DataSet Type Error"
         train_dataset = train_dataset.to_pytorch(transform_train)
 
     if val_dataset is None:
         val_dataset = datasets.ImageFolder(os.path.join(data_dir, 'val'), transform_test)
     else:
         assert isinstance(val_dataset, pd.DataFrame), "DataSet Type Error"
-        # assert isinstance(train_dataset, TorchImageClassificationDataset), "DataSet Type Error"
+        assert isinstance(val_dataset, TorchImageClassificationDataset), "DataSet Type Error"
         val_dataset = val_dataset.to_pytorch(transform_test)
 
     train_data = torch.utils.data.DataLoader(train_dataset,
