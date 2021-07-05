@@ -164,7 +164,7 @@ def _train_image_classification(args, reporter):
                 'time': time.time() - tic, 'train_acc': -1, 'valid_acc': -1}
 
     if estimator:
-        result.update({'model_checkpoint': dill.dumps(estimator)})
+        result.update({'model_checkpoint': pickle.dumps(estimator)})
     return result
 
 
@@ -388,7 +388,7 @@ class ImageClassification(BaseTask):
             if results.get('traceback', '') == 'timeout':
                 raise TimeoutError(f'Unable to fit a usable model given `time_limit={time_limit}`')
             raise RuntimeError(f'Unexpected error happened during fit: {pprint.pformat(results, indent=2)}')
-        estimator = dill.loads(results['model_checkpoint'])
+        estimator = pickle.loads(results['model_checkpoint'])
         return estimator
 
     def fit_summary(self):

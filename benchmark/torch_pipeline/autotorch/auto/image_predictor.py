@@ -103,8 +103,7 @@ class ImagePredictor(object):
             If `None`, the validation dataset will be randomly split from `train_data` according to `holdout_frac`.
         time_limit : int, default = 'auto'(defaults to 2 hours if no presets detected)
             Time limit in seconds, if `None`, will run until all tuning and training finished.
-            If `time_limit` is hit during `fit`, the
-            HPO process will interrupt and return the current best configuration.
+            If `time_limit` is hit during `fit`, the HPO process will interrupt and return the current best configuration.
         presets : list or str or dict, default = ['medium_quality_faster_train']
             List of preset configurations for various arguments in `fit()`. Can significantly impact predictive accuracy, memory-footprint, and inference latency of trained models,
             and various other properties of the returned `predictor`.

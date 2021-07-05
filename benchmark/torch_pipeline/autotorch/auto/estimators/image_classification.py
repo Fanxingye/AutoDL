@@ -65,6 +65,7 @@ class ImageClassificationEstimator(BaseEstimator):
         if net is not None:
             assert isinstance(net, torch.nn.Module), f"given custom network {type(net)}, torch.nn.Module expected"
         self._custom_net = net
+        self._feature_net = None
 
         if optimizer is not None:
             if isinstance(optimizer, str):
@@ -122,11 +123,10 @@ class ImageClassificationEstimator(BaseEstimator):
         if max(self._cfg.train.start_epoch, self.epoch) >= self._cfg.train.epochs:
             return {'time', self._time_elapsed}
 
-        num_workers = self._cfg.train.num_workers
         train_loader, val_loader = get_data_loader(
                                                 data_dir=self._cfg.train.data_dir,
                                                 batch_size=self.batch_size,
-                                                num_workers=num_workers,
+                                                num_workers=self._cfg.train.num_workers,
                                                 input_size=self.input_size,
                                                 crop_ratio=self._cfg.train.crop_ratio,
                                                 data_augment=self._cfg.train.data_augment,
@@ -345,7 +345,7 @@ class ImageClassificationEstimator(BaseEstimator):
             target = target.cuda()
 
             bs = input.size(0)
-            lr_scheduler(optimizer, i, epoch)
+            # lr_scheduler(optimizer, i, epoch)
             data_time = time.time() - end
 
             optimizer_step = ((i + 1) % batch_size_multiplier) == 0
@@ -512,7 +512,7 @@ class ImageClassificationEstimator(BaseEstimator):
         )
 
         self.scaler = scaler
-        self.lr_policy = lr_policy
+        self.lr_policy = None
         self.optimizer = optimizer
         self.criterion = loss().cuda()
 
