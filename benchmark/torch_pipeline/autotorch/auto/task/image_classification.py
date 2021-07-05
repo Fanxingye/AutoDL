@@ -25,7 +25,7 @@ from ..estimators import BaseEstimator
 from ..estimators import ImageClassificationEstimator
 from .utils import config_to_nested
 from ..data.dataset import TorchImageClassificationDataset
-from ..conf import _BEST_CHECKPOINT_FILE
+from ..estimators.conf import _BEST_CHECKPOINT_FILE
 
 
 __all__ = ['ImageClassification', 'ImagePrediction']
@@ -70,8 +70,8 @@ def _train_image_classification(args, reporter):
         task_id = str(args.task_id)
     except Exception as e:
         logging.info(e)
-        logging.info("*" * 100)
-        logging.info("Can not get task_id,  set task_id to 0")
+        logging.info("Set task_id to 0")
+        logging.info("=" * 100)
         task_id = 0
     final_fit = args.pop('final_fit', False)
     # train, val data
@@ -124,7 +124,7 @@ def _train_image_classification(args, reporter):
                                 print("=" * 30, "Find a Better checkpoint : ", best_checkpoint)
                                 best_acc = acc
                     except IOError as exc:
-                        raise RuntimeError('Failed to find valid checkpoint file') from exc
+                        logging.info(exc)
                         pass
                 if best_checkpoint:
                     estimator = estimator_cls.load(best_checkpoint)
@@ -157,13 +157,14 @@ def _train_image_classification(args, reporter):
                 with open(json_file_name, 'w') as json_file:
                     json_file.write(json_str)
                 logging.info('Config and result in this trial have been saved to %s.', json_file_name)
-    except RuntimeError:
+    except RuntimeError as exc:
+        logging.info(exc)
         import traceback
         return {'traceback': traceback.format_exc(), 'args': str(args),
                 'time': time.time() - tic, 'train_acc': -1, 'valid_acc': -1}
 
     if estimator:
-        result.update({'model_checkpoint': dill.dumps(estimator)})
+        result.update({'model_checkpoint': pickle.dumps(estimator)})
     return result
 
 
@@ -176,7 +177,7 @@ class ImageClassification(BaseTask):
         The configurations, can be nested dict.
     logger : logging.Logger
         The desired logger object, use `None` for module specific logger with default setting.
-    net : mx.gluon.Block
+    net : torch.nn.Module
         The custom network. If defined, the model name in config will be ignored so your
         custom network will be used for training rather than pulling it from model zoo.
     """
@@ -387,7 +388,7 @@ class ImageClassification(BaseTask):
             if results.get('traceback', '') == 'timeout':
                 raise TimeoutError(f'Unable to fit a usable model given `time_limit={time_limit}`')
             raise RuntimeError(f'Unexpected error happened during fit: {pprint.pformat(results, indent=2)}')
-        estimator = dill.loads(results['model_checkpoint'])
+        estimator = pickle.loads(results['model_checkpoint'])
         return estimator
 
     def fit_summary(self):

@@ -2,7 +2,6 @@
 # pylint: disable=bare-except
 import os
 import math
-import dill
 import pickle
 import io
 import logging
@@ -304,8 +303,7 @@ class BaseEstimator:
             The file name for storing the full state.
         """
         with open(filename, 'wb') as fid:
-            # pickle.dump(self, fid)
-            dill.dump(self, fid)
+            pickle.dump(self, fid)
         self._logger.debug('Pickled to %s', filename)
 
     @classmethod
@@ -327,62 +325,8 @@ class BaseEstimator:
             will be [gpu(0), gpu(2), gpu(4)...]
         """
         with open(filename, 'rb') as fid:
-            # obj = pickle.load(fid)
-            obj = dill.load(fid)
+            obj = pickle.load(fid)
             obj._logger.debug('Unpickled from %s', filename)
             new_ctx = _suggest_load_context(obj.net, ctx, obj.ctx)
             obj.reset_ctx(new_ctx)
             return obj
-
-    def __getstate__(self):
-        d = self.__dict__.copy()
-        try:
-            import mxnet as mx
-            d.pop('async_net', None)
-            d.pop('_feature_net', None)
-            net = d.get('net', None)
-            if isinstance(net, mx.gluon.HybridBlock):
-                with temporary_filename() as tfile:
-                    net.save_parameters(tfile)
-                    with open(tfile, 'rb') as fi:
-                        d['net'] = fi.read()
-            trainer = d.get('trainer', None)
-            if isinstance(trainer, mx.gluon.Trainer):
-                with temporary_filename() as tfile:
-                    trainer.save_states(tfile)
-                    with open(tfile, 'rb') as fi:
-                        d['trainer'] = fi.read()
-        except ImportError:
-            pass
-        d['_logger'] = None
-        d['_reporter'] = None
-        return d
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        # logger
-        self._logger = logging.getLogger(state.get('_name', self.__class__.__name__))
-        self._logger.setLevel(logging.ERROR)
-        try:
-            fh = logging.FileHandler(self._log_file)
-            self._logger.addHandler(fh)
-        #pylint: disable=bare-except
-        except:
-            pass
-        try:
-            import mxnet as _
-            net_params = state['net']
-            self._init_network(load_only=True)
-            with temporary_filename() as tfile:
-                with open(tfile, 'wb') as fo:
-                    fo.write(net_params)
-                self.net.load_parameters(tfile, ignore_extra=True)
-            trainer_state = state['trainer']
-            self._init_trainer()
-            with temporary_filename() as tfile:
-                with open(tfile, 'wb') as fo:
-                    fo.write(trainer_state)
-                self.trainer.load_states(tfile)
-        except ImportError:
-            pass
-        self._logger.setLevel(logging.INFO)
