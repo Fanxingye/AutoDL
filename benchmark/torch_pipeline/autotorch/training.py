@@ -127,7 +127,7 @@ def train(
         target = target.cuda()
 
         bs = input.size(0)
-        lr_scheduler(optimizer, i, epoch)
+        lr_scheduler.step(epoch)
         data_time = time.time() - end
 
         optimizer_step = ((i + 1) % batch_size_multiplier) == 0
