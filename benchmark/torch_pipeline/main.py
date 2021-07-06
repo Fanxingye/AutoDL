@@ -20,7 +20,7 @@ from autotorch.models.model_zoo import get_model_list
 from autotorch.models.network import init_network, get_input_size
 from autotorch.models.common import EMA
 from autotorch.optim.optimizers import get_optimizer
-from autotorch.scheduler.lr_scheduler import *
+from autotorch.scheduler import StepLRScheduler, LinearLRScheduler, CosineLRScheduler, ExponentialLRScheduler
 from autotorch.utils.model import resum_checkpoint
 from autotorch.training import ModelAndLoss, train_loop
 import autogluon.core as ag
@@ -58,6 +58,8 @@ def parse_args():
                         help="size of a total batch size, for simulating bigger batches using gradient accumulation",)
     parser.add_argument('--lr', '--learning-rate', default=0.1, type=float,
                         metavar='LR', help='initial learning rate', dest='lr')
+    parser.add_argument('--end-lr', '--minimum learning-rate', default=1e-8, type=float,
+                        metavar='END-LR', help='initial learning rate')
     parser.add_argument('--lr-schedule', default="step", type=str, metavar="SCHEDULE",
                         choices=["step", "linear", "cosine", "exponential"],
                         help="Type of LR schedule: {}, {}, {} , {}".format("step", "linear", "cosine", "exponential"),)
@@ -289,22 +291,22 @@ def prepare_for_training(args):
         if args.auto_step:
             step_ratios = [0.6, 0.9]
             auto_steps = [int(ratio * args.epochs) for ratio in step_ratios]
-            lr_policy = lr_step_policy(
-                base_lr=args.lr, steps=auto_steps, decay_factor=0.1, warmup_length=args.warmup, logger=logger
+            lr_policy = StepLRScheduler(
+                optimizer=optimizer, base_lr=args.lr, steps=auto_steps, decay_factor=0.1, warmup_length=args.warmup, logger=logger
             )
         else:
             lr_policy = lr_step_policy(
                 base_lr=args.lr, steps=[30, 60, 80], decay_factor=0.1, warmup_length=args.warmup, logger=logger
             )
     elif args.lr_schedule == "cosine":
-        lr_policy = lr_cosine_policy(
-            base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, end_lr=args.end_lr, logger=logger
+        lr_policy = CosineLRScheduler(
+            optimizer=optimizer, base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, end_lr=args.end_lr, logger=logger
         )
     elif args.lr_schedule == "linear":
-        lr_policy = lr_linear_policy(base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
+        lr_policy = LinearLRScheduler(optimizer=optimizer, base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
         )
     elif args.lr_schedule == "exponential":
-        lr_policy = lr_exponential_policy(base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
+        lr_policy = ExponentialLRScheduler(optimizer=optimizer, base_lr=args.lr, warmup_length=args.warmup, epochs=args.epochs, logger=logger
         )
  
     scaler = torch.cuda.amp.GradScaler(
