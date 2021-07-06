@@ -1,5 +1,7 @@
 from .cosine_lr import CosineLRScheduler
-from .plateau_lr import PlateauLRScheduler
+from .linear_lr import LinearLRScheduler
 from .step_lr import StepLRScheduler
-from .tanh_lr import TanhLRScheduler
-from .scheduler_factory import create_scheduler
+from .exponential_lr import ExponentialLRScheduler
+
+__all__=["CosineLRScheduler", "LinearLRScheduler"
+        "StepLRScheduler", "ExponentialLRScheduler"]

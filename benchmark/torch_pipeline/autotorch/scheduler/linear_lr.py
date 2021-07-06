@@ -1,30 +1,27 @@
 import math
 import numpy as np
 
-class StepLRScheduler():
+class LinearLRScheduler():
     """
-    step learning rate scheduler
+    Linear learning rate decay scheduler
     """
     def __init__(self,
                 optimizer,
                 base_lr,
-                steps,
-                decay_factor,
+                epochs,
                 warmup_length,
                 logger=None):
         self.optimizer = optimizer
         self.base_lr = base_lr
-        self.steps = steps
-        self.decay_factor = decay_factor
+        self.epochs = epochs
         self.warmup_length = warmup_length
 
     def step(self, epoch):
         if epoch < self.warmup_length:
             lr = self.base_lr * (epoch + 1) / self.warmup_length
         else:
-            lr = self.base_lr
-            for s in self.steps:
-                if epoch >= s:
-                    lr *= self.decay_factor
+            e = epoch - self.warmup_length
+            es = self.epochs - self.warmup_length
+            lr = self.base_lr * (1 - (e / es))
         for param_group in self.optimizer.param_groups:
             param_group["lr"] = lr
