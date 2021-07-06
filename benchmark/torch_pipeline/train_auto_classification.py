@@ -47,7 +47,7 @@ if __name__ == '__main__':
     img_path = ["/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg",
                 "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/3475870145_685a19116d.jpg",
                 "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/909609509_a05ccb8127.jpg"]
-    # img_path = "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg"
+    img_path = "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg"
     
     search_args = {'lr': ag.Categorical(1e-3, 1e-2),
                 'num_trials': 1,
@@ -60,5 +60,5 @@ if __name__ == '__main__':
     # task = ImageClassification(search_args)
     # task.load("/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-01-2021/best_checkpoint.pkl")
     # predictor = task.fit(train_data, valid_data)
-    df = classifier.predict_feature(test_data)
+    df = classifier.predict_feature(img_path)
     print(df)
