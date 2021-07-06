@@ -51,7 +51,7 @@ class ImageClassificationEstimator(BaseEstimator):
         Optional logger for this estimator, can be `None` when default setting is used.
     reporter : callable
         The reporter for metric checkpointing.
-    net : torch.Module
+    net : torch.nn.Module
         The custom network. If defined, the model name in config will be ignored so your
         custom network will be used for training rather than pulling it from model zoo.
     """
@@ -637,7 +637,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 input = input.cuda()
                 input_var = Variable(input)
                 with torch.no_grad():
-                    logits = F.softmax(self.net(input_var))
+                    logits = F.softmax(self.net(input_var), dim=1)
                 _, pred_ids = torch.max(logits, 1)
                 for j in range(len(logits)):
                     id = pred_ids[j].cpu().numpy()
@@ -682,7 +682,6 @@ class ImageClassificationEstimator(BaseEstimator):
                             'score': prob,
                             'id': id}, index = [0])
         return df
-
 
     def _get_feature_net(self):
         """Get the network slice for feature extraction only"""

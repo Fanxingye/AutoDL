@@ -20,6 +20,8 @@ except ImportError:
 
 logger = logging.getLogger()
 
+__all__ = ['TorchImageClassificationDataset']
+
 
 def _absolute_pathify(df, root=None, column='image'):
     """Convert relative paths to absolute"""

@@ -9,8 +9,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from gluoncv.utils import random as _random
-from gluoncv.utils.filesystem import temporary_filename
-from gluoncv.auto.estimators.utils import _suggest_load_context
+from autotorch.auto.utils import _suggest_load_context
 
 
 logging.basicConfig(level=logging.INFO)
@@ -250,12 +249,13 @@ class BaseEstimator:
         """validate if requested gpus are actually available"""
         valid_gpus = []
         try:
-            import mxnet as mx
+            import torch
             for gid in gpu_ids:
                 try:
-                    _ = mx.nd.zeros((1,), ctx=mx.gpu(gid))
+                    torch.cuda.set_device(gid)
                     valid_gpus.append(gid)
-                except:
+                except Exception as e:
+                    self._logger.warning(e, ", GPU %s is not available" % gid)
                     pass
         except ImportError:
             pass
@@ -279,14 +279,14 @@ class BaseEstimator:
             ctx_list = ctx
         done = False
         try:
-            import mxnet as mx
-            if isinstance(self.net, mx.gluon.Block):
+            import torch
+            if isinstance(self.net, torch.nn.Module):
                 for c in ctx_list:
-                    assert isinstance(c, mx.Context)
+                    assert isinstance(c, torch.device)
                 if hasattr(self.net, 'reset_ctx'):
-                    self.net.reset_ctx(ctx_list)
+                    self.net.to(ctx_list)
                 else:
-                    self.net.collect_params().reset_ctx(ctx_list)
+                    self.net.to(ctx_list)
                 self.ctx = ctx_list
                 done = True
         except ImportError:
