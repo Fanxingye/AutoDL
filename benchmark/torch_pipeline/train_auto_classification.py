@@ -5,7 +5,7 @@ import pandas as pd
 import autogluon.core as ag
 from autotorch.auto.data import TorchImageClassificationDataset
 from autotorch.auto.estimators import ImageClassificationEstimator
-from autotorch.auto.task.image_classification import ImageClassification
+from autotorch.auto.task import ImageClassification
 
 
 if __name__ == '__main__':

@@ -23,7 +23,7 @@ from autotorch.data.mixup import NLLMultiLabelSmooth
 from autotorch.data.smoothing import LabelSmoothing
 from autotorch.models.network import init_network, get_input_size
 from autotorch.optim.optimizers import get_optimizer
-from autotorch.scheduler.lr_scheduler import lr_step_policy, lr_linear_policy, lr_cosine_policy
+from autotorch.scheduler import StepLRScheduler, LinearLRScheduler, CosineLRScheduler, ExponentialLRScheduler
 from autotorch.utils.model import reduce_tensor
 from autotorch.utils.metrics import AverageMeter, accuracy
 
@@ -345,7 +345,7 @@ class ImageClassificationEstimator(BaseEstimator):
             target = target.cuda()
 
             bs = input.size(0)
-            # lr_scheduler(optimizer, i, epoch)
+            lr_scheduler.step(epoch)
             data_time = time.time() - end
 
             optimizer_step = ((i + 1) % batch_size_multiplier) == 0
@@ -472,18 +472,7 @@ class ImageClassificationEstimator(BaseEstimator):
         decay_factor = self._cfg.train.decay_factor
         lr_decay_period = self._cfg.train.lr_decay_period
 
-        if self._cfg.train.lr_decay_period > 0:
-            lr_decay_epoch = list(range(lr_decay_period, self._cfg.train.epochs, lr_decay_period))
-        else:
-            lr_decay_epoch = [int(i) for i in self._cfg.train.lr_decay_epoch.split(',')]
-
-        if self._cfg.train.lr_schedule_mode == "step":
-            lr_policy = lr_step_policy(base_lr=base_lr, steps=lr_decay_epoch, decay_factor=decay_factor, warmup_length=warmup_epochs, logger=self._logger)
-        elif self._cfg.train.lr_schedule_mode == "cosine":
-            lr_policy = lr_cosine_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch, end_lr=self._cfg.train.end_lr, logger=self._logger)
-        elif self._cfg.train.lr_schedule_mode == "linear":
-            lr_policy = lr_linear_policy(base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epochs, logger=self._logger)
-
+        # init optimizer
         if self._optimizer is None:
             optimizer = optim.SGD(params=self.net.parameters(), lr=base_lr,
                                 momentum=self._cfg.train.momentum, weight_decay=self._cfg.train.weight_decay,
@@ -495,6 +484,30 @@ class ImageClassificationEstimator(BaseEstimator):
                     optimizer = get_optimizer(optimizer, lr=base_lr)
                 except TypeError:
                     pass
+
+        # init lr_scheduler
+        if self._cfg.train.lr_decay_period > 0:
+            lr_decay_epoch = list(range(lr_decay_period, self._cfg.train.epochs, lr_decay_period))
+        else:
+            lr_decay_epoch = [int(i) for i in self._cfg.train.lr_decay_epoch.split(',')]
+
+        if self._cfg.train.lr_schedule_mode == "step":
+            lr_policy = StepLRScheduler(
+                optimizer=optimizer, base_lr=base_lr, steps=lr_decay_epoch, decay_factor=decay_factor, warmup_length=warmup_epochs, logger=self._logger
+            )
+        elif self._cfg.train.lr_schedule_mode == "cosine":
+            lr_policy = CosineLRScheduler(
+                optimizer=optimizer, base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch, end_lr=self._cfg.train.end_lr, logger=self._logger
+            )
+        elif self._cfg.train.lr_schedule_mode == "linear":
+            lr_policy = LinearLRScheduler(optimizer=optimizer, base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch, logger=self._logger
+            )
+        elif self._cfg.lr_schedule == "exponential":
+            lr_policy = ExponentialLRScheduler(optimizer=optimizer, base_lr=base_lr, warmup_length=warmup_epochs, epochs=self.epoch, logger=self._logger
+            )
+        else:
+            raise NotImplementedError
+
         # init loss function
         loss = nn.CrossEntropyLoss
         if self._cfg.train.mixup:
@@ -512,7 +525,7 @@ class ImageClassificationEstimator(BaseEstimator):
         )
 
         self.scaler = scaler
-        self.lr_policy = None
+        self.lr_policy = lr_policy
         self.optimizer = optimizer
         self.criterion = loss().cuda()
 

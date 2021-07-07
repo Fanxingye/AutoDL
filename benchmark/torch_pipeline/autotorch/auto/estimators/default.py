@@ -21,11 +21,11 @@ class TrainCfg:
     base_lr : float = 0.01  # learning rate
     decay_factor : float = 0.1  # decay rate of learning rate.
     lr_decay_period : int = 0
-    lr_decay_epoch : str = '40, 60'  # epochs at which learning rate decays
+    lr_decay_epoch : str = '2, 6'  # epochs at which learning rate decays
     lr_schedule_mode : str = 'step'  # learning rate scheduler mode. options are step, poly and cosine
     warmup_lr : float = 0.0  # starting warmup learning rate.
     warmup_epochs : int = 0  # number of warmup epochs
-    num_workers : int = 0
+    num_workers : int = 4
     weight_decay : float = 0.0001
     momentum : float = 0.9
     nesterov : bool = False
@@ -56,7 +56,7 @@ class TrainCfg:
 
 @dataclass
 class ValidCfg:
-    batch_size : int = 16
+    batch_size : int = 32
     num_workers : int = 4
 
 @dataclass
