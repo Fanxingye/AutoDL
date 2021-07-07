@@ -152,7 +152,6 @@ class ImageClassificationEstimator(BaseEstimator):
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
             data_augment=self._cfg.train.data_augment,
-            train_dataset=train_data,
             val_dataset=val_data)
 
         self._time_elapsed += time.time() - tic
