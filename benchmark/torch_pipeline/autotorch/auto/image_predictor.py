@@ -252,6 +252,7 @@ class ImagePredictor(object):
         # init/validate kwargs
         kwargs = self._validate_kwargs(kwargs)
         # unpack
+        task = kwargs['task']
         num_trials = kwargs['hyperparameter_tune_kwargs']['num_trials']
         nthreads_per_trial = kwargs['nthreads_per_trial']
         ngpus_per_trial = kwargs['ngpus_per_trial']
@@ -319,6 +320,7 @@ class ImagePredictor(object):
             raise ValueError('`time_limit` and `num_trials` can not be `None` at the same time, ''otherwise the training will not be terminated gracefully.')
         config = {
             'log_dir': self._log_dir,
+            'task': kwargs['task'],
             'num_trials': 99999 if num_trials is None else max(1, num_trials),
             'time_limits': 2147483647 if time_limit is None else max(1, time_limit),
             'searcher': searcher,
@@ -453,6 +455,7 @@ class ImagePredictor(object):
         kwargs['holdout_frac'] = kwargs.get('holdout_frac', 0.1)
         if not (0 < kwargs['holdout_frac'] < 1.0):
             raise ValueError(f'Range error for `holdout_frac`, expected to be within range (0, 1), given {kwargs["holdout_frac"]}')
+        kwargs['task'] = kwargs.get('task', None)
         kwargs['random_state'] = kwargs.get('random_state', None)
         kwargs['nthreads_per_trial'] = kwargs.get('nthreads_per_trial', None)
         kwargs['ngpus_per_trial'] = kwargs.get('ngpus_per_trial', None)
@@ -650,6 +653,26 @@ class ImagePredictor(object):
             if not all(isinstance(i, int) for i in mode):
                 raise ValueError('Requires integer gpu id, given {}'.format(mode))
             return [mx.gpu(i) for i in mode if i in range(mx.context.num_gpus())]
+
+
+    def save(self, path=None, mode="gpu", ctx=None):
+        """Dump predictor to disk.
+
+        Parameters
+        ----------
+        path : str, default = None
+            The path of saved copy. If not specified(None), will automatically save to `self.path` directory
+            with filename `image_predictor.ag`
+
+        """
+        ctx_list = suggest_save_context(mode, ctx)
+        self.reset_ctx(ctx_list)
+        if path is None:
+            path = os.path.join(self.path, 'image_predictor.ag')
+
+        with open(path, 'wb') as fid:
+            pickle.dump(self, fid)
+
     @classmethod
     def load(cls, path, ctx='auto'):
         """Load the state from disk copy.

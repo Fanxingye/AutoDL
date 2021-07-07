@@ -8,7 +8,6 @@ import logging
 import pprint
 import json
 import pickle
-import dill
 from typing import Union, Tuple
 import uuid
 import shutil
@@ -232,7 +231,7 @@ class ImageClassification(BaseTask):
         config['gpus'] = [int(i) for i in range(ngpus_per_trial)]
         config['seed'] = config.get('seed', np.random.randint(32, 767))
         config['final_fit'] = config.get('cleanup_disk', False)
-        self._cleanup_disk = config.get('cleanup_disk', True)
+        self._cleanup_disk = config.get('cleanup_disk', False)
         self._config = config
 
         # scheduler options
