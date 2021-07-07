@@ -12,16 +12,15 @@ from autotorch.data.autoaugment import AutoaugmentImageNetPolicy
 from .dataset import TorchImageClassificationDataset
 
 
-def get_pytorch_train_loader(
+def get_pytorch_val_loader(
     data_dir,
     batch_size,
     num_workers,
     input_size,
     crop_ratio,
-    data_augment,
-    train_dataset=None, 
     val_dataset=None,
     start_epoch=0,
+    one_hot=False,
     _worker_init_fn=None,
     memory_format=torch.contiguous_format,
 ):
@@ -39,9 +38,11 @@ def get_pytorch_train_loader(
         assert isinstance(val_dataset, TorchImageClassificationDataset), "DataSet Type Error"
         val_dataset = val_dataset.to_pytorch(transform_test)
 
+    num_classes = len(val_dataset.classes)
+
     if torch.distributed.is_initialized():
         val_sampler = torch.utils.data.distributed.DistributedSampler(
-            train_dataset, shuffle=True
+            val_dataset, shuffle=True
         )
     else:
         val_sampler = None
@@ -58,7 +59,7 @@ def get_pytorch_train_loader(
         drop_last=False,
         persistent_workers=True,
     )
-    return PrefetchedWrapper(val_loader, 0, num_classes, one_hot), len(val_loader)
+    return PrefetchedWrapper(val_loader, start_epoch, num_classes, one_hot)
     
 
 def get_pytorch_train_loader(
@@ -69,7 +70,7 @@ def get_pytorch_train_loader(
     crop_ratio,
     data_augment,
     train_dataset=None,
-    val_dataset=None,
+    one_hot=False,
     start_epoch=0,
     _worker_init_fn=None,
     memory_format=torch.contiguous_format
@@ -97,6 +98,7 @@ def get_pytorch_train_loader(
         assert isinstance(train_dataset, TorchImageClassificationDataset), "DataSet Type Error"
         train_dataset = train_dataset.to_pytorch(transform_train)
 
+    num_classes = len(train_dataset.classes)
     if torch.distributed.is_initialized():
         train_sampler = torch.utils.data.distributed.DistributedSampler(
             train_dataset, shuffle=True
@@ -104,7 +106,6 @@ def get_pytorch_train_loader(
     else:
         train_sampler = None
 
-    num_classes = train_dataset.classes
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         sampler=train_sampler,
