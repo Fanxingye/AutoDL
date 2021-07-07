@@ -25,7 +25,7 @@ class TrainCfg:
     lr_schedule_mode : str = 'step'  # learning rate scheduler mode. options are step, poly and cosine
     warmup_lr : float = 0.0  # starting warmup learning rate.
     warmup_epochs : int = 0  # number of warmup epochs
-    num_workers : int = 4
+    num_workers : int = 0
     weight_decay : float = 0.0001
     momentum : float = 0.9
     nesterov : bool = False

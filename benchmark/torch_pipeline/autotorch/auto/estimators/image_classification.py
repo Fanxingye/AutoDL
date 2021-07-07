@@ -340,9 +340,10 @@ class ImageClassificationEstimator(BaseEstimator):
         steps_per_epoch = len(train_loader)
         end = time.time()
 
-        for i, (input, target) in enumerate(train_loader):
+        for i, (input, target, img_paths) in enumerate(train_loader):
             input = input.cuda()
             target = target.cuda()
+            print(img_paths)
 
             bs = input.size(0)
             lr_scheduler.step(epoch)

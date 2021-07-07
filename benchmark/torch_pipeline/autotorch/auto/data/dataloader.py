@@ -39,13 +39,15 @@ def get_data_loader(data_dir, batch_size, num_workers, input_size, crop_ratio, d
         transforms.RandomHorizontalFlip(),
         transforms.ColorJitter(brightness=jitter_param, contrast=jitter_param, saturation=jitter_param),
         transforms.ToTensor(),
-        normalize
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        #normalize
     ])
     transform_test = transforms.Compose([
         transforms.Resize(resize),
         transforms.CenterCrop(input_size),
         transforms.ToTensor(),
-        normalize
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        #normalize
     ])
 
     if train_dataset is None:

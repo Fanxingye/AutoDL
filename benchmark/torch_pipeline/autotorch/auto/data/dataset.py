@@ -151,6 +151,7 @@ class TorchImageClassificationDataset(pd.DataFrame):
     def to_pytorch(self, transform):
         """Return a pytorch based iterator that returns ndarray and labels"""
         df = self.rename(columns={self.IMG_COL: "image", self.LABEL_COL: "label"}, errors='ignore')
+        df = df.reset_index(drop=True)
         return _TorchImageClassificationDataset(df, transform=transform)
 
     @classmethod
@@ -429,7 +430,7 @@ class _TorchImageClassificationDataset(TorchDataset):
             label = self._dataset['label'][idx]
         if self.transform is not None:
             img = self.transform(img)
-        return img, label
+        return img, label, im_path
 
 
 if __name__ == '__main__':
