@@ -35,17 +35,18 @@ python multiproc_ddp.py  \
     --rank 0 
 
 ## on platform
-python multiproc_ddp.py  \
+python -m torch.distributed.launch --nproc_per_node=2 main.py  \
     --data_path /data/AutoML_compete/Flowers-Recognition/split \
-    --data-backend pytorch  \
+    --output-dir /home/jianzheng.nie/autodl/benchmark/torch_pipeline \
     --lr 0.1  \
-    --batch-size 32 \
+    --batch-size 64 \
     --model resnet18 \
     --pretrained \
-    --epochs 1  \
-    ----multiprocessing-distributed \
-    --world-size 1 \
-    --rank 0 
+    --epochs 1  
+
+python -m torch.distributed.launch --nproc_per_node=2 train_auto_classification.py
+
+
 
 nohup python3 test.py \
 --data_name "UKCarsDataset" \
