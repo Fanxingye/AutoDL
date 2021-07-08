@@ -32,40 +32,40 @@ if __name__ == '__main__':
     results = classifier.evaluate(valid_data)
     print(results)
 
-    df = classifier.predict(valid_data)
-    print(df)
+    # df = classifier.predict(valid_data)
+    # print(df)
 
-    x = '/media/robin/DATA/datatsets/image_data/shopee-iet/images/test/BabyPants/BabyPants_1035.jpg'
+    # x = '/media/robin/DATA/datatsets/image_data/shopee-iet/images/test/BabyPants/BabyPants_1035.jpg'
     
-    out = classifier.predict_feature(x)
-    print(out)
-    # task
-    search_args = {
-        'lr': ag.Categorical(1e-3, 1e-2),
-        'num_trials': 2,
-        'epochs': 2,
-        'num_workers': 4,
-        'batch_size': ag.Categorical(4, 8),
-        'search_strategy': 'random',
-        'log_dir': 'checkpoint',
-        'time_limits': 60*60
-        }
+    # out = classifier.predict_feature(x)
+    # print(out)
+    # # task
+    # search_args = {
+    #     'lr': ag.Categorical(1e-3, 1e-2),
+    #     'num_trials': 2,
+    #     'epochs': 2,
+    #     'num_workers': 4,
+    #     'batch_size': ag.Categorical(4, 8),
+    #     'search_strategy': 'random',
+    #     'log_dir': 'checkpoint',
+    #     'time_limits': 60*60
+    #     }
     
-    img_path = ["/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg",
-                "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/3475870145_685a19116d.jpg",
-                "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/909609509_a05ccb8127.jpg"]
-    img_path = "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg"
+    # img_path = ["/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg",
+    #             "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/3475870145_685a19116d.jpg",
+    #             "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/909609509_a05ccb8127.jpg"]
+    # img_path = "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg"
     
-    search_args = {'lr': ag.Categorical(1e-3, 1e-2),
-                'num_trials': 1,
-                'epochs': 2,
-                'num_workers': 4,
-                'batch_size': ag.Categorical(32, 64),
-                'search_strategy': 'random',
-                'time_limits': 60*60}
+    # search_args = {'lr': ag.Categorical(1e-3, 1e-2),
+    #             'num_trials': 1,
+    #             'epochs': 2,
+    #             'num_workers': 4,
+    #             'batch_size': ag.Categorical(32, 64),
+    #             'search_strategy': 'random',
+    #             'time_limits': 60*60}
 
-    # task = ImageClassification(search_args)
-    # task.load("/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-01-2021/best_checkpoint.pkl")
-    # predictor = task.fit(train_data, valid_data)
-    df = classifier.predict_feature(img_path)
-    print(df)
+    # # task = ImageClassification(search_args)
+    # # task.load("/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-01-2021/best_checkpoint.pkl")
+    # # predictor = task.fit(train_data, valid_data)
+    # df = classifier.predict_feature(img_path)
+    # print(df)
