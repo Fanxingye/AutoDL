@@ -430,7 +430,7 @@ class _TorchImageClassificationDataset(TorchDataset):
             label = self._dataset['label'][idx]
         if self.transform is not None:
             img = self.transform(img)
-        return img, label, im_path
+        return img, label
 
 
 if __name__ == '__main__':
