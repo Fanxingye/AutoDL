@@ -17,7 +17,7 @@ from autogluon.core.utils import set_logger_verbosity
 from autogluon.core.utils import verbosity2loglevel, get_gpu_count
 from autogluon.core.utils.utils import generate_train_test_split
 from autogluon.vision.configs.presets_configs import unpack, _check_gpu_memory_presets
-from autogluon.vision.utils import sanitize_batch_size
+# from autogluon.vision.utils import sanitize_batch_size
 from gluoncv.auto.estimators.utils import _suggest_load_context
 
 __all__ = ['ImagePredictor']
@@ -368,7 +368,8 @@ class ImagePredictor(object):
             min_value = ngpus_per_trial
         else:
             min_value = 1
-        bs = sanitize_batch_size(config.get('batch_size', 16), min_value=min_value, max_value=len(train_data))
+        # bs = sanitize_batch_size(config.get('batch_size', 16), min_value=min_value, max_value=len(train_data))
+        bs = 32
         config['batch_size'] = bs
         # verbosity
         if log_level > logging.INFO:
@@ -476,7 +477,7 @@ class ImagePredictor(object):
         kwargs['hyperparameter_tune_kwargs'] = hpo_tune_args
         return kwargs
 
-    def predict_proba(self, data, as_pandas=True):
+    def predict_proba(self, data, batch_size=32, as_pandas=True):
         """Predict images as a whole, return the probabilities of each category rather
         than class-labels.
 
@@ -498,7 +499,7 @@ class ImagePredictor(object):
         if self._classifier is None:
             raise RuntimeError('Classifier is not initialized, try `fit` first.')
         assert self._label_cleaner is not None
-        y_pred_proba = self._classifier.predict(data, with_proba=True)
+        y_pred_proba = self._classifier.predict(data, batch_size=batch_size, with_proba=True)
         if isinstance(data, pd.DataFrame):
             y_pred_proba.index = data.index
         if self._problem_type in [MULTICLASS, BINARY]:
@@ -511,7 +512,7 @@ class ImagePredictor(object):
         else:
             return ret.to_numpy()
 
-    def predict(self, data, as_pandas=True):
+    def predict(self, data, batch_size=32, as_pandas=True):
         """Predict images as a whole, return labels(class category).
 
         Parameters
@@ -530,12 +531,12 @@ class ImagePredictor(object):
             the returned dataframe will contain `images` column, and all results are concatenated.
         """
         if self._problem_type in [REGRESSION]:
-            return self.predict_proba(data, as_pandas)
+            return self.predict_proba(data, batch_size=batch_size, as_pandas=as_pandas)
 
         if self._classifier is None:
             raise RuntimeError('Classifier is not initialized, try `fit` first.')
         assert self._label_cleaner is not None
-        proba = self._classifier.predict(data)
+        proba = self._classifier.predict(data, batch_size=batch_size)
         if 'image' in proba.columns:
             # multiple images
             assert isinstance(data, pd.DataFrame) and 'image' in data.columns
@@ -543,7 +544,7 @@ class ImagePredictor(object):
             if index_name is None:
                 # TODO: This crashes if a feature is already named 'index'.
                 index_name = 'index'
-            y_pred = proba.loc[proba.groupby(["image"])["score"].idxmax()].reset_index(drop=True)
+            y_pred = proba
             idx_to_image_map = data[['image']]
             idx_to_image_map = idx_to_image_map.reset_index(drop=False)
             y_pred = idx_to_image_map.merge(y_pred, on='image')
@@ -558,7 +559,7 @@ class ImagePredictor(object):
         else:
             return ret.to_numpy()
 
-    def predict_feature(self, data, as_pandas=True):
+    def predict_feature(self, data, batch_size=32, as_pandas=True):
         """Predict images visual feature representations, return the features as numpy (1xD) vector.
 
         Parameters
@@ -578,7 +579,7 @@ class ImagePredictor(object):
         """
         if self._classifier is None:
             raise RuntimeError('Classifier is not initialized, try `fit` first.')
-        ret = self._classifier.predict_feature(data)
+        ret = self._classifier.predict_feature(data, batch_size=batch_size)
         if as_pandas:
             return ret
         else:

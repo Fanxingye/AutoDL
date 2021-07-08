@@ -188,7 +188,7 @@ class BaseEstimator:
         """
         return self._evaluate(val_data)
 
-    def predict(self, x, **kwargs):
+    def predict(self, x, batch_size=32, **kwargs):
         """Predict using this estimator.
 
         Parameters
@@ -199,7 +199,7 @@ class BaseEstimator:
         """
         return self._predict(x, **kwargs)
 
-    def predict_feature(self, x):
+    def predict_feature(self, x, batch_size=32):
         """Predict intermediate features using this estimator.
 
         Parameters
