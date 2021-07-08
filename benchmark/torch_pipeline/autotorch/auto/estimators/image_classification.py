@@ -760,12 +760,11 @@ class ImageClassificationEstimator(BaseEstimator):
                                crop_size=self.input_size)
         return x
 
-    def _predict(self, x, ctx_id=0, with_proba=False):
+    def _predict(self, x, batch_size=32, with_proba=False):
         if with_proba:
-            return self._predict_proba(x, ctx_id=ctx_id)
+            return self._predict_proba(x, batch_size=batch_size)
         x = self._predict_preprocess(x)
         if isinstance(x, pd.DataFrame):
-            bs = self._cfg.valid.batch_size
             results = []
             resize = int(
                 math.ceil(self.input_size / self._cfg.train.crop_ratio))
@@ -779,7 +778,7 @@ class ImageClassificationEstimator(BaseEstimator):
             predict_set = TorchImageClassificationDataset.to_pytorch(
                 x, transform_test)
             loader = torch.utils.data.DataLoader(predict_set,
-                                                 batch_size=2,
+                                                 batch_size=batch_size,
                                                  shuffle=False,
                                                  num_workers=0,
                                                  pin_memory=True)
@@ -793,9 +792,10 @@ class ImageClassificationEstimator(BaseEstimator):
                 _, pred_ids = torch.max(logits, 1)
                 for j in range(len(logits)):
                     id = pred_ids[j].cpu().numpy()
+                    id = int(id)
                     prob = logits[j, id].cpu().numpy()
                     results.append({
-                        'image_index': idx,
+                        'image': x.iloc[idx]["image"],
                         'class': self.classes[id],
                         'score': prob,
                         'id': id
@@ -813,6 +813,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 _, pred_ids = torch.max(logits, 1)
                 for j in range(len(logits)):
                     id = pred_ids[j].cpu().numpy()
+                    id = int(id)
                     prob = logits[j, id].cpu().numpy()
                     results.append({
                         'image_index': idx,
@@ -833,6 +834,7 @@ class ImageClassificationEstimator(BaseEstimator):
             logit = F.softmax(self.net(x))
             _, pred_id = torch.max(logit, 1)
         id = pred_id[0].cpu().numpy()
+        id = int(id)
         logit = logit.cpu().numpy()
         prob = logit[0, id]
         df = pd.DataFrame(
@@ -876,11 +878,10 @@ class ImageClassificationEstimator(BaseEstimator):
             )
         return self._feature_net
 
-    def _predict_feature(self, x, ctx_id=0):
+    def _predict_feature(self, x, batch_size=32):
         x = self._predict_preprocess(x)
         feature_net = self._get_feature_net()
         if isinstance(x, pd.DataFrame):
-            bs = self._cfg.valid.batch_size
             results = []
             resize = int(
                 math.ceil(self.input_size / self._cfg.train.crop_ratio))
@@ -894,7 +895,7 @@ class ImageClassificationEstimator(BaseEstimator):
             predict_set = TorchImageClassificationDataset.to_pytorch(
                 x, transform_test)
             loader = torch.utils.data.DataLoader(predict_set,
-                                                 batch_size=2,
+                                                 batch_size=batch_size,
                                                  shuffle=False,
                                                  num_workers=0,
                                                  pin_memory=True)
@@ -935,5 +936,5 @@ class ImageClassificationEstimator(BaseEstimator):
         df = pd.DataFrame([{'image_index': 0, 'feature': feature}], index=[0])
         return df
 
-    def _predict_proba(self, x, ctx_id=0):
+    def _predict_proba(self, x):
         return df
