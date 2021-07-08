@@ -3,8 +3,9 @@
 import os
 import math
 import torch
+import numpy as np
 import pandas as pd
-from PIL import Image
+from PIL import Image, ImageOps
 from functools import partial
 from torchvision import datasets, transforms
 from autotorch.data.dataloaders import fast_collate, PrefetchedWrapper
