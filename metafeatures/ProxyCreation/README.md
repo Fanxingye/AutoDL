@@ -60,3 +60,7 @@
 3. 目前是用一个输入网络, 生成entropy file和训练, 可以用不同的网络来生成entropy file和训练
 4. 可以实验用不同的网络来生成entropy file.
 5. 可以接入DART
+
+## Reference
+Accelerating Neural Architecture Search via Proxy Data
+https://arxiv.org/abs/2106.04784
