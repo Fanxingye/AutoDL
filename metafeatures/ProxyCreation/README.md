@@ -49,7 +49,7 @@
 ### 实验思路
 通过比较 proxy, full dataset的HPO结果, 来判断两组数据集的相似程度
 
-###实验结果
+### 实验结果
 数据集learning rate HPO比较
 1. Emotion Detection: Proxy: 0.087225, Full: 0.091445
 2. Leaf Classification: Proxy: 0.005803, Full: 0.006753
