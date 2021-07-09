@@ -68,4 +68,6 @@
 Accelerating Neural Architecture Search via Proxy Data
 https://arxiv.org/abs/2106.04784
 
-源码:
+源码: https://github.com/nabk89/NAS-with-Proxy-data
+在源码 sampler.py 第57行有bug
+需要改成 >       if (bins[i] <= ent) and (ent < bins[i+1]):
