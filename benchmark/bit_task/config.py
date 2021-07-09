@@ -6,6 +6,7 @@ import os
 # --------------------------------------------------------------
 # ----------------- global var for path -------------------------
 '''
+To download model wget https://storage.googleapis.com/bit_models/BiT-M-R50x1.{npz|h5}
 - model : choose from {BiT-S-R50x1,BiT-S-R50x3,BiT-S-R101x1,BiT-S-R101x3,BiT-S-R152x4,
     BiT-M-R50x1,BiT-M-R50x3,BiT-M-R101x1,BiT-M-R101x3,BiT-M-R152x4}, need to be downloaded at args.bit_pretrained_dir
 - lr : ([choice, float], [if float, whether to use log sampling], [float range, or all choices])
@@ -19,15 +20,15 @@ import os
 #, 'BiT-M-R101x1', 'BiT-M-R101x3', 'BiT-M-R152x4' , 'BiT-M-R101x1'
 SEARCH_SPACE = {
     'hyperparameters' : {
-        'model' : ['BiT-M-R50x1', 'BiT-M-R101x1','BiT-S-R50x1'],
-        'lr' : ('float', 1e-3, [1e-4, 1e-2]),
-        'batch_size' : [16, 32, 64],
+        'model' : ['BiT-S-R50x1', 'BiT-M-R50x1', 'BiT-M-R101x1'],
+        'lr' :  ('float', 3e-3,  [6e-4,  9e-3]),
+        'batch_size' : [32,64],
         'epochs' : [50],
     },
     'tune_kwargs' : {
         'num_trials' : 30,
         'search_strategy' : 'bayesian',
-        'time_limit' : 60 * 60 * 2,
+        'time_limit' : 60 * 60* 2 ,
         'start_time' : None,
     }
 }
@@ -39,7 +40,7 @@ PRETRAINED_PATH = None
 OUTPUT_PATH = None # OUTPUT_PATH = args.output_path + args.name
 CKPT_PATH = None   # ckpt dir = OUTPUT_PATH + 'best_so_far'
 TRIALS_PATH = None # trials dir =  OUTPUT_PATH + 'trials'
-BESTMODELFILE = 'bestmodel.txt' # should be in dir CKPT_PATH
+BESTMODELFILE = 'best_config.p' # should be in dir CKPT_PATH
 
 NUMCLASSES = None
 LOGGER = None # log dir = OUTPUT_PATH, set up before training
@@ -67,7 +68,6 @@ def get_kt_lr(hp, lr):
     else :
         raise ValueError('Expected lr to be '
                          'choose from (float, choise), got: %s' % (lr[0],))
-
 
 
 

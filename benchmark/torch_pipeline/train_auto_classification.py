@@ -13,6 +13,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='benchmark for image classification')
     parser.add_argument('--dataset', type=str, default='boat', help='dataset name')
     parser.add_argument('--num-trials', type=int, default=3, help='number of training trials')
+    parser.add_argument("--local_rank", default=0, type=int)
     args = parser.parse_args()
     logging.info('user defined arguments: {}'.format(args))
 
@@ -25,7 +26,6 @@ if __name__ == '__main__':
 
     train_data, valid_data, test_data = TorchImageClassificationDataset.from_folders("/data/AutoML_compete/A-Large-Scale-Fish-Dataset/split/")
     
-
     # # fit auto estimator
     classifier = ImageClassificationEstimator(config)
     # print(classifier._cfg)

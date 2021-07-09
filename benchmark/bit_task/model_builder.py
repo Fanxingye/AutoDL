@@ -3,11 +3,11 @@ import os
 import tensorflow.compat.v2 as tf
 tf.enable_v2_behavior()
 from kerastuner import HyperModel
-from . import models
+import models
+import config
 
-def build_from_ckpt(ckpt_path, num_classes, bestmodelfile):
-    with open(os.path.join(ckpt_path, bestmodelfile)) as f:
-        model_name = f.readline()
+os.environ["TF_CPP_MIN_LOG_LEVEL"]="2"
+def build_from_ckpt(ckpt_path, num_classes, model_name):
 
     num_out = 1000 if model_name.split('-')[1] == 'S' else 21843
     model = models.ResnetV2(
@@ -47,8 +47,8 @@ class MyHyperModel(HyperModel) :
         self.pretrained_dir = pretrained_dir
 
     def build(self, hp) :
+        model_name = hp.Choice('model', self.hyperparameters['model'])
         with self.strategy.scope():
-            model_name = hp.Choice('model', self.hyperparameters['model'])
 
             def get_model_file(model, bit_pretrained_dir) :
                 tf.io.gfile.makedirs(bit_pretrained_dir)
@@ -59,7 +59,6 @@ class MyHyperModel(HyperModel) :
                 return bit_model_file
 
             bit_model_file = get_model_file(model_name, self.pretrained_dir)
-
             num_out = 1000 if model_name.split('-')[1] == 'S' else 21843
             model = models.ResnetV2(
                 num_units=models.NUM_UNITS[model_name],

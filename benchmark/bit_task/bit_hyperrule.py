@@ -36,7 +36,7 @@ known_dataset_sizes = {
 def get_resolution_from_dataset(dataset):
     # if dataset not in known_dataset_sizes:
     #   raise ValueError(f"Unsupported dataset {dataset}. Add your own here :)")
-    return (256, 224)
+    return (280,260)
 
 
 def get_mixup(dataset_size):

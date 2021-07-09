@@ -15,7 +15,7 @@
 """ResNet architecture as used in BiT."""
 
 import tensorflow.compat.v2 as tf
-from . import normalization
+import normalization
 
 
 def add_name_prefix(name, prefix=None):
