@@ -12,6 +12,7 @@ from torch import optim
 import torch.nn as nn
 from torch.cuda.amp import autocast
 from torch.autograd import Variable
+import torch.distributed as dist
 import torch.utils.data.distributed
 from torchvision import transforms
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -91,17 +92,34 @@ class ImageClassificationEstimator(BaseEstimator):
         if self._cfg.gpus is not None:
             self.gpu_ids = 0
         else:
-            self.gpu_ids = 0
+            self.gpu_ids = self.gpus
 
-        # init distributed env first, since logger depends on the dist info.
-        if self._cfg.launcher == 'none':
-            self.distributed = False
+        self.distributed = False
+        if "WORLD_SIZE" in os.environ:
+            self.distributed = int(os.environ["WORLD_SIZE"]) > 1
+            self.local_rank = int(os.environ["LOCAL_RANK"])
         else:
-            self.distributed = True
-            init_dist(self._cfg.launcher, backend='nccl')
-            # re-set gpu_ids with distributed training mode
-            _, world_size = get_dist_info()
-            self.gpu_ids = range(world_size)
+            self.local_rank = 0
+
+        self.gpu = 0
+        self.world_size = 1
+
+        if self.distributed:
+            self.gpu = self.local_rank % torch.cuda.device_count()
+            torch.cuda.set_device(self.gpu)
+            dist.init_process_group(backend="nccl", init_method="env://")
+            self.world_size = torch.distributed.get_world_size()
+
+        # # init distributed env first, since logger depends on the dist info.
+        # if self._cfg.launcher == 'none':
+        #     self.distributed = False
+        # else:
+        #     self.distributed = True
+        #     init_dist(self._cfg.launcher, backend='nccl')
+        #     # re-set gpu_ids with distributed training mode
+        #     _, world_size = get_dist_info()
+        #     print(world_size)
+        #     self.gpu_ids = range(world_size)
 
         if self.distributed:
             torch.cuda.set_device(self.gpu_ids)
@@ -742,12 +760,11 @@ class ImageClassificationEstimator(BaseEstimator):
                                crop_size=self.input_size)
         return x
 
-    def _predict(self, x, ctx_id=0, with_proba=False):
+    def _predict(self, x, batch_size=32, with_proba=False):
         if with_proba:
-            return self._predict_proba(x, ctx_id=ctx_id)
+            return self._predict_proba(x, batch_size=batch_size)
         x = self._predict_preprocess(x)
         if isinstance(x, pd.DataFrame):
-            bs = self._cfg.valid.batch_size
             results = []
             resize = int(
                 math.ceil(self.input_size / self._cfg.train.crop_ratio))
@@ -761,7 +778,7 @@ class ImageClassificationEstimator(BaseEstimator):
             predict_set = TorchImageClassificationDataset.to_pytorch(
                 x, transform_test)
             loader = torch.utils.data.DataLoader(predict_set,
-                                                 batch_size=2,
+                                                 batch_size=batch_size,
                                                  shuffle=False,
                                                  num_workers=0,
                                                  pin_memory=True)
@@ -775,9 +792,10 @@ class ImageClassificationEstimator(BaseEstimator):
                 _, pred_ids = torch.max(logits, 1)
                 for j in range(len(logits)):
                     id = pred_ids[j].cpu().numpy()
+                    id = int(id)
                     prob = logits[j, id].cpu().numpy()
                     results.append({
-                        'image_index': idx,
+                        'image': x.iloc[idx]["image"],
                         'class': self.classes[id],
                         'score': prob,
                         'id': id
@@ -795,6 +813,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 _, pred_ids = torch.max(logits, 1)
                 for j in range(len(logits)):
                     id = pred_ids[j].cpu().numpy()
+                    id = int(id)
                     prob = logits[j, id].cpu().numpy()
                     results.append({
                         'image_index': idx,
@@ -815,6 +834,7 @@ class ImageClassificationEstimator(BaseEstimator):
             logit = F.softmax(self.net(x))
             _, pred_id = torch.max(logit, 1)
         id = pred_id[0].cpu().numpy()
+        id = int(id)
         logit = logit.cpu().numpy()
         prob = logit[0, id]
         df = pd.DataFrame(
@@ -858,11 +878,10 @@ class ImageClassificationEstimator(BaseEstimator):
             )
         return self._feature_net
 
-    def _predict_feature(self, x, ctx_id=0):
+    def _predict_feature(self, x, batch_size=32):
         x = self._predict_preprocess(x)
         feature_net = self._get_feature_net()
         if isinstance(x, pd.DataFrame):
-            bs = self._cfg.valid.batch_size
             results = []
             resize = int(
                 math.ceil(self.input_size / self._cfg.train.crop_ratio))
@@ -876,7 +895,7 @@ class ImageClassificationEstimator(BaseEstimator):
             predict_set = TorchImageClassificationDataset.to_pytorch(
                 x, transform_test)
             loader = torch.utils.data.DataLoader(predict_set,
-                                                 batch_size=2,
+                                                 batch_size=batch_size,
                                                  shuffle=False,
                                                  num_workers=0,
                                                  pin_memory=True)
@@ -917,5 +936,5 @@ class ImageClassificationEstimator(BaseEstimator):
         df = pd.DataFrame([{'image_index': 0, 'feature': feature}], index=[0])
         return df
 
-    def _predict_proba(self, x, ctx_id=0):
+    def _predict_proba(self, x):
         return df

@@ -25,7 +25,7 @@ class TrainCfg:
     lr_schedule_mode : str = 'step'  # learning rate scheduler mode. options are step, poly and cosine
     warmup_lr : float = 0.0  # starting warmup learning rate.
     warmup_epochs : int = 0  # number of warmup epochs
-    num_workers : int = 0
+    num_workers : int = 4
     weight_decay : float = 0.0001
     momentum : float = 0.9
     nesterov : bool = False
@@ -71,6 +71,6 @@ class ImageClassificationCfg:
     train: TrainCfg = field(default_factory=TrainCfg)
     valid: ValidCfg = field(default_factory=ValidCfg)
     gpus:  Union[int, list] = (0)
-    launcher: str = 'none'
+    launcher: str = 'pytorch'
     cudnn_benchmark: bool = True
     distributed: bool = False

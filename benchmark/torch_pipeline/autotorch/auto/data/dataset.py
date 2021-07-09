@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from PIL import Image
 import cv2
+import mmcv
 from gluoncv.auto.data.auto_data import is_url, url_data
 
 try:
@@ -424,7 +425,8 @@ class _TorchImageClassificationDataset(TorchDataset):
 
     def __getitem__(self, idx):
         im_path = self._dataset['image'][idx]
-        img = Image.open(im_path)
+        img = mmcv.imread(im_path, flag='color', channel_order='rgb')
+        img = Image.fromarray(img.astype('uint8')).convert('RGB')
         label = None
         if self._has_label:
             label = self._dataset['label'][idx]
