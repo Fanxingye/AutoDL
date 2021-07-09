@@ -3,26 +3,31 @@ import logging
 import logging.config
 import os
 
-# --------------------------------------------------------------
-# ----------------- global var for path -------------------------
+
 '''
 To download model wget https://storage.googleapis.com/bit_models/BiT-M-R50x1.{npz|h5}
+
 - model : choose from {BiT-S-R50x1,BiT-S-R50x3,BiT-S-R101x1,BiT-S-R101x3,BiT-S-R152x4,
-    BiT-M-R50x1,BiT-M-R50x3,BiT-M-R101x1,BiT-M-R101x3,BiT-M-R152x4}, need to be downloaded at args.bit_pretrained_dir
-- lr : ([choice, float], [if float, whether to use log sampling], [float range, or all choices])
+    BiT-M-R50x1,BiT-M-R50x3,BiT-M-R101x1,BiT-M-R101x3,BiT-M-R152x4}, need to be downloaded at args.bit_pretrained_dir.
+- lr : ([choice, float], [Default Value], [float range, or all choices])
+    See function get_kt_lr for detailed decoding logic (Dict -> KerasTuner Object) 
+    Examples: ('float', 3e-3,  [6e-4,  9e-3]),
+                ('choice', 3e-3,  [5e-4, 5e-3, 5e-2, 5e-1]),
 - batch_size : batch size tuple, always use choice, first as default
 - epochs : maximum epoch to run, always use choice, first as default
+
 
 - num_trials: trials to be run
 - search_strategy : choose from ('random', 'hyper', 'bayesian')
 - time_limit : max time to run, seconds as unit
+- start_time : should be preserved as none
 '''
 #, 'BiT-M-R101x1', 'BiT-M-R101x3', 'BiT-M-R152x4' , 'BiT-M-R101x1'
 SEARCH_SPACE = {
     'hyperparameters' : {
         'model' : ['BiT-S-R50x1', 'BiT-M-R50x1', 'BiT-M-R101x1'],
         'lr' :  ('float', 3e-3,  [6e-4,  9e-3]),
-        'batch_size' : [32,64],
+        'batch_size' : [32, 64],
         'epochs' : [50],
     },
     'tune_kwargs' : {
@@ -34,6 +39,8 @@ SEARCH_SPACE = {
 }
 
 
+# --------------------------------------------------------------
+# ----------------- global var for path -------------------------
 Name = None
 DATA_PATH = None
 PRETRAINED_PATH = None
@@ -45,6 +52,7 @@ BESTMODELFILE = 'best_config.p' # should be in dir CKPT_PATH
 NUMCLASSES = None
 LOGGER = None # log dir = OUTPUT_PATH, set up before training
 TRAIN_SPLIT = 0.8
+
 # --------------------------------------------------------------
 # --------------------------------------------------------------
 

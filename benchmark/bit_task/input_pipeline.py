@@ -121,7 +121,6 @@ def data_aug(data,
         features["label"] = tf.reshape(features["label"], (1, -1))
         return (features["image"], features["label"])
 
-
     data = data.cache()
     if mode == 'train':
         data = data.repeat(None).shuffle(min(num_examples, MAX_IN_MEMORY))
