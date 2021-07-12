@@ -12,25 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import math
-def get_resolution(original_resolution):
-    """Takes (H,W) and returns (precrop, crop)."""
-    area = original_resolution[0] * original_resolution[1]
-    return (160, 128) if area < 96*96 else (512, 480)
-
-
-known_dataset_sizes = {
-    'cifar10': (32, 32),
-    'cifar100': (32, 32),
-    'oxford_iiit_pet': (224, 224),
-    'oxford_flowers102': (224, 224),
-    'imagenet2012': (224, 224),
-    '/data/AutoML_compete/datasciencebowl/' : (105, 100),
-    '/data/AutoML_compete/leaf-classification/split/' : (90, 90),
-    '/data/AutoML_compete/oxford-102-flower-pytorch/flower_data/': (500, 500),
-    '/data/AutoML_compete/cassava-leaf-diease/': (500, 500),
-    '/data/AutoML_compete/dog-breed-identification/format/': (500, 500),
-    '/data/AutoML_compete/the-nature-conservancy-fisheries-monitoring/train/': (500, 500),
-}
 
 
 def get_resolution_from_dataset(dataset):

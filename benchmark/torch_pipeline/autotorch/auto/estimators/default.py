@@ -71,6 +71,6 @@ class ImageClassificationCfg:
     train: TrainCfg = field(default_factory=TrainCfg)
     valid: ValidCfg = field(default_factory=ValidCfg)
     gpus:  Union[int, list] = (0)
-    launcher: str = 'none'
+    launcher: str = 'pytorch'
     cudnn_benchmark: bool = True
     distributed: bool = False

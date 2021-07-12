@@ -16,7 +16,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import tensorflow_datasets as tfds
 
-from . import bit_hyperrule
+import bit_hyperrule
 
 # A workaround to avoid crash because tfds may open too many files.
 import resource
@@ -27,7 +27,7 @@ resource.setrlimit(resource.RLIMIT_NOFILE, (high, high))
 MAX_IN_MEMORY = 200_000
 
 # vim /home/yiran.wu/.local/lib/python3.7/site-packages/tensorflow_datasets/core/dataset_info.py :
-#                                                       added in lin 449 : return
+#                                                       added in line 449 : return
 
 def get_data(dataset, train_split):
     
@@ -41,7 +41,7 @@ def get_data(dataset, train_split):
     num_train = data_builder.info.splits['train'].num_examples
     num_test =  data_builder.info.splits['test'].num_examples
     num_valid = data_builder.info.splits['val'].num_examples
-    print(num_valid)
+
     # to dataset
     train_data = data_builder.as_dataset(split='train', decoders={'image': tfds.decode.SkipDecoding()})
     test_data  = data_builder.as_dataset(split='test', decoders={'image' : tfds.decode.SkipDecoding()})
@@ -120,7 +120,6 @@ def data_aug(data,
         features["image"] = tf.reshape(features["image"], (1, crop_size, crop_size, 3))
         features["label"] = tf.reshape(features["label"], (1, -1))
         return (features["image"], features["label"])
-
 
     data = data.cache()
     if mode == 'train':
