@@ -44,6 +44,9 @@
 
  >python main.py --resnet18 --dataset=leaf_classification --proxy
 
+## 输出
+1. 在开始训练之前, 会先写一个entropy file在entropy 都存在entropy_list下面.
+2. 在结束HPO之后, 会写一个.txt文件在HPO下, 保存HPO搜索出来的最优learning rate.
 
 ## 实验
 ### 实验思路
@@ -64,3 +67,7 @@
 ## Reference
 Accelerating Neural Architecture Search via Proxy Data
 https://arxiv.org/abs/2106.04784
+
+源码: https://github.com/nabk89/NAS-with-Proxy-data
+在源码 sampler.py 第57行有bug
+需要改成 >       if (bins[i] <= ent) and (ent < bins[i+1]):
