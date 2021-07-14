@@ -358,8 +358,9 @@ if __name__ == "__main__":
     args = parse_args()
     task_name = args.data_name + '-' + args.model
     args.output_dir = os.path.join(args.output_dir, task_name)
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
+    if not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0:
+        if not os.path.exists(args.output_dir):
+            os.makedirs(args.output_dir)
 
     logger = logging.getLogger('')
     filehandler = logging.FileHandler(os.path.join(args.output_dir, 'summary.log'))
