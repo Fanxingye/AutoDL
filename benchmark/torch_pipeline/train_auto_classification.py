@@ -30,13 +30,13 @@ if __name__ == '__main__':
     classifier = ImageClassificationEstimator(config)
     # print(classifier._cfg)
     # # # evaluate auto estimator
-    # classifier.fit(train_data, valid_data)
+    classifier.fit(train_data, valid_data)
     # results = classifier.evaluate(valid_data)
     # print(results)
 
-    classifier = classifier.load("/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-08-2021/best_checkpoint.pkl")
-    df = classifier.predict(test_data)
-    print(df)
+    # classifier = classifier.load("/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-08-2021/best_checkpoint.pkl")
+    # df = classifier.predict(test_data)
+    # print(df)
 
     # x = '/media/robin/DATA/datatsets/image_data/shopee-iet/images/test/BabyPants/BabyPants_1035.jpg'
     
