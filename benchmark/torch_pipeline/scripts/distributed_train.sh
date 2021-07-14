@@ -1,11 +1,13 @@
 #!/bin/bash
-python3 -m torch.distributed.launch --nproc_per_node=2 main.py \
+python -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --rdzv_backend=c10d main.py \
 --data_name "Flowers-Recognition" \
 --data_path "/data/AutoML_compete/Flowers-Recognition/split" \
+--output-dir "/home/jianzheng.nie/autodl/benchmark/torch_pipeline/checkpoint/bb" \
 --model "resnet18" \
---lr 0.005 \
---epochs 1 \
---batch-size 32 \
+--epochs 2 \
+--lr 0.01 \
+--epochs 10 \
+--batch-size 256 \
 --pretrained 
 
 ## local machine
