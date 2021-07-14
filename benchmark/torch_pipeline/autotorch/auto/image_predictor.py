@@ -368,7 +368,7 @@ class ImagePredictor(object):
             min_value = ngpus_per_trial
         else:
             min_value = 1
-        bs = sanitize_batch_size(config.get('batch_size', 16), min_value=min_value, max_value=len(train_data))
+        #bs = sanitize_batch_size(config.get('batch_size', 16), min_value=min_value, max_value=len(train_data))
         bs = 32
         config['batch_size'] = bs
         # verbosity

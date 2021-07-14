@@ -28,8 +28,9 @@ from autotorch.utils.metrics import AverageMeter, accuracy
 from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
-from ..data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader
+from ..data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader, get_data_loader
 from ..data.transforms import transform_eval
+from ..utils.parallel import DataParallelModel, DataParallelCriterion
 from .conf import _BEST_CHECKPOINT_FILE
 from gluoncv.auto.estimators.utils import EarlyStopperOnPlateau
 
@@ -89,11 +90,13 @@ class ImageClassificationEstimator(BaseEstimator):
         if self._cfg.gpus is None:
             self.gpu_ids = 0
         else:
-            self.gpu_ids = self.gpus
+            self.gpu_ids = self.ctx
 
-        torch.cuda.set_device(self.gpu_ids)
-        self.net = self.net.cuda(self.gpu_ids)
-        self.net = nn.DataParallel(self.net, device_ids=self.gpus)
+        print("=" * 1000)
+        print(self.gpu_ids)
+
+        self.net = self.net.to('cuda:0')
+        self.net = DataParallelModel(self.net, device_ids=self.gpu_ids, output_device=self.gpu_ids[0])
 
     def _fit(self, train_data, val_data, time_limit=math.inf):
         tic = time.time()
@@ -118,22 +121,33 @@ class ImageClassificationEstimator(BaseEstimator):
                self.epoch) >= self._cfg.train.epochs:
             return {'time', self._time_elapsed}
 
-        train_loader = get_pytorch_train_loader(
-            data_dir=self._cfg.train.data_dir,
-            batch_size=self.batch_size,
-            num_workers=self._cfg.train.num_workers,
-            input_size=self.input_size,
-            crop_ratio=self._cfg.train.crop_ratio,
-            data_augment=self._cfg.train.data_augment,
-            train_dataset=train_data)
+        # train_loader = get_pytorch_train_loader(
+        #     data_dir=self._cfg.train.data_dir,
+        #     batch_size=self.batch_size,
+        #     num_workers=self._cfg.train.num_workers,
+        #     input_size=self.input_size,
+        #     crop_ratio=self._cfg.train.crop_ratio,
+        #     data_augment=self._cfg.train.data_augment,
+        #     train_dataset=train_data)
 
-        val_loader = get_pytorch_val_loader(
+        # val_loader = get_pytorch_val_loader(
+        #     data_dir=self._cfg.train.data_dir,
+        #     batch_size=self.batch_size,
+        #     num_workers=self._cfg.train.num_workers,
+        #     input_size=self.input_size,
+        #     crop_ratio=self._cfg.train.crop_ratio,
+        #     val_dataset=val_data)
+
+        train_loader, val_loader = get_data_loader(
             data_dir=self._cfg.train.data_dir,
             batch_size=self.batch_size,
             num_workers=self._cfg.train.num_workers,
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
-            val_dataset=val_data)
+            data_augment=None,
+            train_dataset=train_data,
+            val_dataset=val_data
+        )
 
         self._time_elapsed += time.time() - tic
         return self._train_loop(model=self.net,
@@ -253,8 +267,8 @@ class ImageClassificationEstimator(BaseEstimator):
                     batch_size_multiplier=1,
                     top_k=1):
         def step_fn(input, target, optimizer_step=True):
-            input_var = Variable(input)
-            target_var = Variable(target)
+            input_var = Variable(input).cuda(non_blocking=True)
+            target_var = Variable(target).cuda(non_blocking=True)
 
             with autocast(enabled=use_amp):
                 output = model(input_var)
@@ -265,6 +279,7 @@ class ImageClassificationEstimator(BaseEstimator):
                                         target,
                                         topk=(1, min(top_k, 5)))
                 if torch.distributed.is_initialized():
+                    print("******" * 1000)
                     reduced_loss = reduce_tensor(loss.data)
                     prec1 = reduce_tensor(prec1)
                     prec5 = reduce_tensor(prec5)
@@ -602,7 +617,8 @@ class ImageClassificationEstimator(BaseEstimator):
         self.scaler = scaler
         self.lr_policy = lr_policy
         self.optimizer = optimizer
-        self.criterion = loss().cuda()
+        self.criterion = nn.CrossEntropyLoss()
+        self.criterion = DataParallelCriterion(self.criterion).cuda()
 
     def _init_network(self, **kwargs):
         load_only = kwargs.get('load_only', False)
