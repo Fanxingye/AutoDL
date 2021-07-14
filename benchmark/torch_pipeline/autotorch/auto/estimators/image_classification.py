@@ -12,14 +12,11 @@ from torch import optim
 import torch.nn as nn
 from torch.cuda.amp import autocast
 from torch.autograd import Variable
-import torch.distributed as dist
-import torch.utils.data.distributed
 from torchvision import transforms
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.nn.functional as F
 from timm.models.layers.classifier import ClassifierHead
 
-from mmcv.runner import get_dist_info, init_dist
 from autotorch.data.mixup import NLLMultiLabelSmooth
 from autotorch.data.smoothing import LabelSmoothing
 from autotorch.models.network import init_network, get_input_size
@@ -89,47 +86,14 @@ class ImageClassificationEstimator(BaseEstimator):
         if self._cfg.get('cudnn_benchmark', False):
             torch.backends.cudnn.benchmark = True
 
-        if self._cfg.gpus is not None:
+        if self._cfg.gpus is None:
             self.gpu_ids = 0
         else:
             self.gpu_ids = self.gpus
 
-        self.distributed = False
-        if "WORLD_SIZE" in os.environ:
-            self.distributed = int(os.environ["WORLD_SIZE"]) > 1
-            self.local_rank = int(os.environ["LOCAL_RANK"])
-        else:
-            self.local_rank = 0
-
-        self.gpu = 0
-        self.world_size = 1
-
-        if self.distributed:
-            self.gpu = self.local_rank % torch.cuda.device_count()
-            torch.cuda.set_device(self.gpu)
-            dist.init_process_group(backend="nccl", init_method="env://")
-            self.world_size = torch.distributed.get_world_size()
-
-        # # init distributed env first, since logger depends on the dist info.
-        # if self._cfg.launcher == 'none':
-        #     self.distributed = False
-        # else:
-        #     self.distributed = True
-        #     init_dist(self._cfg.launcher, backend='nccl')
-        #     # re-set gpu_ids with distributed training mode
-        #     _, world_size = get_dist_info()
-        #     print(world_size)
-        #     self.gpu_ids = range(world_size)
-
-        if self.distributed:
-            torch.cuda.set_device(self.gpu_ids)
-            self.net = self.net.cuda(self.gpu_ids)
-            self.net = DDP(self.net,
-                           device_ids=[self.gpu_ids],
-                           output_device=self.gpu_ids)
-        else:
-            torch.cuda.set_device(self.gpu_ids)
-            self.net = self.net.cuda(self.gpu_ids)
+        torch.cuda.set_device(self.gpu_ids)
+        self.net = self.net.cuda(self.gpu_ids)
+        self.net = nn.DataParallel(self.net, device_ids=self.gpus)
 
     def _fit(self, train_data, val_data, time_limit=math.inf):
         tic = time.time()

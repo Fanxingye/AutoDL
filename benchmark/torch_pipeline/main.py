@@ -3,7 +3,6 @@ import os
 import time
 import random
 import logging
-from autogluon.core.space import Bool
 import numpy as np
 from copy import deepcopy
 
@@ -22,8 +21,7 @@ from autotorch.models.common import EMA
 from autotorch.optim.optimizers import get_optimizer
 from autotorch.scheduler import StepLRScheduler, LinearLRScheduler, CosineLRScheduler, ExponentialLRScheduler
 from autotorch.utils.model import resum_checkpoint
-from autotorch.training import ModelAndLoss, train_loop
-import autogluon.core as ag
+from autotorch.training import train_loop
 from test import test
 
 
@@ -295,8 +293,8 @@ def prepare_for_training(args):
                 optimizer=optimizer, base_lr=args.lr, steps=auto_steps, decay_factor=0.1, warmup_length=args.warmup, logger=logger
             )
         else:
-            lr_policy = lr_step_policy(
-                base_lr=args.lr, steps=[30, 60, 80], decay_factor=0.1, warmup_length=args.warmup, logger=logger
+            lr_policy = StepLRScheduler(
+                optimizer=optimizer, base_lr=args.lr, steps=[30, 60, 80], decay_factor=0.1, warmup_length=args.warmup, logger=logger
             )
     elif args.lr_schedule == "cosine":
         lr_policy = CosineLRScheduler(
