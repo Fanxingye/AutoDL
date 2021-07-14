@@ -2,7 +2,7 @@
 python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=2 main.py \
 --data_name "Flowers-Recognition" \
 --data_path "/data/AutoML_compete/Flowers-Recognition/split" \
---output-dir "/home/jianzheng.nie/autodl/benchmark/torch_pipeline/checkpoint/bb" \
+--output-dir "/home/jianzheng.nie/autodl/benchmark/torch_pipeline/checkpoint" \
 --model "resnet18" \
 --epochs 2 \
 --lr 0.01 \
