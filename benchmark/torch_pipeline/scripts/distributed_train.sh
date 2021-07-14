@@ -1,5 +1,5 @@
 #!/bin/bash
-python -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --rdzv_backend=c10d main.py \
+python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=2 main.py \
 --data_name "Flowers-Recognition" \
 --data_path "/data/AutoML_compete/Flowers-Recognition/split" \
 --output-dir "/home/jianzheng.nie/autodl/benchmark/torch_pipeline/checkpoint/bb" \
