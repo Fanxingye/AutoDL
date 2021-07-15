@@ -18,9 +18,9 @@ predictor.fit(
     tuning_data=train_dataset,
     hyperparameters={
         'model': ag.Categorical('resnet18_v1b', 'mobilenetv3'),
-        'batch_size': ag.Categorical(128),
+        'batch_size': ag.Categorical(256),
         'lr': ag.Real(1e-4, 1e-2, log=True),
-        'epochs': 10,
+        'epochs': 1,
         'ngpus_per_trial': 2,
         'cleanup_disk': False
     },
@@ -34,3 +34,5 @@ predictor.fit(
 )  # you can trust the default config, we reduce the # epoch to save some build time
 
 res = predictor.predict(data=test_dataset, batch_size=32)
+print(res)
+

@@ -81,19 +81,84 @@ class ImageClassificationEstimator(BaseEstimator):
                 assert isinstance(optimizer, torch.optim.Optimizer)
         self._optimizer = optimizer
 
+    # def _init_dist_envs(self):
+    #     # set cudnn_benchmark
+    #     if self._cfg.get('cudnn_benchmark', False):
+    #         torch.backends.cudnn.benchmark = True
+
+    #     if self._cfg.gpus is None:
+    #         self.gpu_ids = 0
+    #     else:
+    #         self.gpu_ids = self.ctx
+
+    #     self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    #     self.net = nn.DataParallel(self.net, device_ids=self.gpu_ids, output_device=self.gpu_ids[0])
+    #     self.net.to(self.device)
+
     def _init_dist_envs(self):
+        import torch.distributed as dist
         # set cudnn_benchmark
         if self._cfg.get('cudnn_benchmark', False):
             torch.backends.cudnn.benchmark = True
+
+        distributed = False
+        if "WORLD_SIZE" in os.environ:
+            distributed = int(os.environ["WORLD_SIZE"]) > 1
+            local_rank = int(os.environ["LOCAL_RANK"])
+        else:
+            local_rank = 0
 
         if self._cfg.gpus is None:
             self.gpu_ids = 0
         else:
             self.gpu_ids = self.ctx
+    
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.net = nn.DataParallel(self.net, device_ids=self.gpu_ids, output_device=self.gpu_ids[0])
-        self.net.to(self.device)
+        env_dict = {
+            key: os.environ[key]
+            for key in ("MASTER_ADDR", "MASTER_PORT", "RANK", "WORLD_SIZE")
+        }
+        world_size = 1
+        if distributed:
+            self.gpu = local_rank % torch.cuda.device_count()
+
+            if not torch.distributed.is_initialized():
+                torch.cuda.set_device(self.gpu)
+                dist.init_process_group(backend="nccl", init_method="env://")
+                world_size = torch.distributed.get_world_size()
+                print(f"[{os.getpid()}] Initializing process group with: {env_dict}")
+
+        if distributed:
+            # For multiprocessing distributed, DistributedDataParallel constructor
+            # should always set the single device scope, otherwise,
+            # DistributedDataParallel will use all available devices.
+            if self.gpu is not None:
+                torch.cuda.set_device(self.gpu)
+                self.net.cuda(self.device)
+                # When using a single GPU per process and per
+                # DistributedDataParallel, we need to divide the batch size
+                # ourselves based on the total number of GPUs we have
+                self.net = torch.nn.parallel.DistributedDataParallel(self.net, device_ids=[self.gpu], output_device=self.gpu)
+            else:
+                self.net.cuda(self.device)
+                # DistributedDataParallel will divide and allocate batch_size to all
+                # available GPUs if device_ids are not set
+                self.net = torch.nn.parallel.DistributedDataParallel(self.net, output_device=0)
+        else:
+            self.net.cuda(self.device)
+
+        # local_rank = int(env_dict["RANK"])
+        # local_world_size = int(env_dict["WORLD_SIZE"])
+        # n = torch.cuda.device_count() // local_world_size
+        # device_ids = list(range(local_rank * n, (local_rank + 1) * n))
+        # print(
+        #     f"[{os.getpid()}] rank = {dist.get_rank()}, "
+        #     + f"world_size = {dist.get_world_size()}, n = {n}, device_ids = {device_ids}"
+        # )
+        # self.device = device_ids[0]
+        # self.net.cuda(self.device)
+        # self.net = DDP(self.net, device_ids)
 
     def _fit(self, train_data, val_data, time_limit=math.inf):
         tic = time.time()
@@ -596,9 +661,9 @@ class ImageClassificationEstimator(BaseEstimator):
         # init loss function
         loss = nn.CrossEntropyLoss
         if self._cfg.train.mixup:
-            loss = lambda: NLLMultiLabelSmooth(self._cfg.train.mixup_alpha)
+            def loss(): return NLLMultiLabelSmooth(self._cfg.train.mixup_alpha)
         elif self._cfg.train.label_smoothing:
-            loss = lambda: LabelSmoothing(self._cfg.train.mixup_alpha)
+            def loss(): return LabelSmoothing(self._cfg.train.mixup_alpha)
 
         # amp trainng
         scaler = torch.cuda.amp.GradScaler(
@@ -613,7 +678,7 @@ class ImageClassificationEstimator(BaseEstimator):
         self.scaler = scaler
         self.lr_policy = lr_policy
         self.optimizer = optimizer
-        self.criterion = loss().cuda()
+        self.criterion = loss().to(self.device)
         #self.criterion = DataParallelCriterion(self.criterion).cuda()
 
     def _init_network(self, **kwargs):

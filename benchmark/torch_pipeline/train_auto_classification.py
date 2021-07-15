@@ -29,7 +29,6 @@ if __name__ == '__main__':
         "/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-08-2021/best_checkpoint.pkl"
     )
     df = classifier.predict(test_data)
-    print(df)
     # x = '/media/robin/DATA/datatsets/image_data/shopee-iet/images/test/BabyPants/BabyPants_1035.jpg'
 
     # out = classifier.predict_feature(x)
