@@ -7,7 +7,6 @@ from autotorch.auto.data import TorchImageClassificationDataset
 from autotorch.auto.estimators import ImageClassificationEstimator
 from autotorch.auto.task import ImageClassification
 
-
 if __name__ == '__main__':
     # specify hyperparameter search space
     config = {}
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     classifier = ImageClassificationEstimator(config)
     # print(classifier._cfg)
     # # # evaluate auto estimator
-    # classifier.fit(train_data, valid_data)
+    classifier.fit(train_data, valid_data)
     # results = classifier.evaluate(valid_data)
     # print(results)
 

@@ -30,7 +30,6 @@ from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
 from ..data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader, get_data_loader
 from ..data.transforms import transform_eval
-from ..utils.parallel import DataParallelModel, DataParallelCriterion
 from .conf import _BEST_CHECKPOINT_FILE
 from gluoncv.auto.estimators.utils import EarlyStopperOnPlateau
 
@@ -91,6 +90,7 @@ class ImageClassificationEstimator(BaseEstimator):
             self.gpu_ids = 0
         else:
             self.gpu_ids = self.ctx
+
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.net = nn.DataParallel(self.net, device_ids=self.gpu_ids, output_device=self.gpu_ids[0])
         self.net.to(self.device)
@@ -613,8 +613,8 @@ class ImageClassificationEstimator(BaseEstimator):
         self.scaler = scaler
         self.lr_policy = lr_policy
         self.optimizer = optimizer
-        self.criterion = nn.CrossEntropyLoss()
-        self.criterion = DataParallelCriterion(self.criterion).cuda()
+        self.criterion = loss().cuda()
+        #self.criterion = DataParallelCriterion(self.criterion).cuda()
 
     def _init_network(self, **kwargs):
         load_only = kwargs.get('load_only', False)
