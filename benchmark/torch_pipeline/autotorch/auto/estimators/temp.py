@@ -16,6 +16,8 @@ from torchvision import transforms
 from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.nn.functional as F
 from timm.models.layers.classifier import ClassifierHead
+import sys
+sys.path.append("/home/jianzheng.nie/autodl/benchmark/torch_pipeline")
 
 from autotorch.data.mixup import NLLMultiLabelSmooth
 from autotorch.data.smoothing import LabelSmoothing
@@ -25,13 +27,13 @@ from autotorch.scheduler import StepLRScheduler, LinearLRScheduler, CosineLRSche
 from autotorch.utils.model import reduce_tensor
 from autotorch.utils.metrics import AverageMeter, accuracy
 
-from .base_estimator import BaseEstimator, set_default
-from .default import ImageClassificationCfg
-from ..data.dataset import TorchImageClassificationDataset
-from ..data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader, get_data_loader
-from ..data.transforms import transform_eval
-from ..utils.parallel import DataParallelModel, DataParallelCriterion
-from .conf import _BEST_CHECKPOINT_FILE
+from autotorch.auto.estimators.base_estimator import BaseEstimator, set_default
+from autotorch.auto.estimators.default import ImageClassificationCfg
+from autotorch.auto.data.dataset import TorchImageClassificationDataset
+from autotorch.auto.data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader, get_data_loader
+from autotorch.auto.data.transforms import transform_eval
+from autotorch.auto.utils.parallel import DataParallelModel, DataParallelCriterion
+from autotorch.auto.estimators.conf import _BEST_CHECKPOINT_FILE
 from gluoncv.auto.estimators.utils import EarlyStopperOnPlateau
 
 __all__ = ['ImageClassificationEstimator']
@@ -91,8 +93,11 @@ class ImageClassificationEstimator(BaseEstimator):
             self.gpu_ids = 0
         else:
             self.gpu_ids = self.ctx
+        self.gpu_ids = [0, 1]
+        # self.net = nn.DataParallel(self.net, device_ids=self.gpu_ids, output_device=self.gpu_ids[0])
+        # self.net = nn.DataParallel(self.net, device_ids=self.gpu_ids)
+        self.net = DataParallelModel(self.net, device_ids=self.gpu_ids)
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.net = nn.DataParallel(self.net, device_ids=self.gpu_ids, output_device=self.gpu_ids[0])
         self.net.to(self.device)
 
     def _fit(self, train_data, val_data, time_limit=math.inf):
@@ -264,14 +269,12 @@ class ImageClassificationEstimator(BaseEstimator):
                     batch_size_multiplier=1,
                     top_k=1):
         def step_fn(input, target, optimizer_step=True):
-            input_var = Variable(input)
-            target_var = Variable(target)
-
+            input_var=Variable(input)
+            target_var=Variable(target)
             with autocast(enabled=use_amp):
                 output = model(input_var)
                 loss = criterion(output, target_var)
                 loss /= batch_size_multiplier
-
                 prec1, prec5 = accuracy(output,
                                         target,
                                         topk=(1, min(top_k, 5)))
@@ -296,9 +299,8 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _val_step(self, model, criterion, use_amp=False, top_k=1):
         def step_fn(input, target):
-            input_var = Variable(input)
-            target_var = Variable(target)
-
+            input_var=Variable(input)
+            target_var=Variable(target)
             with torch.no_grad(), autocast(enabled=use_amp):
                 output = model(input_var)
                 loss = criterion(output, target_var)
@@ -388,8 +390,8 @@ class ImageClassificationEstimator(BaseEstimator):
         end = time.time()
 
         for i, (input, target) in enumerate(train_loader):
-            input = input.cuda()
-            target = target.cuda()
+            input = input.to(self.device)
+            target = target.to(self.device)
 
             bs = input.size(0)
             lr_scheduler.step(epoch)
@@ -482,8 +484,8 @@ class ImageClassificationEstimator(BaseEstimator):
         data_iter = enumerate(val_loader)
 
         for i, (input, target) in data_iter:
-            input = input.cuda()
-            target = target.cuda()
+            input = input.to(self.device)
+            target = target.to(self.device)
 
             bs = input.size(0)
             data_time = time.time() - end
@@ -613,8 +615,7 @@ class ImageClassificationEstimator(BaseEstimator):
         self.scaler = scaler
         self.lr_policy = lr_policy
         self.optimizer = optimizer
-        self.criterion = nn.CrossEntropyLoss()
-        self.criterion = DataParallelCriterion(self.criterion).cuda()
+        self.criterion = loss()
 
     def _init_network(self, **kwargs):
         load_only = kwargs.get('load_only', False)
