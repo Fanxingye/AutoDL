@@ -388,8 +388,8 @@ class ImageClassificationEstimator(BaseEstimator):
         end = time.time()
 
         for i, (input, target) in enumerate(train_loader):
-            input = input.cuda()
-            target = target.cuda()
+            input = input.to(self.device)
+            target = target.to(self.device)
 
             bs = input.size(0)
             lr_scheduler.step(epoch)
@@ -482,8 +482,8 @@ class ImageClassificationEstimator(BaseEstimator):
         data_iter = enumerate(val_loader)
 
         for i, (input, target) in data_iter:
-            input = input.cuda()
-            target = target.cuda()
+            input = input.to(self.device)
+            target = target.to(self.device)
 
             bs = input.size(0)
             data_time = time.time() - end
