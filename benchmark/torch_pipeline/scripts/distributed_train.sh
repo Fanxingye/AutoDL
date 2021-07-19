@@ -1,8 +1,8 @@
 #!/bin/bash
-python -m torch.distributed.run --nnodes=1 --nproc_per_node=2 --rdzv_backend=c10d main.py \
+python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=2 main.py \
 --data_name "Flowers-Recognition" \
 --data_path "/data/AutoML_compete/Flowers-Recognition/split" \
---output-dir "/home/jianzheng.nie/autodl/benchmark/torch_pipeline/checkpoint/bb" \
+--output-dir "/home/jianzheng.nie/autodl/benchmark/torch_pipeline/checkpoint" \
 --model "resnet18" \
 --epochs 2 \
 --lr 0.01 \
@@ -27,3 +27,7 @@ python -m torch.distributed.launch --nproc_per_node=4 test.py \
 --model "resnet18" \
 --resume "/home/yiran.wu/work_dirs/pytorch_model_benchmark/Flowers-Recognition-resnet18/model_best.pth.tar" \
 -b 16
+
+
+### autodl
+python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=2 test_autotorch_ddp.py 

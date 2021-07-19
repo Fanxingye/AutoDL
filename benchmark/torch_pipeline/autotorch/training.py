@@ -215,6 +215,9 @@ def validate(
     data_iter = enumerate(val_loader)
 
     for i, (input, target) in data_iter:
+        input = input.cuda()
+        target = target.cuda()
+        
         bs = input.size(0)
         data_time = time.time() - end
         loss, prec1, prec5 = step(input, target)

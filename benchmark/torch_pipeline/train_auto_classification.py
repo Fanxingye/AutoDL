@@ -7,25 +7,16 @@ from autotorch.auto.data import TorchImageClassificationDataset
 from autotorch.auto.estimators import ImageClassificationEstimator
 from autotorch.auto.task import ImageClassification
 
-
 if __name__ == '__main__':
-    # user defined arguments
-    parser = argparse.ArgumentParser(description='benchmark for image classification')
-    parser.add_argument('--dataset', type=str, default='boat', help='dataset name')
-    parser.add_argument('--num-trials', type=int, default=3, help='number of training trials')
-    parser.add_argument("--local_rank", default=0, type=int)
-    args = parser.parse_args()
-    logging.info('user defined arguments: {}'.format(args))
-
     # specify hyperparameter search space
     config = {}
-
     # specify learning task
     # train_data, _, valid_data = TorchImageClassificationDataset.from_folders(
     # 'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
 
-    train_data, valid_data, test_data = TorchImageClassificationDataset.from_folders("/data/AutoML_compete/A-Large-Scale-Fish-Dataset/split/")
-    
+    train_data, valid_data, test_data = TorchImageClassificationDataset.from_folders(
+        "/data/AutoML_compete/A-Large-Scale-Fish-Dataset/split/")
+
     # # fit auto estimator
     classifier = ImageClassificationEstimator(config)
     # print(classifier._cfg)
@@ -34,12 +25,12 @@ if __name__ == '__main__':
     # results = classifier.evaluate(valid_data)
     # print(results)
 
-    # classifier = classifier.load("/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-08-2021/best_checkpoint.pkl")
-    # df = classifier.predict(test_data)
-    # print(df)
-
+    classifier = classifier.load(
+        "/data/autodl/benchmark/torch_pipeline/imageclassificationestimator-07-08-2021/best_checkpoint.pkl"
+    )
+    df = classifier.predict(test_data)
     # x = '/media/robin/DATA/datatsets/image_data/shopee-iet/images/test/BabyPants/BabyPants_1035.jpg'
-    
+
     # out = classifier.predict_feature(x)
     # print(out)
     # # task
@@ -53,12 +44,12 @@ if __name__ == '__main__':
     #     'log_dir': 'checkpoint',
     #     'time_limits': 60*60
     #     }
-    
+
     # img_path = ["/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg",
     #             "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/3475870145_685a19116d.jpg",
     #             "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/909609509_a05ccb8127.jpg"]
     # img_path = "/data/AutoML_compete/Flowers-Recognition/split/test/daisy/10993710036_2033222c91.jpg"
-    
+
     # search_args = {'lr': ag.Categorical(1e-3, 1e-2),
     #             'num_trials': 1,
     #             'epochs': 2,
