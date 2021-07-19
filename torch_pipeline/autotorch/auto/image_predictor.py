@@ -17,7 +17,7 @@ from autogluon.core.utils import set_logger_verbosity
 from autogluon.core.utils import verbosity2loglevel, get_gpu_count
 from autogluon.core.utils.utils import generate_train_test_split
 from autogluon.vision.configs.presets_configs import unpack, _check_gpu_memory_presets
-# from autogluon.vision.utils import sanitize_batch_size
+from autotorch.auto.utils import sanitize_batch_size
 from gluoncv.auto.estimators.utils import _suggest_load_context
 
 __all__ = ['ImagePredictor']
@@ -368,8 +368,7 @@ class ImagePredictor(object):
             min_value = ngpus_per_trial
         else:
             min_value = 1
-        #bs = sanitize_batch_size(config.get('batch_size', 16), min_value=min_value, max_value=len(train_data))
-        bs = 32
+        bs = sanitize_batch_size(config.get('batch_size', 16), min_value=min_value, max_value=len(train_data))
         config['batch_size'] = bs
         # verbosity
         if log_level > logging.INFO:
