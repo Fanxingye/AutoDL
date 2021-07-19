@@ -26,9 +26,8 @@ def is_valid_dir(logdir, trial_name):
     return flag
 
 
-def find_best_model(checkpoint_dir):
+def find_best_model(checkpoint_dir, valid_summary_file='fit_summary_img_cls.ag'):
     _BEST_CHECKPOINT_FILE = 'best_checkpoint.pkl'
-    valid_summary_file = 'fit_summary_img_cls.ag'
     _BEST_CONFIG_FILE = 'config.yaml'
     best_checkpoint = ''
     best_config = ''
@@ -56,9 +55,8 @@ def find_best_model(checkpoint_dir):
     return best_checkpoint, best_config, result
 
 
-def find_best_model_loop(checkpoint_dir):
+def find_best_model_loop(checkpoint_dir, valid_summary_file='fit_summary_img_cls.ag'):
     _BEST_CHECKPOINT_FILE = 'best_checkpoint.pkl'
-    valid_summary_file = 'fit_summary_img_cls.ag'
     _BEST_CONFIG_FILE = 'config.yaml'
     best_checkpoint = ''
     best_config = ''

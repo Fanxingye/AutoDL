@@ -1,12 +1,12 @@
 import os
+import sys
 import time
 import argparse
 import importlib
 import logging
-from autogluon.vision import ImagePredictor
 from configuration import gluon_config_choice
-from gluoncv.auto.data.dataset import ImageClassificationDataset
 from utils import mkdir, find_best_model, parse_config, write_csv_file, find_best_model_loop
+sys.path.append("../torch_pipeline")
 
 
 def parse_args():
@@ -39,6 +39,8 @@ def parse_args():
                         help='if true, will load the best model and test')
     parser.add_argument('--data_augmention', type=str, default="False",
                         help='Whether use thee data augmention')
+    parser.add_argument('--local_rank', type=int, default=0,
+                        help='Whether use thee data augmention')
     opt = parser.parse_args()
     return opt
 
@@ -47,6 +49,7 @@ def main():
     opt = parse_args()
 
     if opt.train_framework == "autogluon":
+        from autogluon.vision import ImagePredictor
         logger = logging.getLogger('')
         if not opt.checkpoint_path:
             out_dir = os.path.join(opt.output_path, opt.dataset, opt.model_config)
@@ -169,6 +172,176 @@ def main():
         else:
             predictor = None
             best_checkpoint, best_config, results = find_best_model_loop(checkpoint_dir=opt.checkpoint_path)
+            predictor = ImagePredictor().load(best_checkpoint)
+
+            test_acc, _ = predictor.evaluate(test_dataset)
+            logger.info("*" * 100)
+            logger.info('Load the best checkpoint to evaluate on Test dataset')
+            logging.info('Top-1 test acc: %.5f' % test_acc)
+
+            model, batch_size, epochs, learning_rate, momentum, wd, input_size = parse_config(best_config)
+
+
+            fields = ["dataset_name", "hpo_type", "train_acc", "valid_acc", "test_acc",
+                "model", "batch_size", "learning_rate", "momentum", "wd",
+                "data_augmention", "epochs", "search_strategy", "input_size", "total_time"]
+
+            model, batch_size, epochs, learning_rate, momentum, wd, input_size = parse_config(best_config)
+
+            train_acc = results.get('train_acc', None)
+            valid_acc = results.get('valid_acc',  None)
+            total_time = results.get('total_time', None)
+            search_strategy = tune_hyperparameter.get('searcher', None)
+
+            report = [[opt.dataset, opt.model_config, train_acc, valid_acc, test_acc,
+                model, batch_size, learning_rate, momentum, wd,
+                opt.data_augmention, epochs, search_strategy,
+                input_size, total_time]]
+
+            # collect and save the results to csv
+            if not os.path.exists(opt.report_path):
+                os.makedirs(opt.report_path)
+            report_path = os.path.join(opt.report_path, "report.csv")
+            logger.info("Write the results to file: %s" % report_path)
+            isExists = os.path.exists(report_path)
+
+            if not isExists:
+                write_csv_file(report_path, head=fields, data=report)
+            else:
+                write_csv_file(report_path, head=None, data=report)
+
+            # save results
+            logger.info("*" * 100)
+            filename = 'predictor.ag'
+            output_directory_list = best_checkpoint.split('/')[:-3]
+            output_directory = '/'.join(output_directory_list)
+            logger.info("Save The final moodel `predictor.ag` to %s" % output_directory)
+            predictor.save(os.path.join(output_directory, filename))
+
+    elif opt.train_framework == "autotorch":
+        from autotorch.auto import ImagePredictor
+        logger = logging.getLogger('')
+        if not opt.checkpoint_path:
+            out_dir = os.path.join(opt.output_path, opt.dataset, opt.model_config)
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
+            tm = time.strftime("%Y%m%d-%H%M", time.localtime())
+            tm_dir = os.path.join(out_dir, tm)
+            if not os.path.exists(tm_dir):
+                os.makedirs(tm_dir)
+
+            output_directory = os.path.join(tm_dir, 'checkpoint/')
+            filehandler = logging.FileHandler(os.path.join(tm_dir, 'summary.log'))
+            streamhandler = logging.StreamHandler()
+            logger.setLevel(logging.INFO)
+            logger.addHandler(filehandler)
+            logger.addHandler(streamhandler)
+            logging.info(opt)
+
+        config = gluon_config_choice(opt.dataset, model_choice=opt.model_config)
+        target_hyperparams = config["hyperparameters"]
+        tune_hyperparameter = config["hyperparameter_tune_kwargs"]
+
+        train_data_dir = opt.data_path
+        val_data_dir = opt.data_path.replace("train", "val")
+        if opt.data_augmention == "True":
+            train_data_dir = opt.data_path.replace("train", "train_dataaug2_balance")
+        test_data_dir = opt.data_path.replace("train", "test")
+
+        train_dataset = ImagePredictor.Dataset.from_folder(train_data_dir)
+        val_dataset = ImagePredictor.Dataset.from_folder(val_data_dir)
+        test_dataset = ImagePredictor.Dataset.from_folder(test_data_dir)
+
+        if not opt.checkpoint_path:
+            predictor = ImagePredictor(log_dir=output_directory)
+            # overwriting default by command line:
+            if int(opt.batch_size) > 0:
+                target_hyperparams['batch_size'] = int(opt.batch_size)
+            if int(opt.num_epochs) > 0:
+                target_hyperparams['epochs'] = int(opt.num_epochs)
+            if int(opt.num_trials) > 0:
+                tune_hyperparameter['num_trials'] = int(opt.num_trials)
+
+            ngpus_per_trial = target_hyperparams.pop('ngpus_per_trial')
+            if int(opt.ngpus_per_trial) > 0:
+                ngpus_per_trial = int(opt.ngpus_per_trial)
+
+            predictor.fit(train_data=train_dataset,
+                        tuning_data=val_dataset,
+                        hyperparameters=target_hyperparams,
+                        hyperparameter_tune_kwargs=tune_hyperparameter,
+                        ngpus_per_trial=ngpus_per_trial,
+                        time_limit=config['time_limit'],
+                        verbosity=2)
+
+            summary = predictor.fit_summary()
+            logging.info('Top-1 val acc: %.3f' % summary['valid_acc'])
+            logger.info(summary)
+
+            # use the default saved model to evaluate
+            val_acc, _ = predictor.evaluate(val_dataset)
+            logger.info("*" * 100)
+            logger.info('Use the default saved model to evaluate on validation dataset')
+            logging.info('Top-1 valid acc: %.5f' % val_acc)
+
+            # use the default saved model to evaluate
+            test_acc, _ = predictor.evaluate(test_dataset)
+            logger.info("*" * 100)
+            logger.info('Use the default saved model to evaluate on Test dataset')
+            logging.info('Top-1 test acc: %.5f' % test_acc)
+        
+            # load the best checkpoint to evaluate
+            if opt.load_best_model:
+                predictor = None
+                best_checkpoint, best_config, results = find_best_model(checkpoint_dir=output_directory, valid_summary_file='fit_summary_img_cls.json')
+                predictor = ImagePredictor().load(best_checkpoint)
+
+                test_acc, _ = predictor.evaluate(test_dataset)
+                logger.info("*" * 100)
+                logger.info('Load the best checkpoint to evaluate on Test dataset')
+                logging.info('Top-1 test acc: %.5f' % test_acc)
+
+            # save results
+            logger.info("*" * 100)
+            filename = 'predictor.ag'
+            logger.info("Save The final moodel to predictor.ag")
+            predictor.save(os.path.join(output_directory, filename))
+
+            fields = ["dataset_name", "hpo_type", "train_acc", "valid_acc", "test_acc",
+                "model", "batch_size", "learning_rate", "momentum", "wd",
+                "data_augmention", "epochs", "search_strategy", "input_size", "total_time"]
+
+            model, batch_size, epochs, learning_rate, momentum, wd, input_size = parse_config(best_config)
+
+            train_acc = results.get('train_acc')
+            valid_acc = results.get('valid_acc')
+            total_time = summary.get('total_time')
+            search_strategy = tune_hyperparameter.get('searcher', None)
+
+            report = [[opt.dataset, opt.model_config, train_acc, valid_acc, test_acc,
+                model, batch_size, learning_rate, momentum, wd,
+                opt.data_augmention, epochs, search_strategy,
+                input_size, total_time]]
+
+            # collect and save the results to csv
+            if not os.path.exists(opt.report_path):
+                os.makedirs(opt.report_path)
+            report_path = os.path.join(opt.report_path, "report.csv")
+            logger.info("Write the results to file: %s" % report_path)
+            isExists = os.path.exists(report_path)
+
+            if not isExists:
+                write_csv_file(report_path, head=fields, data=report)
+            else:
+                write_csv_file(report_path, head=None, data=report)
+
+            # save the single traing results to csv
+            report_path = os.path.join(output_directory, "report.csv")
+            logger.info("Write the results to file: %s" % report_path)
+            write_csv_file(report_path, head=fields, data=report)
+        else:
+            predictor = None
+            best_checkpoint, best_config, results = find_best_model_loop(checkpoint_dir=opt.checkpoint_path, valid_summary_file='fit_summary_img_cls.json')
             predictor = ImagePredictor().load(best_checkpoint)
 
             test_acc, _ = predictor.evaluate(test_dataset)
