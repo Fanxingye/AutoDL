@@ -179,7 +179,7 @@ def gluon_config_choice(dataset, model_choice="default"):
                 'max_reward': 1.0,
                 'searcher': 'random'
             },
-            'time_limit': 4*24*3600
+            'time_limit': 8*24*3600
         },
 
         'best_quality': {
