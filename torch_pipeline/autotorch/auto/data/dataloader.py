@@ -59,7 +59,7 @@ def get_pytorch_val_loader(
         pin_memory=True,
         collate_fn=partial(fast_collate, memory_format),
         drop_last=False,
-        persistent_workers=True,
+        persistent_workers=False,
     )
     return PrefetchedWrapper(val_loader, start_epoch, num_classes, one_hot)
 
@@ -120,7 +120,7 @@ def get_pytorch_train_loader(data_dir,
         pin_memory=True,
         collate_fn=partial(fast_collate, memory_format),
         drop_last=True,
-        persistent_workers=True,
+        persistent_workers=False,
     )
     return PrefetchedWrapper(train_loader, start_epoch, num_classes, one_hot)
 

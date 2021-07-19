@@ -117,7 +117,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         env_dict = {
             key: os.environ[key]
-            for key in ("MASTER_ADDR", "MASTER_PORT", "RANK", "WORLD_SIZE")
+            for key in ("MASTER_ADDR", "MASTER_PORT", "RANK", "WORLD_SIZE") if key in os.environ
         }
         world_size = 1
         if distributed:
