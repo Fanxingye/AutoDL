@@ -46,16 +46,14 @@ def parse_args():
     parser.add_argument("--no_python", default=False, action="store_true",
                         help="Do not prepend the training script with \"python\" - just exec "
                              "it directly. Useful when the script is not a Python script.")
-
     # positional
     parser.add_argument("--training_script", type=str,default="train_auto_classification.py",required=False,
                         help="The full path to the single GPU training "
                              "program/script to be launched in parallel, "
                              "followed by all the arguments for the "
                              "training script")
-
     # rest from the training program
-    parser.add_argument('--training_script_args', default="",required=False,type=str,)
+    parser.add_argument('--training_script_args', default="", nargs=REMAINDER, required=False,type=str)
     return parser.parse_args()
 
 def main():
