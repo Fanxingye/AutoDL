@@ -22,15 +22,19 @@ import numpy as np
 from autotorch.auto.estimators import ImageClassificationEstimator
 from autotorch.auto.data import TorchImageClassificationDataset
 
-
-
 IMAGE_CLASS_DATASET, _, IMAGE_CLASS_TEST = ImageClassification.Dataset.from_folders(
     'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
 
 
 def test_image_classification_estimator():
     from gluoncv.auto.estimators import ImageClassificationEstimator
-    est = ImageClassificationEstimator({'train': {'epochs': 1, 'batch_size': 8}, 'gpus': list(range(get_gpu_count()))})
+    est = ImageClassificationEstimator({
+        'train': {
+            'epochs': 1,
+            'batch_size': 8
+        },
+        'gpus': list(range(get_gpu_count()))
+    })
     res = est.fit(IMAGE_CLASS_DATASET)
     assert res.get('valid_acc', 0) > 0
     test_result = est.predict(IMAGE_CLASS_TEST)
@@ -52,8 +56,16 @@ def test_image_classification_estimator_custom_net_optimizer():
     from mxnet.optimizer import Adam
     net = get_model('resnet18_v1')
     optim = Adam(learning_rate=0.01, wd=1e-3)
-    est = ImageClassificationEstimator({'train': {'epochs': 1, 'batch_size': 8}, 'gpus': list(range(get_gpu_count()))},
-        net=net, optimizer=optim)
+    est = ImageClassificationEstimator(
+        {
+            'train': {
+                'epochs': 1,
+                'batch_size': 8
+            },
+            'gpus': list(range(get_gpu_count()))
+        },
+        net=net,
+        optimizer=optim)
     res = est.fit(IMAGE_CLASS_DATASET)
     assert res.get('valid_acc', 0) > 0
     feat = est.predict_feature(IMAGE_CLASS_TEST)
