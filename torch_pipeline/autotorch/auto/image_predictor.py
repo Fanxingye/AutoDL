@@ -653,32 +653,6 @@ class ImagePredictor(object):
             obj = pickle.load(fid)
         obj._verbosity = verbosity
         return obj
-    @classmethod
-    def load(cls, path, ctx='auto'):
-        """Load the state from disk copy.
-
-        Parameters
-        ----------
-        filename : str
-            The file name to load from.
-        ctx: str, default is 'auto'
-            The context for reloaded model.
-            'auto': use previously saved context type if still available, fallback
-            to cpu if no gpu detected.
-            Use `cpu` if no GPU available.
-            'cpu': use cpu for inference regardless.
-            'gpu': use as many gpus available as possible.
-            [0, 2, 4, ...]: if a list or tuple of integers are provided, the context
-            will be [gpu(0), gpu(2), gpu(4)...]
-        """
-        if os.path.isdir(path):
-            filename = os.path.join(path, 'predictor.ag')
-        with open(filename, 'rb') as fid:
-            obj = pickle.load(fid)
-            obj._logger.debug('Unpickled from %s', filename)
-            new_ctx = _suggest_load_context(obj.net, ctx, obj.ctx)
-            obj.reset_ctx(new_ctx)
-            return obj
 
     @classmethod
     def list_models(cls):
