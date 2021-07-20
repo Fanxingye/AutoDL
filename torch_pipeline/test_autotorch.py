@@ -20,7 +20,7 @@ predictor.fit(
         'model': ag.Categorical('resnet18_v1b', 'mobilenetv3'),
         'batch_size': ag.Categorical(64),
         'lr': ag.Real(1e-4, 1e-2, log=True),
-        'epochs': 10,
+        'epochs': 1,
         'ngpus_per_trial': 2,
         'cleanup_disk': False
     },

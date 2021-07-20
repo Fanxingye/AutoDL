@@ -4,7 +4,7 @@ import logging
 import os
 import pickle
 import warnings
-
+import torch
 import numpy as np
 import pandas as pd
 from autotorch.auto.task import ImageClassification as ImageClassification
@@ -631,28 +631,55 @@ class ImagePredictor(object):
             pickle.dump(self, fid)
 
 
+    # @classmethod
+    # def load(cls, path, verbosity=2):
+    #     """Load previously saved predictor.
+
+    #     Parameters
+    #     ----------
+    #     path : str
+    #         The file name for saved pickle file. If `path` is a directory, will try to load the file `image_predictor.ag` in
+    #         this directory.
+    #     verbosity : int, default = 2
+    #         Verbosity levels range from 0 to 4 and control how much information is printed.
+    #         Higher levels correspond to more detailed print statements (you can set verbosity = 0 to suppress warnings).
+    #         If using logging, you can alternatively control amount of information printed via logger.setLevel(L),
+    #         where L ranges from 0 to 50 (Note: higher values of L correspond to fewer print statements, opposite of verbosity levels)
+
+    #     """
+    #     if os.path.isdir(path):
+    #         path = os.path.join(path, 'image_predictor.ag')
+    #     with open(path, 'rb') as fid:
+    #         obj = pickle.load(fid)
+    #     obj._verbosity = verbosity
+    #     return obj
+
     @classmethod
-    def load(cls, path, verbosity=2):
-        """Load previously saved predictor.
+    def load(cls, path, ctx='auto'):
+        """Load the state from disk copy.
 
         Parameters
         ----------
-        path : str
-            The file name for saved pickle file. If `path` is a directory, will try to load the file `image_predictor.ag` in
-            this directory.
-        verbosity : int, default = 2
-            Verbosity levels range from 0 to 4 and control how much information is printed.
-            Higher levels correspond to more detailed print statements (you can set verbosity = 0 to suppress warnings).
-            If using logging, you can alternatively control amount of information printed via logger.setLevel(L),
-            where L ranges from 0 to 50 (Note: higher values of L correspond to fewer print statements, opposite of verbosity levels)
-
+        filename : str
+            The file name to load from.
+        ctx: str, default is 'auto'
+            The context for reloaded model.
+            'auto': use previously saved context type if still available, fallback
+            to cpu if no gpu detected.
+            Use `cpu` if no GPU available.
+            'cpu': use cpu for inference regardless.
+            'gpu': use as many gpus available as possible.
+            [0, 2, 4, ...]: if a list or tuple of integers are provided, the context
+            will be [gpu(0), gpu(2), gpu(4)...]
         """
         if os.path.isdir(path):
-            path = os.path.join(path, 'image_predictor.ag')
+            path = os.path.join(path, 'predictor.ag')
         with open(path, 'rb') as fid:
             obj = pickle.load(fid)
-        obj._verbosity = verbosity
-        return obj
+            obj._logger.debug('Unpickled from %s', path)
+            new_ctx = 'cuda' if torch.cuda.is_available() else 'cpu'
+            obj.reset_ctx(new_ctx)
+            return obj
 
     @classmethod
     def list_models(cls):
