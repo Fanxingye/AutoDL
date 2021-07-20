@@ -219,6 +219,7 @@ def main():
             predictor.save(os.path.join(output_directory, filename))
 
     elif opt.train_framework == "autotorch":
+        import torch
         from autotorch.auto import ImagePredictor
         logger = logging.getLogger('')
         if not opt.checkpoint_path:
@@ -290,104 +291,6 @@ def main():
             logger.info('Use the default saved model to evaluate on Test dataset')
             logging.info('Top-1 test acc: %.5f' % test_acc)
         
-            # load the best checkpoint to evaluate
-            if opt.load_best_model:
-                predictor = None
-                best_checkpoint, best_config, results = find_best_model(checkpoint_dir=output_directory, valid_summary_file='fit_summary_img_cls.json')
-                predictor = ImagePredictor().load(best_checkpoint)
-
-                test_acc, _ = predictor.evaluate(test_dataset)
-                logger.info("*" * 100)
-                logger.info('Load the best checkpoint to evaluate on Test dataset')
-                logging.info('Top-1 test acc: %.5f' % test_acc)
-
-            # save results
-            logger.info("*" * 100)
-            filename = 'predictor.ag'
-            logger.info("Save The final moodel to predictor.ag")
-            predictor.save(os.path.join(output_directory, filename))
-
-            fields = ["dataset_name", "hpo_type", "train_acc", "valid_acc", "test_acc",
-                "model", "batch_size", "learning_rate", "momentum", "wd",
-                "data_augmention", "epochs", "search_strategy", "input_size", "total_time"]
-
-            model, batch_size, epochs, learning_rate, momentum, wd, input_size = parse_config(best_config)
-
-            train_acc = results.get('train_acc')
-            valid_acc = results.get('valid_acc')
-            total_time = summary.get('total_time')
-            search_strategy = tune_hyperparameter.get('searcher', None)
-
-            report = [[opt.dataset, opt.model_config, train_acc, valid_acc, test_acc,
-                model, batch_size, learning_rate, momentum, wd,
-                opt.data_augmention, epochs, search_strategy,
-                input_size, total_time]]
-
-            # collect and save the results to csv
-            if not os.path.exists(opt.report_path):
-                os.makedirs(opt.report_path)
-            report_path = os.path.join(opt.report_path, "report.csv")
-            logger.info("Write the results to file: %s" % report_path)
-            isExists = os.path.exists(report_path)
-
-            if not isExists:
-                write_csv_file(report_path, head=fields, data=report)
-            else:
-                write_csv_file(report_path, head=None, data=report)
-
-            # save the single traing results to csv
-            report_path = os.path.join(output_directory, "report.csv")
-            logger.info("Write the results to file: %s" % report_path)
-            write_csv_file(report_path, head=fields, data=report)
-        else:
-            predictor = None
-            best_checkpoint, best_config, results = find_best_model_loop(checkpoint_dir=opt.checkpoint_path, valid_summary_file='fit_summary_img_cls.json')
-            predictor = ImagePredictor().load(best_checkpoint)
-
-            test_acc, _ = predictor.evaluate(test_dataset)
-            logger.info("*" * 100)
-            logger.info('Load the best checkpoint to evaluate on Test dataset')
-            logging.info('Top-1 test acc: %.5f' % test_acc)
-
-            model, batch_size, epochs, learning_rate, momentum, wd, input_size = parse_config(best_config)
-
-
-            fields = ["dataset_name", "hpo_type", "train_acc", "valid_acc", "test_acc",
-                "model", "batch_size", "learning_rate", "momentum", "wd",
-                "data_augmention", "epochs", "search_strategy", "input_size", "total_time"]
-
-            model, batch_size, epochs, learning_rate, momentum, wd, input_size = parse_config(best_config)
-
-            train_acc = results.get('train_acc', None)
-            valid_acc = results.get('valid_acc',  None)
-            total_time = results.get('total_time', None)
-            search_strategy = tune_hyperparameter.get('searcher', None)
-
-            report = [[opt.dataset, opt.model_config, train_acc, valid_acc, test_acc,
-                model, batch_size, learning_rate, momentum, wd,
-                opt.data_augmention, epochs, search_strategy,
-                input_size, total_time]]
-
-            # collect and save the results to csv
-            if not os.path.exists(opt.report_path):
-                os.makedirs(opt.report_path)
-            report_path = os.path.join(opt.report_path, "report.csv")
-            logger.info("Write the results to file: %s" % report_path)
-            isExists = os.path.exists(report_path)
-
-            if not isExists:
-                write_csv_file(report_path, head=fields, data=report)
-            else:
-                write_csv_file(report_path, head=None, data=report)
-
-            # save results
-            logger.info("*" * 100)
-            filename = 'predictor.ag'
-            output_directory_list = best_checkpoint.split('/')[:-3]
-            output_directory = '/'.join(output_directory_list)
-            logger.info("Save The final moodel `predictor.ag` to %s" % output_directory)
-            predictor.save(os.path.join(output_directory, filename))
-
     elif opt.train_framework == "bit":
         from bit_task import train
         train.bit_start(opt)

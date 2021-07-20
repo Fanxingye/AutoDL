@@ -62,8 +62,8 @@ python multiproc_ddp.py --nproc_per_node 2 benchmark.py  \
 
 python -m torch.distributed.launch --nproc_per_node 2 benchmark.py  \
     --data_path /data/AutoML_compete/Flowers-Recognition/split/train \
-    --output_path /data/autodl/benchmark \
-    --report_path /data/autodl/benchmark \
+    --output_path /home/jianzheng.nie/autodl/benchmark/checkpoint \
+    --report_path /home/jianzheng.nie/autodl/benchmark/checkpoint \
     --dataset  Flowers-Recognition \
     --ngpus-per-trial 2 \
     --batch-size 64  \
