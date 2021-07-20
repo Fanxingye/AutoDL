@@ -200,17 +200,6 @@ class ImageClassificationEstimator(BaseEstimator):
             crop_ratio=self._cfg.train.crop_ratio,
             val_dataset=val_data)
 
-        # train_loader, val_loader = get_data_loader(
-        #     data_dir=self._cfg.train.data_dir,
-        #     batch_size=self.batch_size,
-        #     num_workers=self._cfg.train.num_workers,
-        #     input_size=self.input_size,
-        #     crop_ratio=self._cfg.train.crop_ratio,
-        #     data_augment=None,
-        #     train_dataset=train_data,
-        #     val_dataset=val_data
-        # )
-
         self._time_elapsed += time.time() - tic
         return self._train_loop(model=self.net,
                                 criterion=self.criterion,
