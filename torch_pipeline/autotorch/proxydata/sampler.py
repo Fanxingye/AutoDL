@@ -11,7 +11,7 @@ def read_entropy_file(filename):
     label = []
     with open(filename, 'r') as f:
         for line in f.readlines():
-            tokens = line.split()
+            tokens = line.strip().split()
             index.append(int(tokens[0]))
             entropy.append(float(tokens[1]))
             label.append(int(tokens[2]))
@@ -63,7 +63,7 @@ def get_proxy_data_log_entropy_histogram(entropy,
 
     def get_bin_idx(ent):
         for i in range(len(bins) - 1):
-            if (bins[i] < ent) and (ent < bins[i + 1]):
+            if (bins[i] <= ent) and (ent < bins[i + 1]):
                 return i
         return None
 

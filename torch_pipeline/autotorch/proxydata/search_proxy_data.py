@@ -165,7 +165,6 @@ class ProxyModel():
         return top1.avg
 
     def generate_proxy_data(self, val_data):
-        
         def get_entropy(data):
             entropy = F.softmax(data, dim=1) * F.log_softmax(data, dim=1)
             entropy = -1.0 * entropy.sum(dim=1)
