@@ -28,10 +28,18 @@ from autotorch.utils.metrics import AverageMeter, accuracy
 from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
 from ..data.dataset import TorchImageClassificationDataset
-from ..data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader, get_data_loader
+from ..data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader
 from ..data.transforms import transform_eval
 from .conf import _BEST_CHECKPOINT_FILE
 from gluoncv.auto.estimators.utils import EarlyStopperOnPlateau
+from autotorch.utils.filesystem import try_import
+problem_type_constants = try_import(
+    package='autogluon.core.constants',
+    fromlist=['MULTICLASS', 'BINARY', 'REGRESSION'],
+    message='Failed to import problem type constants from autogluon.core.')
+MULTICLASS = problem_type_constants.MULTICLASS
+BINARY = problem_type_constants.BINARY
+REGRESSION = problem_type_constants.REGRESSION
 
 __all__ = ['ImageClassificationEstimator']
 
@@ -59,11 +67,15 @@ class ImageClassificationEstimator(BaseEstimator):
                  logger=None,
                  reporter=None,
                  net=None,
-                 optimizer=None):
+                 optimizer=None,
+                 problem_type=None):
         super(ImageClassificationEstimator, self).__init__(config,
                                                            logger=logger,
                                                            reporter=reporter,
                                                            name=None)
+        if problem_type is None:
+            problem_type = MULTICLASS
+        self._problem_type = problem_type
         self.last_train = None
         self.input_size = self._cfg.train.input_size
 
@@ -108,16 +120,12 @@ class ImageClassificationEstimator(BaseEstimator):
         else:
             local_rank = 0
 
-        if self._cfg.gpus is None:
-            self.gpu_ids = 0
-        else:
-            self.gpu_ids = self.ctx
-    
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
         env_dict = {
             key: os.environ[key]
-            for key in ("MASTER_ADDR", "MASTER_PORT", "RANK", "WORLD_SIZE") if key in os.environ
+            for key in ("MASTER_ADDR", "MASTER_PORT", "RANK", "WORLD_SIZE")
+            if key in os.environ
         }
         world_size = 1
         if distributed:
@@ -127,7 +135,9 @@ class ImageClassificationEstimator(BaseEstimator):
                 torch.cuda.set_device(self.gpu)
                 dist.init_process_group(backend="nccl", init_method="env://")
                 world_size = torch.distributed.get_world_size()
-                print(f"[{os.getpid()}] Initializing process group with: {env_dict}")
+                print(
+                    f"[{os.getpid()}] Initializing process group with: {env_dict}"
+                )
 
         if distributed:
             # For multiprocessing distributed, DistributedDataParallel constructor
@@ -139,12 +149,14 @@ class ImageClassificationEstimator(BaseEstimator):
                 # When using a single GPU per process and per
                 # DistributedDataParallel, we need to divide the batch size
                 # ourselves based on the total number of GPUs we have
-                self.net = torch.nn.parallel.DistributedDataParallel(self.net, device_ids=[self.gpu], output_device=self.gpu)
+                self.net = DDP(self.net,
+                               device_ids=[self.gpu],
+                               output_device=self.gpu)
             else:
                 self.net.cuda(self.device)
                 # DistributedDataParallel will divide and allocate batch_size to all
                 # available GPUs if device_ids are not set
-                self.net = torch.nn.parallel.DistributedDataParallel(self.net, output_device=0)
+                self.net = DDP(self.net, output_device=0)
         else:
             self.net.cuda(self.device)
 
@@ -195,7 +207,7 @@ class ImageClassificationEstimator(BaseEstimator):
         val_loader = get_pytorch_val_loader(
             data_dir=self._cfg.train.data_dir,
             batch_size=self.batch_size,
-            num_workers=self._cfg.train.num_workers,
+            num_workers=self._cfg.valid.num_workers,
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
             val_dataset=val_data)
@@ -650,9 +662,13 @@ class ImageClassificationEstimator(BaseEstimator):
         # init loss function
         loss = nn.CrossEntropyLoss
         if self._cfg.train.mixup:
-            def loss(): return NLLMultiLabelSmooth(self._cfg.train.mixup_alpha)
+
+            def loss():
+                return NLLMultiLabelSmooth(self._cfg.train.mixup_alpha)
         elif self._cfg.train.label_smoothing:
-            def loss(): return LabelSmoothing(self._cfg.train.mixup_alpha)
+
+            def loss():
+                return LabelSmoothing(self._cfg.train.mixup_alpha)
 
         # amp trainng
         scaler = torch.cuda.amp.GradScaler(

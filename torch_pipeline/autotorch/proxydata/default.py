@@ -57,7 +57,7 @@ class TrainCfg:
 @dataclass
 class ValidCfg:
     batch_size : int = 16
-    num_workers : int = 4
+    num_workers : int = 0
     log_interval : int = 10
 
 

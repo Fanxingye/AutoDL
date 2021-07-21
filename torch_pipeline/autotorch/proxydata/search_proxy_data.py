@@ -98,7 +98,7 @@ class ProxyModel():
         val_loader = get_pytorch_val_loader(
             data_dir=self._cfg.train.data_dir,
             batch_size=self._cfg.valid.batch_size,
-            num_workers=self._cfg.train.num_workers,
+            num_workers=self._cfg.valid.num_workers,
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
             val_dataset=val_data)

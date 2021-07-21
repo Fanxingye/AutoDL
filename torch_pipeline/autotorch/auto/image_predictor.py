@@ -7,7 +7,7 @@ import warnings
 import torch
 import numpy as np
 import pandas as pd
-from autotorch.auto.task import ImageClassification as ImageClassification
+from autotorch.auto.task import ImageClassification
 from autotorch.models import get_model_list
 from autotorch.auto.utils.error_handler import TorchErrorCatcher
 
@@ -295,6 +295,7 @@ class ImagePredictor(object):
             tuning_data = tuning_data.reset_index(drop=True)
             tuning_data_validated = True
 
+        train_data = self._validate_data(train_data)
         if isinstance(train_data, self.Dataset):
             train_data = self.Dataset(train_data, classes=train_data.classes)
         if tuning_data is not None and not tuning_data_validated:
@@ -375,7 +376,7 @@ class ImagePredictor(object):
             logging.getLogger('autotorch.auto.tasks.image_classification').propagate = False
             logging.getLogger("ImageClassificationEstimator").propagate = False
             logging.getLogger("ImageClassificationEstimator").setLevel(log_level)
-        task = ImageClassification(config=config)
+        task = ImageClassification(config=config, problem_type=self._problem_type)
         # GluonCV can't handle these separately - patching created config
         task.search_strategy = scheduler
         task.scheduler_options['searcher'] = searcher
