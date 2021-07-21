@@ -37,7 +37,7 @@ def get_proxy_data_random(entropy, sampling_portion, logging=None):
 ########################
 def get_proxy_data_log_entropy_histogram(entropy,
                                          sampling_portion,
-                                         sampling_type=1,
+                                         histogram_type=1,
                                          dataset='cifar10',
                                          logging=None):
     """
@@ -46,7 +46,7 @@ def get_proxy_data_log_entropy_histogram(entropy,
     - sampling_type is one of {1, 2, 3}; P1, P2, and P3 in paper
     """
     # make histogram and collect data index in each bin
-    log_entropy = np.log10(entropy)
+    log_entropy = np.log10(entropy + 1e-6)
     min_log_entropy, max_log_entropy = np.min(log_entropy), np.max(log_entropy)
     if dataset == 'cifar10': bin_width = 0.5
     elif dataset == 'cifar100': bin_width = 0.25
@@ -81,15 +81,15 @@ def get_proxy_data_log_entropy_histogram(entropy,
 
     # prepare the histogram selection probability
     histo = np.array([len(l) for l in index_histogram])
-    if sampling_type == 1:
+    if histogram_type == 1:
         # P1
         inv_histo = (max(histo) - histo + 1) * (histo != 0)
         inv_histo_prob = inv_histo / np.sum(inv_histo)
-    elif sampling_type == 2:
+    elif histogram_type == 2:
         # P2
         inv_histo_prob = np.array(
             [1 / (len(bins) - 1) for _ in index_histogram])
-    elif sampling_type == 3:
+    elif histogram_type == 3:
         # P3
         inv_histo_prob = np.array([(1 / len(l) if len(l) != 0 else 0)
                                    for l in index_histogram])

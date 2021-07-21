@@ -28,7 +28,7 @@ class TrainCfg:
     num_workers : int = 0
     weight_decay : float = 0.0001
     momentum : float = 0.9
-    nesterov : bool = False
+    nesterov : bool = True
     dtype : str = 'float32'
     input_size : int = 224
     crop_ratio : float = 0.875
