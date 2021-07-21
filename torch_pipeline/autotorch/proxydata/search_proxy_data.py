@@ -34,6 +34,7 @@ class ProxyModel():
 
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
+        self.distributed = False
         world_size = 1
         if self.distributed:
             self.gpu = self.local_rank % torch.cuda.device_count()
@@ -76,7 +77,6 @@ class ProxyModel():
             self.net.cuda(self.device)
 
         # init loss function
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         loss = nn.CrossEntropyLoss()
         self.criterion = loss.to(self.device)
         # init optimizer
