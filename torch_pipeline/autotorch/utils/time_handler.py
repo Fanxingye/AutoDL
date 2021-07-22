@@ -60,6 +60,7 @@ class TimeoutHandler:
     def __init__(self, sig=signal.SIGTERM):
         self.sig = sig
         self.device = torch.device("cuda")
+
     @property
     def interrupted(self):
         if not dist.is_initialized():
@@ -103,8 +104,7 @@ class TimeoutHandler:
 
 
 def calc_ips(batch_size, time):
-    world_size = (
-        torch.distributed.get_world_size() if torch.distributed.is_initialized() else 1
-    )
+    world_size = (torch.distributed.get_world_size()
+                  if torch.distributed.is_initialized() else 1)
     tbs = world_size * batch_size
     return tbs / time

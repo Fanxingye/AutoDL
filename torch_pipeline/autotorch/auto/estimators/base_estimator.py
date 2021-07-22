@@ -273,21 +273,15 @@ class BaseEstimator:
         """
         if not ctx:
             return
-        if not isinstance(ctx, (tuple, list)):
-            ctx_list = [ctx]
-        else:
-            ctx_list = ctx
         done = False
         try:
             import torch
             if isinstance(self.net, torch.nn.Module):
-                for c in ctx_list:
-                    assert isinstance(c, torch.device)
                 if hasattr(self.net, 'reset_ctx'):
-                    self.net.to(ctx_list)
+                    self.net.to(ctx)
                 else:
-                    self.net.to(ctx_list)
-                self.ctx = ctx_list
+                    self.net.to(ctx)
+                self.ctx = ctx
                 done = True
         except ImportError:
             pass

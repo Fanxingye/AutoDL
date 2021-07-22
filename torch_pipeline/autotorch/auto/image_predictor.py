@@ -4,10 +4,10 @@ import logging
 import os
 import pickle
 import warnings
-
+import torch
 import numpy as np
 import pandas as pd
-from autotorch.auto.task import ImageClassification as ImageClassification
+from autotorch.auto.task import ImageClassification
 from autotorch.models import get_model_list
 from autotorch.auto.utils.error_handler import TorchErrorCatcher
 
@@ -295,6 +295,7 @@ class ImagePredictor(object):
             tuning_data = tuning_data.reset_index(drop=True)
             tuning_data_validated = True
 
+        train_data = self._validate_data(train_data)
         if isinstance(train_data, self.Dataset):
             train_data = self.Dataset(train_data, classes=train_data.classes)
         if tuning_data is not None and not tuning_data_validated:
@@ -375,7 +376,7 @@ class ImagePredictor(object):
             logging.getLogger('autotorch.auto.tasks.image_classification').propagate = False
             logging.getLogger("ImageClassificationEstimator").propagate = False
             logging.getLogger("ImageClassificationEstimator").setLevel(log_level)
-        task = ImageClassification(config=config)
+        task = ImageClassification(config=config, problem_type=self._problem_type)
         # GluonCV can't handle these separately - patching created config
         task.search_strategy = scheduler
         task.scheduler_options['searcher'] = searcher
@@ -615,44 +616,7 @@ class ImagePredictor(object):
         """
         return copy.copy(self._fit_summary)
 
-    # def save(self, path=None):
-    #     """Dump predictor to disk.
-
-    #     Parameters
-    #     ----------
-    #     path : str, default = None
-    #         The path of saved copy. If not specified(None), will automatically save to `self.path` directory
-    #         with filename `image_predictor.ag`
-
-    #     """
-    #     if path is None:
-    #         path = os.path.join(self.path, 'image_predictor.ag')
-    #     with open(path, 'wb') as fid:
-    #         pickle.dump(self, fid)
-
-    def suggest_save_context(self, mode='gpu', ctx=None):
-        """Get the correct context given the mode
-            mode :  cpu,  gpu, auto
-            ctx  :  [mx.gpu(0), mx.gpu(1), ...]
-        """
-        if mode == 'cpu':
-            return [mx.cpu()]
-        if mode == 'gpu':
-            if not ctx:
-                return [mx.gpu(0)]
-            if not isinstance(ctx, (tuple, list)):
-                ctx_list = [ctx]
-            else:
-                ctx_list = ctx
-        if mode == 'auto':
-            return [mx.gpu(i) for i in range(mx.context.num_gpus())]
-        if isinstance(mode, (list, tuple)):
-            if not all(isinstance(i, int) for i in mode):
-                raise ValueError('Requires integer gpu id, given {}'.format(mode))
-            return [mx.gpu(i) for i in mode if i in range(mx.context.num_gpus())]
-
-
-    def save(self, path=None, mode="gpu", ctx=None):
+    def save(self, path=None):
         """Dump predictor to disk.
 
         Parameters
@@ -662,13 +626,34 @@ class ImagePredictor(object):
             with filename `image_predictor.ag`
 
         """
-        ctx_list = suggest_save_context(mode, ctx)
-        self.reset_ctx(ctx_list)
         if path is None:
             path = os.path.join(self.path, 'image_predictor.ag')
-
         with open(path, 'wb') as fid:
             pickle.dump(self, fid)
+
+
+    # @classmethod
+    # def load(cls, path, verbosity=2):
+    #     """Load previously saved predictor.
+
+    #     Parameters
+    #     ----------
+    #     path : str
+    #         The file name for saved pickle file. If `path` is a directory, will try to load the file `image_predictor.ag` in
+    #         this directory.
+    #     verbosity : int, default = 2
+    #         Verbosity levels range from 0 to 4 and control how much information is printed.
+    #         Higher levels correspond to more detailed print statements (you can set verbosity = 0 to suppress warnings).
+    #         If using logging, you can alternatively control amount of information printed via logger.setLevel(L),
+    #         where L ranges from 0 to 50 (Note: higher values of L correspond to fewer print statements, opposite of verbosity levels)
+
+    #     """
+    #     if os.path.isdir(path):
+    #         path = os.path.join(path, 'image_predictor.ag')
+    #     with open(path, 'rb') as fid:
+    #         obj = pickle.load(fid)
+    #     obj._verbosity = verbosity
+    #     return obj
 
     @classmethod
     def load(cls, path, ctx='auto'):
@@ -689,11 +674,11 @@ class ImagePredictor(object):
             will be [gpu(0), gpu(2), gpu(4)...]
         """
         if os.path.isdir(path):
-            filename = os.path.join(path, 'predictor.ag')
-        with open(filename, 'rb') as fid:
+            path = os.path.join(path, 'predictor.ag')
+        with open(path, 'rb') as fid:
             obj = pickle.load(fid)
-            obj._logger.debug('Unpickled from %s', filename)
-            new_ctx = _suggest_load_context(obj.net, ctx, obj.ctx)
+            obj._logger.debug('Unpickled from %s', path)
+            new_ctx = 'cuda' if torch.cuda.is_available() else 'cpu'
             obj.reset_ctx(new_ctx)
             return obj
 

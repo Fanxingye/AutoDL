@@ -1,12 +1,12 @@
 import os
+import sys
 import time
 import argparse
 import importlib
 import logging
-from autogluon.vision import ImagePredictor
 from configuration import gluon_config_choice
-from gluoncv.auto.data.dataset import ImageClassificationDataset
 from utils import mkdir, find_best_model, parse_config, write_csv_file, find_best_model_loop
+sys.path.append("../torch_pipeline")
 
 
 def parse_args():
@@ -39,6 +39,8 @@ def parse_args():
                         help='if true, will load the best model and test')
     parser.add_argument('--data_augmention', type=str, default="False",
                         help='Whether use thee data augmention')
+    parser.add_argument('--local_rank', type=int, default=0,
+                        help='Whether use thee data augmention')
     opt = parser.parse_args()
     return opt
 
@@ -47,6 +49,7 @@ def main():
     opt = parse_args()
 
     if opt.train_framework == "autogluon":
+        from autogluon.vision import ImagePredictor
         logger = logging.getLogger('')
         if not opt.checkpoint_path:
             out_dir = os.path.join(opt.output_path, opt.dataset, opt.model_config)
@@ -215,6 +218,79 @@ def main():
             logger.info("Save The final moodel `predictor.ag` to %s" % output_directory)
             predictor.save(os.path.join(output_directory, filename))
 
+    elif opt.train_framework == "autotorch":
+        import torch
+        from autotorch.auto import ImagePredictor
+        logger = logging.getLogger('')
+        if not opt.checkpoint_path:
+            out_dir = os.path.join(opt.output_path, opt.dataset, opt.model_config)
+            if not os.path.exists(out_dir):
+                os.makedirs(out_dir)
+            tm = time.strftime("%Y%m%d-%H%M", time.localtime())
+            tm_dir = os.path.join(out_dir, tm)
+            if not os.path.exists(tm_dir):
+                os.makedirs(tm_dir)
+
+            output_directory = os.path.join(tm_dir, 'checkpoint/')
+            filehandler = logging.FileHandler(os.path.join(tm_dir, 'summary.log'))
+            streamhandler = logging.StreamHandler()
+            logger.setLevel(logging.INFO)
+            logger.addHandler(filehandler)
+            logger.addHandler(streamhandler)
+            logging.info(opt)
+
+        config = gluon_config_choice(opt.dataset, model_choice=opt.model_config)
+        target_hyperparams = config["hyperparameters"]
+        tune_hyperparameter = config["hyperparameter_tune_kwargs"]
+
+        train_data_dir = opt.data_path
+        val_data_dir = opt.data_path.replace("train", "val")
+        if opt.data_augmention == "True":
+            train_data_dir = opt.data_path.replace("train", "train_dataaug2_balance")
+        test_data_dir = opt.data_path.replace("train", "test")
+
+        train_dataset = ImagePredictor.Dataset.from_folder(train_data_dir)
+        val_dataset = ImagePredictor.Dataset.from_folder(val_data_dir)
+        test_dataset = ImagePredictor.Dataset.from_folder(test_data_dir)
+
+        if not opt.checkpoint_path:
+            predictor = ImagePredictor(log_dir=output_directory)
+            # overwriting default by command line:
+            if int(opt.batch_size) > 0:
+                target_hyperparams['batch_size'] = int(opt.batch_size)
+            if int(opt.num_epochs) > 0:
+                target_hyperparams['epochs'] = int(opt.num_epochs)
+            if int(opt.num_trials) > 0:
+                tune_hyperparameter['num_trials'] = int(opt.num_trials)
+
+            ngpus_per_trial = target_hyperparams.pop('ngpus_per_trial')
+            if int(opt.ngpus_per_trial) > 0:
+                ngpus_per_trial = int(opt.ngpus_per_trial)
+
+            predictor.fit(train_data=train_dataset,
+                        tuning_data=val_dataset,
+                        hyperparameters=target_hyperparams,
+                        hyperparameter_tune_kwargs=tune_hyperparameter,
+                        ngpus_per_trial=ngpus_per_trial,
+                        time_limit=config['time_limit'],
+                        verbosity=2)
+
+            summary = predictor.fit_summary()
+            logging.info('Top-1 val acc: %.3f' % summary['valid_acc'])
+            logger.info(summary)
+
+            # use the default saved model to evaluate
+            val_acc, _ = predictor.evaluate(val_dataset)
+            logger.info("*" * 100)
+            logger.info('Use the default saved model to evaluate on validation dataset')
+            logging.info('Top-1 valid acc: %.5f' % val_acc)
+
+            # use the default saved model to evaluate
+            test_acc, _ = predictor.evaluate(test_dataset)
+            logger.info("*" * 100)
+            logger.info('Use the default saved model to evaluate on Test dataset')
+            logging.info('Top-1 test acc: %.5f' % test_acc)
+        
     elif opt.train_framework == "bit":
         from bit_task import train
         train.bit_start(opt)
