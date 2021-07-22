@@ -17,10 +17,10 @@ predictor.fit(
     train_data=train_dataset,
     tuning_data=train_dataset,
     hyperparameters={
-        'model': ag.Categorical('resnet18_v1b', 'mobilenetv3'),
+        'model': ag.Categorical('resnet18', 'mobilenetv3'),
         'batch_size': ag.Categorical(32),
-        'lr': ag.Real(1e-4, 1e-2, log=True),
-        'epochs': 1,
+        'lr': ag.Categorical(1e-3, 1e-2, 1e-1),
+        'epochs': 2,
         'ngpus_per_trial': 1,
         'cleanup_disk': False
     },

@@ -109,9 +109,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _init_dist_envs(self):
         import torch.distributed as dist
-        # set cudnn_benchmark
-        if self._cfg.get('cudnn_benchmark', False):
-            torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.benchmark = True
 
         distributed = False
         if "WORLD_SIZE" in os.environ:
@@ -277,7 +275,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 use_amp=use_amp,
                 batch_size_multiplier=batch_size_multiplier,
                 logger=logger,
-                log_interval=10)
+                log_interval=self._cfg.train.log_interval)
 
             steps_per_epoch = len(train_loader)
             throughput = int(self.batch_size * steps_per_epoch /
@@ -290,15 +288,16 @@ class ImageClassificationEstimator(BaseEstimator):
                 '[Epoch %d] speed: %d samples/sec\ttime cost: %f', epoch,
                 throughput,
                 time.time() - tic)
-
-            top1_val, top5_val = self._val_epoch(val_loader,
-                                                 model,
-                                                 criterion,
-                                                 num_class,
-                                                 use_amp=use_amp,
-                                                 logger=logger,
-                                                 log_name="Val-log",
-                                                 log_interval=10)
+            self._logger.info('')
+            top1_val, top5_val = self._val_epoch(
+                val_loader,
+                model,
+                criterion,
+                num_class,
+                use_amp=use_amp,
+                logger=logger,
+                log_name="Val-log",
+                log_interval=self._cfg.valid.log_interval)
             early_stopper.update(top1_val)
             self._logger.info('[Epoch %d] validation: top1=%f top5=%f', epoch,
                               top1_val, top5_val)
@@ -313,6 +312,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 if self._reporter:
                     self._reporter(epoch=epoch, acc_reward=top1_val)
             self._time_elapsed += time.time() - tic
+            self._logger.info('')
 
         return {
             'train_acc': top1_m,
@@ -599,8 +599,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         batch_size = self._cfg.train.batch_size
         self.batch_size = batch_size
-
-        base_lr = self._cfg.train.base_lr
+        lr = self._cfg.train.lr
         warmup_epochs = self._cfg.train.warmup_epochs
         decay_factor = self._cfg.train.decay_factor
         lr_decay_period = self._cfg.train.lr_decay_period
@@ -608,7 +607,7 @@ class ImageClassificationEstimator(BaseEstimator):
         # init optimizer
         if self._optimizer is None:
             optimizer = optim.SGD(params=self.net.parameters(),
-                                  lr=base_lr,
+                                  lr=self._cfg.train.lr,
                                   momentum=self._cfg.train.momentum,
                                   weight_decay=self._cfg.train.weight_decay,
                                   nesterov=self._cfg.train.nesterov)
@@ -616,7 +615,7 @@ class ImageClassificationEstimator(BaseEstimator):
             optimizer = self._optimizer
             if isinstance(optimizer, str):
                 try:
-                    optimizer = get_optimizer(optimizer, lr=base_lr)
+                    optimizer = get_optimizer(optimizer, lr=lr)
                 except TypeError:
                     pass
 
@@ -630,29 +629,33 @@ class ImageClassificationEstimator(BaseEstimator):
                 int(i) for i in self._cfg.train.lr_decay_epoch.split(',')
             ]
 
+        lr_decay_epoch = [
+            e - self._cfg.train.warmup_epochs for e in lr_decay_epoch
+        ]
+
         if self._cfg.train.lr_schedule_mode == "step":
             lr_policy = StepLRScheduler(optimizer=optimizer,
-                                        base_lr=base_lr,
+                                        base_lr=lr,
                                         steps=lr_decay_epoch,
                                         decay_factor=decay_factor,
                                         warmup_length=warmup_epochs,
                                         logger=self._logger)
         elif self._cfg.train.lr_schedule_mode == "cosine":
             lr_policy = CosineLRScheduler(optimizer=optimizer,
-                                          base_lr=base_lr,
+                                          base_lr=lr,
                                           warmup_length=warmup_epochs,
                                           epochs=self.epoch,
                                           end_lr=self._cfg.train.end_lr,
                                           logger=self._logger)
         elif self._cfg.train.lr_schedule_mode == "linear":
             lr_policy = LinearLRScheduler(optimizer=optimizer,
-                                          base_lr=base_lr,
+                                          base_lr=lr,
                                           warmup_length=warmup_epochs,
                                           epochs=self.epoch,
                                           logger=self._logger)
         elif self._cfg.lr_schedule == "exponential":
             lr_policy = ExponentialLRScheduler(optimizer=optimizer,
-                                               base_lr=base_lr,
+                                               base_lr=lr,
                                                warmup_length=warmup_epochs,
                                                epochs=self.epoch,
                                                logger=self._logger)
@@ -684,11 +687,10 @@ class ImageClassificationEstimator(BaseEstimator):
         self.lr_policy = lr_policy
         self.optimizer = optimizer
         self.criterion = loss().to(self.device)
-        #self.criterion = DataParallelCriterion(self.criterion).cuda()
 
     def _init_network(self, **kwargs):
         load_only = kwargs.get('load_only', False)
-        if not self.num_class:
+        if not self.num_class and self._problem_type != REGRESSION:
             raise ValueError(
                 'This is a classification problem and we are not able to create network when `num_class` is unknown. \
                 It should be inferred from dataset or resumed from saved states.'
@@ -711,7 +713,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         # network
         if self._custom_net is None:
-            model_name = self._cfg.img_cls.model_name.lower()
+            model_name = self._cfg.img_cls.model.lower()
             input_size = self.input_size
             self.input_size = get_input_size(model_name)
         else:
