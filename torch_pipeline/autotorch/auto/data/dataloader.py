@@ -22,8 +22,8 @@ def get_pytorch_val_loader(
     val_dataset=None,
     start_epoch=0,
     one_hot=False,
-    _worker_init_fn=None,
-    memory_format=torch.contiguous_format,
+    collate_fn=None,
+    _worker_init_fn=None
 ):
     interpolation = Image.BILINEAR
     resize = int(math.ceil(input_size / crop_ratio))
@@ -49,6 +49,9 @@ def get_pytorch_val_loader(
     else:
         val_sampler = None
 
+    if collate_fn is None:
+        collate_fn = fast_collate
+
     val_loader = torch.utils.data.DataLoader(
         val_dataset,
         sampler=val_sampler,
@@ -57,7 +60,7 @@ def get_pytorch_val_loader(
         num_workers=num_workers,
         worker_init_fn=_worker_init_fn,
         pin_memory=True,
-        collate_fn=partial(fast_collate, memory_format),
+        collate_fn=collate_fn,
         drop_last=False,
         persistent_workers=False,
     )
@@ -73,8 +76,8 @@ def get_pytorch_train_loader(data_dir,
                              train_dataset=None,
                              one_hot=False,
                              start_epoch=0,
-                             _worker_init_fn=None,
-                             memory_format=torch.contiguous_format):
+                             collate_fn=None,
+                             _worker_init_fn=None):
 
     interpolation = Image.BILINEAR
     jitter_param = 0.4
@@ -110,6 +113,9 @@ def get_pytorch_train_loader(data_dir,
     else:
         train_sampler = None
 
+    if collate_fn is None:
+        collate_fn = fast_collate
+
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         sampler=train_sampler,
@@ -118,7 +124,7 @@ def get_pytorch_train_loader(data_dir,
         num_workers=num_workers,
         worker_init_fn=_worker_init_fn,
         pin_memory=True,
-        collate_fn=partial(fast_collate, memory_format),
+        collate_fn=collate_fn,
         drop_last=True,
         persistent_workers=False,
     )
