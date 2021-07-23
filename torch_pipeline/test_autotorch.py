@@ -20,8 +20,8 @@ predictor.fit(
         'model': ag.Categorical('resnet18', 'mobilenetv3'),
         'batch_size': ag.Categorical(32),
         'lr': ag.Categorical(1e-3, 1e-2, 1e-1),
-        'epochs': 2,
-        'ngpus_per_trial': 1,
+        'epochs': 10,
+        'data_augment': 'autoaugment',
         'cleanup_disk': False
     },
     hyperparameter_tune_kwargs={
@@ -30,6 +30,8 @@ predictor.fit(
         'searcher': 'random'
     },
     log_dir="checkpoint",
+    nthreads_per_trial=0,
+    ngpus_per_trial=1,
 )  # you can trust the default config, we reduce the # epoch to save some build time
 
 res = predictor.predict(data=train_dataset, batch_size=32)
