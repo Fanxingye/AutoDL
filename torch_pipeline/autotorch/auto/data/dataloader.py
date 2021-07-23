@@ -10,6 +10,8 @@ from functools import partial
 from torchvision import datasets, transforms
 from autotorch.data.dataloaders import fast_collate, PrefetchedWrapper
 from autotorch.data.autoaugment import AutoaugmentImageNetPolicy
+from autotorch.data.timm_auto_augment import rand_augment_transform, augment_and_mix_transform, auto_augment_transform, _pil_interp
+from autotorch.data.constants import IMAGENET_DEFAULT_MEAN
 from .dataset import TorchImageClassificationDataset
 
 
@@ -70,26 +72,49 @@ def get_pytorch_train_loader(data_dir,
                              input_size,
                              crop_ratio,
                              data_augment,
+                             interpolation="bilinear",
+                             mean=IMAGENET_DEFAULT_MEAN,
                              train_dataset=None,
                              one_hot=False,
                              start_epoch=0,
                              _worker_init_fn=None,
                              memory_format=torch.contiguous_format):
 
-    interpolation = Image.BILINEAR
+    interpolation_m = _pil_interp(interpolation)
     jitter_param = 0.4
     crop_ratio = crop_ratio if crop_ratio > 0 else 0.875
-
     transforms_list = [
-        transforms.RandomResizedCrop(input_size, interpolation=interpolation),
+        transforms.RandomResizedCrop(input_size, interpolation=interpolation_m),
         transforms.RandomHorizontalFlip(),
-        transforms.ColorJitter(brightness=jitter_param,
-                               contrast=jitter_param,
-                               saturation=jitter_param),
     ]
 
-    if data_augment == "autoaugment":
-        transforms_list.append(AutoaugmentImageNetPolicy())
+    autogluon_transforms = [
+        transforms.ColorJitter(brightness=jitter_param, contrast=jitter_param, saturation=jitter_param),
+    ]
+
+    if data_augment:
+        assert isinstance(data_augment, str)
+        if isinstance(input_size, (tuple, list)):
+            img_size_min = min(input_size)
+        else:
+            img_size_min = input_size
+        aa_params = dict(
+            translate_const=int(img_size_min * 0.45),
+            img_mean=tuple([min(255, round(255 * x)) for x in mean]),
+        )
+        if interpolation and interpolation != 'random':
+            aa_params['interpolation'] = _pil_interp(interpolation)
+        if data_augment == "autoaugment":
+            transforms_list.append(AutoaugmentImageNetPolicy())
+        elif data_augment == "autogluon":
+            transforms_list.append(autogluon_transforms)
+        elif data_augment.startswith('rand'):
+            transforms_list.append(rand_augment_transform(data_augment, aa_params))
+        elif data_augment.startswith('augmix'):
+            aa_params['translate_pct'] = 0.3
+            transforms_list.append(augment_and_mix_transform(data_augment, aa_params))
+        else:
+            transforms_list.append(auto_augment_transform(data_augment, aa_params))
 
     transform_train = transforms.Compose(transforms_list)
 
