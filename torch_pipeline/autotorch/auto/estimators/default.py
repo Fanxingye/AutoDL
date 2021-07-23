@@ -27,7 +27,7 @@ class TrainCfg:
     end_lr: float = 0.0  # cosine lr schedule
     warmup_lr: float = 0.0  # starting warmup learning rate.
     warmup_epochs: int = 0  # number of warmup epochs
-    num_workers: int = 4
+    num_workers: int = 0
     weight_decay: float = 0.0001
     momentum: float = 0.9
     nesterov: bool = False
@@ -39,8 +39,8 @@ class TrainCfg:
     no_wd: bool = False
     label_smoothing: bool = False
     resume_epoch: int = 0
-    mixup: bool = False
-    mixup_alpha: float = 0.2
+    mixup: bool = True
+    mixup_alpha: float = 0.1
     mixup_off_epoch: int = 0
     log_interval: int = 50
     mode: str = ''
@@ -61,7 +61,7 @@ class TrainCfg:
 @dataclass
 class ValidCfg:
     batch_size: int = 16
-    num_workers: int = 4
+    num_workers: int = 0
     log_interval: int = 50
 
 

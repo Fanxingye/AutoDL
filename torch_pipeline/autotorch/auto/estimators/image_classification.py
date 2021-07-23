@@ -17,7 +17,7 @@ from torch.nn.parallel import DistributedDataParallel as DDP
 import torch.nn.functional as F
 from timm.models.layers.classifier import ClassifierHead
 
-from autotorch.data.mixup import NLLMultiLabelSmooth
+from autotorch.data.mixup import NLLMultiLabelSmooth, MixUpWrapper
 from autotorch.data.smoothing import LabelSmoothing
 from autotorch.models.network import init_network, get_input_size
 from autotorch.optim.optimizers import get_optimizer
@@ -200,7 +200,13 @@ class ImageClassificationEstimator(BaseEstimator):
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
             data_augment=self._cfg.train.data_augment,
-            train_dataset=train_data)
+            train_dataset=train_data,
+            one_hot=self._cfg.train.mixup)
+
+        if self._cfg.train.mixup:
+            assert 0.0 < self._cfg.train.mixup_alpha < 1, "Error value, mixup_alpha should be in [0, 1]"
+            train_loader = MixUpWrapper(self._cfg.train.mixup_alpha,
+                                        train_loader)
 
         val_loader = get_pytorch_val_loader(
             data_dir=self._cfg.train.data_dir,
@@ -212,7 +218,8 @@ class ImageClassificationEstimator(BaseEstimator):
 
         self._time_elapsed += time.time() - tic
         return self._train_loop(model=self.net,
-                                criterion=self.criterion,
+                                train_criterion=self.train_criterion,
+                                val_criterion=self.val_criterion,
                                 optimizer=self.optimizer,
                                 scaler=self.scaler,
                                 lr_scheduler=self.lr_policy,
@@ -226,7 +233,8 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _train_loop(self,
                     model,
-                    criterion,
+                    train_criterion,
+                    val_criterion,
                     optimizer,
                     scaler,
                     lr_scheduler,
@@ -266,13 +274,14 @@ class ImageClassificationEstimator(BaseEstimator):
             losses_m, top1_m, top5_m = self._train_epoch(
                 train_loader,
                 model,
-                criterion,
+                train_criterion,
                 optimizer,
                 scaler,
                 lr_scheduler,
                 num_class,
                 epoch,
                 use_amp=use_amp,
+                mixup=self._cfg.train.mixup,
                 batch_size_multiplier=batch_size_multiplier,
                 logger=logger,
                 log_interval=self._cfg.train.log_interval)
@@ -292,7 +301,7 @@ class ImageClassificationEstimator(BaseEstimator):
             top1_val, top5_val = self._val_epoch(
                 val_loader,
                 model,
-                criterion,
+                val_criterion,
                 num_class,
                 use_amp=use_amp,
                 logger=logger,
@@ -326,6 +335,7 @@ class ImageClassificationEstimator(BaseEstimator):
                     criterion,
                     optimizer,
                     scaler,
+                    mixup=False,
                     use_amp=False,
                     batch_size_multiplier=1,
                     top_k=1):
@@ -338,15 +348,24 @@ class ImageClassificationEstimator(BaseEstimator):
                 loss = criterion(output, target_var)
                 loss /= batch_size_multiplier
 
-                prec1, prec5 = accuracy(output,
-                                        target,
-                                        topk=(1, min(top_k, 5)))
-                if torch.distributed.is_initialized():
-                    reduced_loss = reduce_tensor(loss.data)
-                    prec1 = reduce_tensor(prec1)
-                    prec5 = reduce_tensor(prec5)
+                if not mixup:
+                    prec1, prec5 = accuracy(output,
+                                            target,
+                                            topk=(1, min(top_k, 5)))
+                    if torch.distributed.is_initialized():
+                        reduced_loss = reduce_tensor(loss.data)
+                        prec1 = reduce_tensor(prec1)
+                        prec5 = reduce_tensor(prec5)
+                    else:
+                        reduced_loss = loss.data
                 else:
-                    reduced_loss = loss.data
+                    if torch.distributed.is_initialized():
+                        reduced_loss = reduce_tensor(loss.data)
+                    else:
+                        reduced_loss = loss.data
+
+                    prec1 = torch.tensor(0)
+                    prec5 = torch.tensor(0)
 
             scaler.scale(loss).backward()
             if optimizer_step:
@@ -396,6 +415,7 @@ class ImageClassificationEstimator(BaseEstimator):
                      num_class,
                      epoch,
                      use_amp=False,
+                     mixup=False,
                      batch_size_multiplier=1,
                      logger=None,
                      log_interval=10):
@@ -444,6 +464,7 @@ class ImageClassificationEstimator(BaseEstimator):
                                 criterion,
                                 optimizer,
                                 scaler=scaler,
+                                mixup=mixup,
                                 use_amp=use_amp,
                                 batch_size_multiplier=batch_size_multiplier,
                                 top_k=self.num_class)
@@ -686,7 +707,8 @@ class ImageClassificationEstimator(BaseEstimator):
         self.scaler = scaler
         self.lr_policy = lr_policy
         self.optimizer = optimizer
-        self.criterion = loss().to(self.device)
+        self.train_criterion = loss().to(self.device)
+        self.val_criterion = nn.CrossEntropyLoss().to(self.device)
 
     def _init_network(self, **kwargs):
         load_only = kwargs.get('load_only', False)
