@@ -20,7 +20,7 @@ from torchmetrics.functional import accuracy
 import sys
 sys.path.append("../../")
 from autotorch.models.network import init_network
-
+from autotorch.autopl.custom_trainer import CustomTrainer
 
 seed_everything(7)
 
@@ -52,13 +52,12 @@ cifar10_dm = CIFAR10DataModule(
     val_transforms=test_transforms,
 )
 
-
 # Data loading code
 root_dir = '/media/robin/DATA/datatsets/image_data/shopee-iet/images'
 traindir = os.path.join(root_dir, 'train')
 valdir = os.path.join(root_dir, 'val')
 normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                    std=[0.229, 0.224, 0.225])
+                                 std=[0.229, 0.224, 0.225])
 
 train_dataset = datasets.ImageFolder(
     traindir,
@@ -70,21 +69,27 @@ train_dataset = datasets.ImageFolder(
     ]))
 
 train_sampler = None
-train_loader = torch.utils.data.DataLoader(
-    train_dataset, batch_size=32, shuffle=(train_sampler is None),
-    num_workers=0, pin_memory=True, sampler=train_sampler)
+train_loader = torch.utils.data.DataLoader(train_dataset,
+                                           batch_size=32,
+                                           shuffle=(train_sampler is None),
+                                           num_workers=0,
+                                           pin_memory=True,
+                                           sampler=train_sampler)
 
-val_loader = torch.utils.data.DataLoader(
-    datasets.ImageFolder(valdir, transforms.Compose([
+val_dataset = datasets.ImageFolder(
+    valdir,
+    transforms.Compose([
         transforms.Resize(256),
         transforms.CenterCrop(224),
         transforms.ToTensor(),
         normalize,
-    ])),
-    batch_size=32, shuffle=False,
-    num_workers=0, pin_memory=True)
+    ]))
 
-
+val_loader = torch.utils.data.DataLoader(val_dataset,
+                                         batch_size=32,
+                                         shuffle=False,
+                                         num_workers=0,
+                                         pin_memory=True)
 
 
 def create_model(model_name):
@@ -180,9 +185,8 @@ class LitResnet(LightningModule):
         }
 
     def configure_callbacks(self):
-        early_stop = EarlyStopping(monitor="val_acc", mode="max")
         checkpoint = ModelCheckpoint(monitor="val_loss")
-        return [early_stop, checkpoint]
+        return [checkpoint]
 
 
 class PrintCallback(Callback):
@@ -193,7 +197,7 @@ class PrintCallback(Callback):
         print("Training is done.")
 
 
-early_stop_callback = EarlyStopping(monitor='val_accuracy',
+early_stop_callback = EarlyStopping(monitor='val_acc',
                                     min_delta=0.00,
                                     patience=3,
                                     verbose=False,
@@ -201,11 +205,11 @@ early_stop_callback = EarlyStopping(monitor='val_accuracy',
 
 model = LitResnet(lr=0.05)
 model.datamodule = cifar10_dm
-trainer = Trainer(
+trainer = CustomTrainer(
     progress_bar_refresh_rate=50,
     log_every_n_steps=50,
     log_gpu_memory='all',
-    max_epochs=10,
+    max_epochs=1,
     gpus=AVAIL_GPUS,
     sync_batchnorm=True,
     limit_train_batches=1.0,
@@ -239,6 +243,9 @@ trainer = Trainer(
 # trainer.fit(model, cifar10_dm)
 # trainer.test(model, datamodule=cifar10_dm)
 
-trainer.fit(model, train_dataloader=train_loader,  val_dataloaders=val_loader)
-trainer.test(model, val_loader)
-
+results = trainer.fit(model,
+                      train_dataloader=train_loader,
+                      val_dataloaders=val_loader)
+print(results)
+results = trainer.test(model, val_loader)
+print(results)
