@@ -1,1 +1,1 @@
-python mnist.py --num-workers 1 --num-gpus-per-worker 1
+python mnist.py --num-workers 1 --num-gpus-per-worker 2

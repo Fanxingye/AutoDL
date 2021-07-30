@@ -240,5 +240,6 @@ trainer = Trainer(
 # trainer.test(model, datamodule=cifar10_dm)
 
 trainer.fit(model, train_dataloader=train_loader,  val_dataloaders=val_loader)
+trainer.train(model, )
 trainer.test(model, val_loader)
 
