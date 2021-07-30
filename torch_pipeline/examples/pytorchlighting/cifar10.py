@@ -243,9 +243,6 @@ trainer = CustomTrainer(
 # trainer.fit(model, cifar10_dm)
 # trainer.test(model, datamodule=cifar10_dm)
 
-results = trainer.fit(model,
-                      train_dataloader=train_loader,
-                      val_dataloaders=val_loader)
-print(results)
-results = trainer.test(model, val_loader)
-print(results)
+trainer.fit(model, train_dataloader=train_loader,  val_dataloaders=val_loader)
+trainer.test(model, val_loader)
+

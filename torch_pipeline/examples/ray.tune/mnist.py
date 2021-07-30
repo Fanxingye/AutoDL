@@ -38,9 +38,6 @@ def train(model, optimizer, train_loader, device=None):
     device = device or torch.device("cpu")
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        print(batch_idx)
-        if batch_idx * len(data) > EPOCH_SIZE:
-            return
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
@@ -83,7 +80,7 @@ def train_mnist(config, checkpoint_dir=False):
 
     model = DistributedDataParallel(model)
 
-    for epoch in range(40):
+    for epoch in range(400):
         train(model, optimizer, train_loader, device)
         acc = test(model, test_loader, device)
 
