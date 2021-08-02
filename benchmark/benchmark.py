@@ -6,7 +6,9 @@ import importlib
 import logging
 from configuration import gluon_config_choice
 from utils import mkdir, find_best_model, parse_config, write_csv_file, find_best_model_loop
-sys.path.append("../torch_pipeline")
+sys.path.append("/data/autodl/torch_pipeline")
+
+from autotorch.proxydata.search_proxy_data import ProxyModel
 
 
 def parse_args():
@@ -39,6 +41,8 @@ def parse_args():
                         help='if true, will load the best model and test')
     parser.add_argument('--data_augmention', type=str, default="False",
                         help='Whether use thee data augmention')
+    parser.add_argument('--proxy', type=str, default="True",
+                        help='Whether make proxy dataset')
     parser.add_argument('--local_rank', type=int, default=0,
                         help='Whether use thee data augmention')
     opt = parser.parse_args()
@@ -81,6 +85,17 @@ def main():
         train_dataset = ImagePredictor.Dataset.from_folder(train_data_dir)
         val_dataset = ImagePredictor.Dataset.from_folder(val_data_dir)
         test_dataset = ImagePredictor.Dataset.from_folder(test_data_dir)
+
+        if opt.proxy == "True":
+            from autotorch.auto import ImagePredictor  as ImagePre
+            train_data, val_data, test_data = ImagePre.Dataset.from_folders(opt.data_path[:-6])
+            proxmodel = ProxyModel()
+            proxmodel.fit(train_data, val_data)
+            saved_path = os.path.join(opt.output_path, opt.dataset)
+            proxy_data = proxmodel.generate_proxy_data(train_data = train_data,
+                                                        output_dir = saved_path)
+            csv_path = os.path.join(saved_path, "proxy_data.csv")
+            train_dataset = ImagePredictor.Dataset.from_csv(csv_path)
 
         if not opt.checkpoint_path:
             predictor = ImagePredictor(path=output_directory)
