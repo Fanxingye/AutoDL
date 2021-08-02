@@ -80,7 +80,7 @@ def train_mnist(config, checkpoint_dir=False):
 
     model = DistributedDataParallel(model)
 
-    for epoch in range(400):
+    for epoch in range(10):
         train(model, optimizer, train_loader, device)
         acc = test(model, test_loader, device)
 
