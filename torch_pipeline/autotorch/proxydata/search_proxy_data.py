@@ -100,11 +100,9 @@ class ProxyModel():
             # compute output
             output = model(images)
             loss = criterion(output, target)
-            if self.distributed:
-                reduced_loss = reduce_tensor(loss.data)
-                losses.update(reduced_loss.item(), images.size(0))
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, min(5, num_class)))
+
             losses.update(loss.item(), images.size(0))
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))
@@ -145,6 +143,7 @@ class ProxyModel():
                 acc1, acc5 = accuracy(output,
                                       target,
                                       topk=(1, min(5, num_class)))
+
                 losses.update(loss.item(), images.size(0))
                 top1.update(acc1.item(), images.size(0))
                 top5.update(acc5.item(), images.size(0))
@@ -193,7 +192,7 @@ class ProxyModel():
             output = self.net(input)  # model must be declared
             ent = get_entropy(output.data)  # entropy extraction
 
-            print("generate %d proxy dataset" % i)
+            print("===> generate entropy value batch: %d " % i)
             # generate entropy file
             batch_list = list(range(batch_size * i, batch_size * (i + 1)))
             index_list.extend(batch_list)
@@ -201,9 +200,8 @@ class ProxyModel():
             label_list.extend(target.data.tolist())
 
         # write the entropy file
-        print(
-            "Finished generate proxydataset, write the entropy_list to csv file"
-        )
+        print("===> Finished generate entropy_list")
+
         entropy_path = os.path.join(output_dir, entropy_file_name)
         with open(entropy_path, 'w') as f:
             for idx in index_list:
@@ -213,6 +211,7 @@ class ProxyModel():
         # generate proxy dataset
         index, entropy, label = read_entropy_file(entropy_path)
 
+        print("===> Write the entropy_list to csv ")
         if sampler_type == 'random':
             indices = get_proxy_data_random(entropy, sampling_portion, logging)
         elif sampler_type == 'histogram':
