@@ -2,10 +2,10 @@ import autogluon.core as ag
 from autotorch.auto import ImagePredictor
 from autotorch.proxydata import ProxyModel
 
-# train_dataset, _, test_dataset = ImagePredictor.Dataset.from_folders(
-#     'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
-train_dataset, valid_dataset, _ = ImagePredictor.Dataset.from_folders(
-    "/data/AutoML_compete/leafy-vegetable-pests/split/", test="None")
+train_dataset, _, valid_dataset = ImagePredictor.Dataset.from_folders(
+    'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
+# train_dataset, valid_dataset, _ = ImagePredictor.Dataset.from_folders(
+#     "/data/AutoML_compete/leafy-vegetable-pests/split/", test="None")
 
 proxy_model = ProxyModel()
 proxy_model.fit(train_dataset, valid_dataset)
