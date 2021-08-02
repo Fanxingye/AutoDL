@@ -205,7 +205,7 @@ def prepare_for_training(args):
         augmentation=args.augmentation,
         start_epoch=start_epoch,
         workers=args.workers,
-        memory_format=memory_format,
+        # memory_format=memory_format,
     )
     if args.mixup != 0.0:
         train_loader = MixUpWrapper(args.mixup, train_loader)
@@ -218,7 +218,7 @@ def prepare_for_training(args):
         False,
         interpolation=args.interpolation,
         workers=args.workers,
-        memory_format=memory_format,
+        # memory_format=memory_format,
     )
 
     # optionally resume from a checkpoint

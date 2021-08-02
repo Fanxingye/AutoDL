@@ -155,7 +155,7 @@ def prepare_for_test(args):
         False,
         interpolation=args.interpolation,
         workers=args.workers,
-        memory_format=memory_format,
+        # memory_format=memory_format,
     )
 
     # model

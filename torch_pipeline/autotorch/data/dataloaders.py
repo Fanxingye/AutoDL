@@ -408,6 +408,7 @@ def get_pytorch_train_loader(
     transforms_list = [
         transforms.RandomResizedCrop(image_size, interpolation=interpolation_m),
         transforms.RandomHorizontalFlip(),
+        transforms.RandomVerticalFlip()
     ]
     jitter_param = 0.4
     autogluon_transforms = [

@@ -6,6 +6,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
 import torch.distributed as dist
+import sys
+sys.path.append("../../")
+
 from autotorch.models.network import init_network, get_input_size
 from autotorch.auto.data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader
 from autotorch.utils.metrics import AverageMeter, accuracy, ProgressMeter
@@ -54,7 +57,6 @@ class ProxyModel():
         self.net = init_network(model_name=model_name,
                                 num_class=num_class,
                                 pretrained=use_pretrained)
-
         if self.distributed:
             # For multiprocessing distributed, DistributedDataParallel constructor
             # should always set the single device scope, otherwise,
@@ -150,9 +152,9 @@ class ProxyModel():
             batch_time.update(time.time() - end)
             end = time.time()
 
-            if self.local_rank == 0:
-                if i % self._cfg.train.log_interval == 0:
-                    progress.display(i)
+            # if self.local_rank == 0:
+            if i % self._cfg.train.log_interval == 0:
+                progress.display(i)
 
     def validate(self, val_loader, model, criterion, num_class):
         batch_time = AverageMeter('Time', ':6.3f')
@@ -197,7 +199,7 @@ class ProxyModel():
         return top1.avg
 
     def generate_proxy_data(self,
-                            val_data,
+                            train_data,
                             sampling_portion=0.2,
                             sampler_type='histogram',
                             output_dir='',
@@ -216,7 +218,7 @@ class ProxyModel():
             num_workers=self._cfg.test.num_workers,
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
-            val_dataset=val_data)
+            val_dataset=train_data)
 
         index_list = []
         entropy_list = []  # result
@@ -254,15 +256,18 @@ class ProxyModel():
         else:
             raise NotImplementedError
 
-        val_data = val_data.iloc[indices, :]
-        return val_data
+        proxy_data = train_data.iloc[indices, :]
+        saved_path = os.path.join(output_dir, "proxy_data.csv")
+        proxy_data.to_csv(saved_path, index = None)
+        return proxy_data
 
 
 if __name__ == '__main__':
     from autotorch.auto import ImagePredictor
-    train_dataset, _, test_dataset = ImagePredictor.Dataset.from_folders(
-        'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
+    train_dataset, val_dataset, test_dataset = ImagePredictor.Dataset.from_folders(
+        '/data/AutoML_compete/food-101/split/')
 
     proxmodel = ProxyModel()
-    proxmodel.fit(train_dataset, test_dataset)
-    proxy_data = proxmodel.generate_proxy_data(train_dataset)
+    proxmodel.fit(train_dataset, val_dataset)
+    proxy_data = proxmodel.generate_proxy_data(train_data = train_dataset,
+                                                output_dir = '/data/AutoML_compete/food-101/split/')

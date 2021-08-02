@@ -39,7 +39,7 @@ class TrainCfg:
     no_wd: bool = False
     label_smoothing: bool = False
     resume_epoch: int = 0
-    mixup: bool = True
+    mixup: bool = False
     mixup_alpha: float = 0.1
     mixup_off_epoch: int = 0
     log_interval: int = 50

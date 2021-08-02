@@ -126,9 +126,9 @@ def get_pytorch_train_loader(data_dir,
                                              transform_train)
     else:
         assert isinstance(train_dataset, pd.DataFrame), "DataSet Type Error"
-        assert isinstance(
-            train_dataset,
-            TorchImageClassificationDataset), "DataSet Type Error"
+        # assert isinstance(
+        #     train_dataset,
+        #     TorchImageClassificationDataset), "DataSet Type Error"
         train_dataset = train_dataset.to_pytorch(transform_train)
 
     num_classes = len(train_dataset.classes)
@@ -209,9 +209,9 @@ def get_data_loader(data_dir,
                                              transform_train)
     else:
         assert isinstance(train_dataset, pd.DataFrame), "DataSet Type Error"
-        assert isinstance(
-            train_dataset,
-            TorchImageClassificationDataset), "DataSet Type Error"
+        # assert isinstance(
+        #     train_dataset,
+        #     TorchImageClassificationDataset), "DataSet Type Error"
         train_dataset = train_dataset.to_pytorch(transform_train)
 
     if val_dataset is None:

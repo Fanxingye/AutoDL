@@ -16,7 +16,7 @@ class ImageClassification:
 @dataclass
 class TrainCfg:
     pretrained_base : bool = True  # whether load the imagenet pre-trained base
-    batch_size : int = 32
+    batch_size : int = 64
     epochs : int = 1
     base_lr : float = 0.01  # learning rate
     decay_factor : float = 0.1  # decay rate of learning rate.
@@ -25,7 +25,7 @@ class TrainCfg:
     lr_schedule_mode : str = 'step'  # learning rate scheduler mode. options are step, poly and cosine
     warmup_lr : float = 0.0  # starting warmup learning rate.
     warmup_epochs : int = 0  # number of warmup epochs
-    num_workers : int = 0
+    num_workers : int = 8
     weight_decay : float = 0.0001
     momentum : float = 0.9
     nesterov : bool = True
@@ -40,7 +40,7 @@ class TrainCfg:
     mixup : bool = False
     mixup_alpha : float = 0.2
     mixup_off_epoch : int = 0
-    log_interval : int = 50
+    log_interval : int = 1
     mode : str = ''
     amp: bool = False
     static_loss_scale : float = 1.0
@@ -57,14 +57,14 @@ class TrainCfg:
 @dataclass
 class ValidCfg:
     batch_size : int = 16
-    num_workers : int = 0
+    num_workers : int = 8
     log_interval : int = 10
 
 
 @dataclass
 class TestCfg:
     batch_size : int = 1
-    num_workers : int = 0
+    num_workers : int = 8
 
 
 @dataclass

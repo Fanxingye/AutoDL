@@ -7,17 +7,16 @@ from autotorch.proxydata import ProxyModel
 train_dataset, valid_dataset, _ = ImagePredictor.Dataset.from_folders("/data/AutoML_compete/leafy-vegetable-pests/split/", test = "None")
 
 predictor = ImagePredictor(log_dir='checkpoint')
-# predictor = predictor.load("/data/autodl/torch_pipeline/checkpoint/bddb5b08/.trial_0/best_checkpoint.pkl")
+# predictor = predictor.load("/data/autodl/torch_pipeline/checkpoint/45357a67/.trial_0/best_checkpoint.pkl")
 # since the original dataset does not provide validation split, the `fit` function splits it randomly with 90/10 ratio
 predictor.fit(
     train_data=train_dataset,
-    # tuning_data=valid_dataset,
+    tuning_data=valid_dataset,
     hyperparameters={
-        'model': ag.Categorical('tf_efficientnetv2_m'),
+        'model': ag.Categorical('tf_efficientnet_b4'),
         'batch_size': ag.Categorical(8),
-        'lr': 0.005,
-        'epochs': 30,
-        "data_augment": "augmix-m5-w4-d2",
+        'lr': ag.Categorical(0.001),
+        'epochs': 50,
         'cleanup_disk': False
     },
     hyperparameter_tune_kwargs={
@@ -32,6 +31,8 @@ predictor.fit(
 
 # res = predictor.predict(data=test_dataset, batch_size=32)
 
-# test_data = ImagePredictor.Dataset.from_folder("/data/AutoML_compete/leafy-vegetable-pests/test")
-# res_ = predictor.predict(data=test_data, batch_size=32)
-# res_.to_csv("./result.csv")
+test_data = ImagePredictor.Dataset.from_folder("/data/AutoML_compete/leafy-vegetable-pests/test")
+res_ = predictor.predict(data=test_data, batch_size=32)
+res_.to_csv("./result.csv")
+print("*"*10)
+print("result saved!")
