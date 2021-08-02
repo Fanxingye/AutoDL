@@ -63,7 +63,7 @@ class ValidCfg:
 
 @dataclass
 class TestCfg:
-    batch_size : int = 1
+    batch_size : int = 64
     num_workers : int = 8
 
 
