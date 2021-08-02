@@ -2,6 +2,7 @@ import os
 import time
 import torch
 import logging
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
@@ -35,7 +36,8 @@ class ProxyModel():
         else:
             self.local_rank = 0
 
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        # self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
         self.distributed = False
         world_size = 1

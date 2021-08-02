@@ -4,7 +4,8 @@ from autotorch.proxydata import ProxyModel
 
 # train_dataset, _, test_dataset = ImagePredictor.Dataset.from_folders(
 #     'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
-train_dataset, valid_dataset, _ = ImagePredictor.Dataset.from_folders("/data/AutoML_compete/leafy-vegetable-pests/split/", test = "None")
+train_dataset, valid_dataset, _ = ImagePredictor.Dataset.from_folders(
+    "/data/AutoML_compete/leafy-vegetable-pests/split/", test="None")
 
 predictor = ImagePredictor(log_dir='checkpoint')
 # predictor = predictor.load("/data/autodl/torch_pipeline/checkpoint/45357a67/.trial_0/best_checkpoint.pkl")
@@ -24,8 +25,8 @@ predictor.fit(
         'max_reward': 1.0,
         'searcher': 'random'
     },
-    nthreads_per_trial = 8,
-    ngpus_per_trial = 2,
+    nthreads_per_trial=8,
+    ngpus_per_trial=2,
     log_dir="checkpoint",
 )  # you can trust the default config, we reduce the # epoch to save some build time
 
