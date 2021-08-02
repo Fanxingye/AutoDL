@@ -17,7 +17,7 @@ import ray
 from ray import tune
 from ray.tune.schedulers import ASHAScheduler
 # __import_end__
-
+from ray.util.sgd.torch import TorchTrainer
 
 # __load_data_begin__
 def load_data(data_dir="./data"):

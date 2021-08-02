@@ -141,7 +141,7 @@ if __name__ == "__main__":
         if args.cluster:
             options = dict(address="auto")
         else:
-            options = dict(num_cpus=2)
+            options = dict(num_cpus=8)
         ray.init(**options)
 
     run_ddp_tune(num_workers=args.num_workers,
