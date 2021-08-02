@@ -2,11 +2,9 @@ import os
 import time
 import torch
 import logging
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
-import torch.distributed as dist
 from autotorch.models.network import init_network, get_input_size
 from autotorch.auto.data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader
 from autotorch.utils.metrics import AverageMeter, accuracy, ProgressMeter
@@ -183,28 +181,28 @@ class ProxyModel():
             crop_ratio=self._cfg.train.crop_ratio,
             val_dataset=train_data)
 
-        index_list = []
         entropy_list = []  # result
         label_list = []
+
+        steps_per_epoch = len(data_loader)
         for i, (input, target) in enumerate(data_loader):
             input = input.to(self.device)
             target = target.to(self.device)
             output = self.net(input)  # model must be declared
             ent = get_entropy(output.data)  # entropy extraction
 
-            print("===> generate entropy value batch: %d " % i)
+            if i % self._cfg.valid.log_interval == 0 or (i == steps_per_epoch -
+                                                         1):
+                print("===> generate entropy value batch: %d " % i)
             # generate entropy file
-            batch_list = list(range(batch_size * i, batch_size * (i + 1)))
-            index_list.extend(batch_list)
             entropy_list.extend(ent.tolist())
             label_list.extend(target.data.tolist())
 
         # write the entropy file
         print("===> Finished generate entropy_list")
-
         entropy_path = os.path.join(output_dir, entropy_file_name)
         with open(entropy_path, 'w') as f:
-            for idx in index_list:
+            for idx in range(len(entropy_list)):
                 f.write('%d %f %d\n' %
                         (idx, entropy_list[idx], label_list[idx]))
 
