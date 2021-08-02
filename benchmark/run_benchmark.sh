@@ -19,8 +19,9 @@ python benchmark.py \
     --dataset  hymenoptera \
     --model_config  'default' \
     --batch-size 32 \
-    --num_epochs 10 \
+    --num_epochs 1 \
     --num_trials 1 \
+    --proxy \
     --train_framework autogluon 
 
 ## use docker 

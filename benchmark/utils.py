@@ -18,6 +18,13 @@ def mkdir(root_dir):
     return file_path
 
 
+def update_kwargs(hyperparameters, hyperparameter_tune_kwargs, summary):
+    for key in hyperparameters:
+        hyperparameters[key] = summary[key]
+    hyperparameter_tune_kwargs['num_trials'] = 1
+    return hyperparameters, hyperparameter_tune_kwargs
+
+
 def is_valid_dir(logdir, trial_name):
     flag = False
     trial_dir = os.path.join(logdir, trial_name)
