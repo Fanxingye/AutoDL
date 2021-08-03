@@ -14,14 +14,14 @@ predictor.fit(
     train_data=train_dataset,
     tuning_data=valid_dataset,
     hyperparameters={
-        'model': ag.Categorical('tf_efficientnet_b4'),
-        'batch_size': ag.Categorical(8),
-        'lr': ag.Categorical(0.001),
+        'model': ag.Categorical('tf_efficientnet_b5'),
+        'batch_size': ag.Categorical(4),
+        'lr': ag.Categorical(0.005),
         'epochs': 50,
         'cleanup_disk': False
     },
     hyperparameter_tune_kwargs={
-        'num_trials': 1,
+        'num_trials': 2,
         'max_reward': 1.0,
         'searcher': 'random'
     },
