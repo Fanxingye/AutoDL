@@ -9,16 +9,15 @@ from torchvision import transforms
 import torch.nn as nn
 from timm.models.layers.classifier import ClassifierHead
 import timm
-import torch
 from scipy.spatial import distance
 from autotorch.utils.constant import Constant
 
-from .meta_feature_utils import sample_num_strategy # sample strategy
-
+from .meta_feature_utils import sample_num_strategy  # sample strategy
 
 
 class DNNFeature:
-    def __init__(self, task_config,
+    def __init__(self,
+                 task_config,
                  csv_path=Constant.BIT_FEATURES_CSV,
                  model_name="resnetv2_50x1_bitm_in21k",
                  save_to_file=False):
@@ -47,13 +46,14 @@ class DNNFeature:
         self.model_name = model_name
         self.model = timm.create_model(self.model_name, pretrained=True)
         self.model = self._get_feature_net(self.model)
+
         self.model.eval()
         print('BiT Res50 created.')
 
         self.df = self._load_csv()
         self.entry = self._generate_feature(save_to_file)
 
-    def calculate_similarity_topk(self, top_k:int) -> np.ndarray:
+    def calculate_similarity_topk(self, top_k: int) -> np.ndarray:
         ''' calculate similarity between current dataset and all entries in the csv form
 
         Args:
@@ -69,7 +69,9 @@ class DNNFeature:
         # validate input top_k
         num_entries = len(self.df.index)
         if top_k > num_entries:
-            raise ValueError(f'Expect {top_k} most similar datasets, but total count of dataset is {num_entries}')
+            raise ValueError(
+                f'Expect {top_k} most similar datasets, but total count of dataset is {num_entries}'
+            )
 
         # calculate distance to all the known datasets
         dists = np.zeros(num_entries, dtype=np.float32)
@@ -77,7 +79,7 @@ class DNNFeature:
             dists[i] = distance.cosine(self.entry, self.df.iloc[i])
 
         # get top_k smallest values
-        top_k_index = dists.argsort()[: :1][:top_k]
+        top_k_index = dists.argsort()[::1][:top_k]
         names = np.array(self.df.index)
 
         return names[top_k_index]
@@ -102,9 +104,13 @@ class DNNFeature:
             elif isinstance(fc_layer, (nn.Linear, nn.Conv2d)):
                 setattr(feature_net, fc_name, new_fc_layer)
             else:
-                raise TypeError(f'Invalid FC layer type {type(fc_layer)} found, expected (Conv2d, Linear)...')
+                raise TypeError(
+                    f'Invalid FC layer type {type(fc_layer)} found, expected (Conv2d, Linear)...'
+                )
         else:
-            raise RuntimeError('Unable to modify the last fc layer in network, (fc, classifier, ClassifierHead) expected...')
+            raise RuntimeError(
+                'Unable to modify the last fc layer in network, (fc, classifier, ClassifierHead) expected...'
+            )
         return feature_net
 
     def _generate_feature(self, save_to_file) -> np.ndarray:
@@ -116,9 +122,10 @@ class DNNFeature:
         Returns:
             entry: 2048 features of current dataset
         '''
-        if(self.data_name in self.df.index):
-            print(f'{self.data_name} already in csv file so stored features will be loaded. '
-                  f'Please use another name if you entered a new dataset.')
+        if (self.data_name in self.df.index):
+            print(
+                f'{self.data_name} already in csv file so stored features will be loaded. '
+                f'Please use another name if you entered a new dataset.')
             return np.array(self.df.loc[self.data_name])
 
         # extract features
@@ -146,10 +153,10 @@ class DNNFeature:
             raise FileNotFoundError(f'Cannot find csv file {self.csv_path}')
         df = pd.read_csv(self.csv_path, header=None, index_col=0)
 
-        def _remove_zeros(df:pandas.DataFrame) :
-            for i in df.columns :
-                for j in df.index :
-                    if df[i][j] < 1e-7 :
+        def _remove_zeros(df: pandas.DataFrame):
+            for i in df.columns:
+                for j in df.index:
+                    if df[i][j] < 1e-7:
                         df[i][j] = 1e-7
             return df
 
@@ -169,19 +176,18 @@ class DNNFeature:
         tfms = transforms.Compose([
             transforms.Resize([224, 224]),
             transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])]
-            )
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
         img_tensor = tfms(img).unsqueeze(0)
         # get feature vector
-        output = self.model(img_tensor)
         b = self.model(img_tensor).detach().numpy()
         # convert 0s to 1e-7 for later use
-        for i in range(self.DIM) :
-            if (b[0][i] < 1e-7) :
+        for i in range(self.DIM):
+            if (b[0][i] < 1e-7):
                 b[0][i] = 1e-7
         return b
 
-    def _get_deep_features(self, ddir: str) -> np.ndarray :
+    def _get_deep_features(self, ddir: str) -> np.ndarray:
         ''' Get one vector of feature to one dataset
 
         Args:
@@ -190,14 +196,16 @@ class DNNFeature:
         Returns:
             entry: feature vector of one dataset
         '''
-        imPerClass = [len(os.listdir(os.path.join(ddir, i))) for i in os.listdir(ddir)]
+        imPerClass = [
+            len(os.listdir(os.path.join(ddir, i))) for i in os.listdir(ddir)
+        ]
         mean = int(np.mean(imPerClass))
         print(f'Image Per class Mean : {mean}')
 
         entry = np.zeros([1, self.DIM])
         total_sample = 0
 
-        for j, c in enumerate(os.listdir(ddir)) :
+        for j, c in enumerate(os.listdir(ddir)):
 
             im_path = os.path.join(ddir, c)  # path to current class folder
             im_files = os.listdir(im_path)  # image names in the class folder
@@ -206,8 +214,10 @@ class DNNFeature:
             sample_num = sample_num_strategy(mean, class_num)
             total_sample += sample_num
             index = random.sample(range(class_num), sample_num)
-            print(f"Processing {j}th folder {c}. Sampled {sample_num} from total {class_num} images.")
-            for i in index :
+            print(
+                f"Processing {j}th folder {c}. Sampled {sample_num} from total {class_num} images."
+            )
+            for i in index:
                 im = os.path.join(im_path, im_files[i])
                 entry += self._get_image_feature_vector(im)
 
