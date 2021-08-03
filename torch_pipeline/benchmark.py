@@ -1,13 +1,9 @@
 import os
-import sys
 import time
 import argparse
-import importlib
 import logging
 from configuration import gluon_config_choice
-from utils import mkdir, find_best_model, parse_config, write_csv_file, find_best_model_loop, update_kwargs
-sys.path.append("../torch_pipeline")
-sys.path.append("/data/autodl/torch_pipeline")
+from autotorch.utils.utils import mkdir, find_best_model, parse_config, write_csv_file, find_best_model_loop, update_kwargs
 from autotorch.proxydata.search_proxy_data import ProxyModel
 
 
@@ -180,7 +176,9 @@ def main():
                 logger.info("=" * 10)
                 logger.info("Refit the full data by best config")
                 logger.info("Update the model config from the searched space")
-                target_hyperparams, tune_hyperparameter = update_kwargs(target_hyperparams, tune_hyperparameter, summary['best_config'])
+                target_hyperparams, tune_hyperparameter = update_kwargs(
+                    target_hyperparams, tune_hyperparameter,
+                    summary['best_config'])
 
                 predictor.fit(train_data=train_dataset,
                               tuning_data=val_dataset,

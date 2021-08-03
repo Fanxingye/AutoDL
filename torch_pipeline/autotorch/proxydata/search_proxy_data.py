@@ -2,14 +2,9 @@ import os
 import time
 import torch
 import logging
-import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch import optim
-import torch.distributed as dist
-import sys
-sys.path.append("../../")
-
 from autotorch.models.network import init_network, get_input_size
 from autotorch.auto.data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader
 from autotorch.utils.metrics import AverageMeter, accuracy, ProgressMeter
@@ -28,61 +23,24 @@ class ProxyModel():
         self._cfg = self._default_cfg
 
     def fit(self, train_data, val_data=None):
-
-        self.distributed = False
-        if "WORLD_SIZE" in os.environ:
-            self.distributed = int(os.environ["WORLD_SIZE"]) > 1
-            self.local_rank = int(os.environ["LOCAL_RANK"])
-        else:
-            self.local_rank = 0
-
+        torch.backends.cudnn.benchmark = True
         # self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-        self.distributed = False
-        world_size = 1
-        if self.distributed:
-            self.gpu = self.local_rank % torch.cuda.device_count()
-
-            if not torch.distributed.is_initialized():
-                torch.cuda.set_device(self.gpu)
-                dist.init_process_group(backend="nccl", init_method="env://")
-                world_size = torch.distributed.get_world_size()
+        self.device = torch.device(
+            "cuda:0" if torch.cuda.is_available() else "cpu")
 
         # init network
         classes = train_data.classes
         num_class = len(classes)
-
         model_name = self._cfg.img_cls.model_name.lower()
         self.input_size = get_input_size(model_name)
         use_pretrained = self._cfg.img_cls.use_pretrained
         self.net = init_network(model_name=model_name,
                                 num_class=num_class,
                                 pretrained=use_pretrained)
-        if self.distributed:
-            # For multiprocessing distributed, DistributedDataParallel constructor
-            # should always set the single device scope, otherwise,
-            # DistributedDataParallel will use all available devices.
-            if self.gpu is not None:
-                torch.cuda.set_device(self.gpu)
-                self.net.cuda(self.device)
-                # When using a single GPU per process and per
-                # DistributedDataParallel, we need to divide the batch size
-                # ourselves based on the total number of GPUs we have
-                self.net = torch.nn.parallel.DistributedDataParallel(
-                    self.net, device_ids=[self.gpu], output_device=self.gpu)
-            else:
-                self.net.cuda(self.device)
-                # DistributedDataParallel will divide and allocate batch_size to all
-                # available GPUs if device_ids are not set
-                self.net = torch.nn.parallel.DistributedDataParallel(
-                    self.net, output_device=0)
-        else:
-            self.net.cuda(self.device)
+        self.net = self.net.to(self.device)
 
         # init loss function
-        loss = nn.CrossEntropyLoss()
-        self.criterion = loss.to(self.device)
+        self.criterion = nn.CrossEntropyLoss()
         # init optimizer
         self.optimizer = optim.SGD(params=self.net.parameters(),
                                    lr=self._cfg.train.base_lr,
@@ -112,8 +70,10 @@ class ProxyModel():
             self.train(train_loader, self.net, self.criterion, self.optimizer,
                        epoch, num_class)
             # evaluate on validation set
-            acc1 = self.validate(val_loader, self.net, self.criterion,
-                                 num_class)
+            if val_loader is not None:
+                acc1 = self.validate(val_loader, self.net, self.criterion,
+                                     num_class)
+                print("valid acc : %f" % acc1)
 
     def train(self, train_loader, model, criterion, optimizer, epoch,
               num_class):
@@ -138,11 +98,9 @@ class ProxyModel():
             # compute output
             output = model(images)
             loss = criterion(output, target)
-            if self.distributed:
-                reduced_loss = reduce_tensor(loss.data)
-                losses.update(reduced_loss.item(), images.size(0))
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, target, topk=(1, min(5, num_class)))
+
             losses.update(loss.item(), images.size(0))
             top1.update(acc1.item(), images.size(0))
             top5.update(acc5.item(), images.size(0))
@@ -183,6 +141,7 @@ class ProxyModel():
                 acc1, acc5 = accuracy(output,
                                       target,
                                       topk=(1, min(5, num_class)))
+
                 losses.update(loss.item(), images.size(0))
                 top1.update(acc1.item(), images.size(0))
                 top5.update(acc5.item(), images.size(0))
@@ -222,31 +181,35 @@ class ProxyModel():
             crop_ratio=self._cfg.train.crop_ratio,
             val_dataset=train_data)
 
-        index_list = []
         entropy_list = []  # result
         label_list = []
+
+        steps_per_epoch = len(data_loader)
         for i, (input, target) in enumerate(data_loader):
             input = input.to(self.device)
             target = target.to(self.device)
             output = self.net(input)  # model must be declared
             ent = get_entropy(output.data)  # entropy extraction
 
+            if i % self._cfg.valid.log_interval == 0 or (i == steps_per_epoch -
+                                                         1):
+                print("===> generate entropy value batch: %d " % i)
             # generate entropy file
-            batch_list = list(range(batch_size * i, batch_size * (i + 1)))
-            index_list.extend(batch_list)
             entropy_list.extend(ent.tolist())
             label_list.extend(target.data.tolist())
 
         # write the entropy file
+        print("===> Finished generate entropy_list")
         entropy_path = os.path.join(output_dir, entropy_file_name)
         with open(entropy_path, 'w') as f:
-            for idx in index_list:
+            for idx in range(len(entropy_list)):
                 f.write('%d %f %d\n' %
                         (idx, entropy_list[idx], label_list[idx]))
 
         # generate proxy dataset
         index, entropy, label = read_entropy_file(entropy_path)
 
+        print("===> Write the entropy_list to csv ")
         if sampler_type == 'random':
             indices = get_proxy_data_random(entropy, sampling_portion, logging)
         elif sampler_type == 'histogram':
@@ -260,7 +223,7 @@ class ProxyModel():
 
         proxy_data = train_data.iloc[indices, :]
         saved_path = os.path.join(output_dir, "proxy_data.csv")
-        proxy_data.to_csv(saved_path, index = None)
+        proxy_data.to_csv(saved_path, index=None)
         return proxy_data
 
 
@@ -271,5 +234,6 @@ if __name__ == '__main__':
 
     proxmodel = ProxyModel()
     proxmodel.fit(train_dataset, val_dataset)
-    proxy_data = proxmodel.generate_proxy_data(train_data = train_dataset,
-                                                output_dir = '/data/AutoML_compete/food-101/split/')
+    proxy_data = proxmodel.generate_proxy_data(
+        train_data=train_dataset,
+        output_dir='/data/AutoML_compete/food-101/split/')

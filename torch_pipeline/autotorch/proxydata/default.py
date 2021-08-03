@@ -40,7 +40,7 @@ class TrainCfg:
     mixup : bool = False
     mixup_alpha : float = 0.2
     mixup_off_epoch : int = 0
-    log_interval : int = 1
+    log_interval : int = 10
     mode : str = ''
     amp: bool = False
     static_loss_scale : float = 1.0
@@ -56,14 +56,14 @@ class TrainCfg:
 
 @dataclass
 class ValidCfg:
-    batch_size : int = 16
+    batch_size : int = 64
     num_workers : int = 8
     log_interval : int = 10
 
 
 @dataclass
 class TestCfg:
-    batch_size : int = 1
+    batch_size : int = 64
     num_workers : int = 8
 
 

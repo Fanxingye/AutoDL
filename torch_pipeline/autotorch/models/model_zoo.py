@@ -1,7 +1,5 @@
 import timm
 import torchvision.models as models
-
-
 """"
 timm_models = [
     'adv_inception_v3',
