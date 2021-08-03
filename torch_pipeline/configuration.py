@@ -239,7 +239,7 @@ def gluon_config_choice(dataset, model_choice="default"):
 
         'default': {
             'hyperparameters': {
-                'model': 'resnet50_v1b',
+                'model': 'resnet18',
                 'lr': 0.01,
                 'batch_size': 64,
                 'epochs': 10,
