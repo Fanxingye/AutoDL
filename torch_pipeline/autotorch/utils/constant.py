@@ -10,8 +10,8 @@ class Constant:
     DATASET_CONFIGURATION_CSV = os.path.join(ASSET_DIR,
                                              "dataset_configuration_debug.csv") if DEBUG else os.path.join(BASE_DIR,
                                                                                                            "dataset_configuration.csv")
-    AUTO_GLUON = "autogluon"
-    PYTORCH = "pytorch"
+    AUTO_GLUON = "pytorch"
+    PYTORCH = "pytorch1"
     BERT_PREPROCESS_MODEL = os.path.join(ASSET_DIR, "bert_zh_preprocess_3")
     BERT_CHECKPOINT = os.path.join(ASSET_DIR, "chinese_L-12_H-768_A-12/tmp/temp_dir/raw/", 'bert_model.ckpt')
 
