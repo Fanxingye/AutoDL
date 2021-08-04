@@ -451,7 +451,16 @@ class ImagePredictor(object):
 
     def _validate_kwargs(self, kwargs):
         """validate and initialize default kwargs"""
-        kwargs['holdout_frac'] = kwargs.get('holdout_frac', 0.1)
+
+        valid_kwargs = {'holdout_frac', 'random_state', 'nthreads_per_trial', 'ngpus_per_trial', 'hyperparameter_tune_kwargs'}
+        invalid_kwargs = []
+        for key in kwargs:
+            if key not in valid_kwargs:
+                invalid_kwargs.append(key)
+        if invalid_kwargs:
+            raise KeyError(f'Invalid kwargs specified: {invalid_kwargs}. Valid kwargs names: {list(valid_kwargs)}')
+
+            kwargs['holdout_frac'] = kwargs.get('holdout_frac', 0.1)
         if not (0 < kwargs['holdout_frac'] < 1.0):
             raise ValueError(f'Range error for `holdout_frac`, expected to be within range (0, 1), given {kwargs["holdout_frac"]}')
         kwargs['random_state'] = kwargs.get('random_state', None)
@@ -630,30 +639,6 @@ class ImagePredictor(object):
             path = os.path.join(self.path, 'image_predictor.ag')
         with open(path, 'wb') as fid:
             pickle.dump(self, fid)
-
-
-    # @classmethod
-    # def load(cls, path, verbosity=2):
-    #     """Load previously saved predictor.
-
-    #     Parameters
-    #     ----------
-    #     path : str
-    #         The file name for saved pickle file. If `path` is a directory, will try to load the file `image_predictor.ag` in
-    #         this directory.
-    #     verbosity : int, default = 2
-    #         Verbosity levels range from 0 to 4 and control how much information is printed.
-    #         Higher levels correspond to more detailed print statements (you can set verbosity = 0 to suppress warnings).
-    #         If using logging, you can alternatively control amount of information printed via logger.setLevel(L),
-    #         where L ranges from 0 to 50 (Note: higher values of L correspond to fewer print statements, opposite of verbosity levels)
-
-    #     """
-    #     if os.path.isdir(path):
-    #         path = os.path.join(path, 'image_predictor.ag')
-    #     with open(path, 'rb') as fid:
-    #         obj = pickle.load(fid)
-    #     obj._verbosity = verbosity
-    #     return obj
 
     @classmethod
     def load(cls, path, ctx='auto'):

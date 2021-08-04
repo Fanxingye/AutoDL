@@ -115,3 +115,5 @@ framework/asset/test_dataset/split
 checkpoint/
 *.out/
 benchmark/report.csv
+*.jpg
+*.png
