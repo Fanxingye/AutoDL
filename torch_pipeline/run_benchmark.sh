@@ -1,17 +1,5 @@
 #!/bin/bash
 
-# RUN BENCHMARK
-python benchmark.py \
-    --data_path /media/robin/DATA/datatsets/image_data/hymenoptera/images/train \
-    --dataset hymenoptera --output_path /home/robin/jianzh/automl/autodl/benchmark \
-    --train_framework autokeras
-
-python benchmark.py \
-    --data_path /media/robin/DATA/datatsets/image_data/dog-breed-identification \
-    --output_path /home/robin/jianzh/automl/autodl/benchmark \
-    --dataset dog-breed-identification \
-    --train_framework autogluon
-
 python benchmark.py \
     --data_path /media/robin/DATA/datatsets/image_data/hymenoptera/split/train \
     --output_path /home/robin/jianzh/automl/autodl/benchmark \
@@ -24,6 +12,18 @@ python benchmark.py \
     --proxy \
     --train_framework autogluon 
 
+python benchmark.py \
+    --data_path /media/robin/DATA/datatsets/image_data/hymenoptera/split/train \
+    --output_path /home/robin/jianzh/automl/autodl/benchmark \
+    --report_path /home/robin/jianzh/automl/autodl/benchmark \
+    --dataset  hymenoptera \
+    --model_config  'default' \
+    --batch-size  16 \
+    --num_epochs 1 \
+    --num_trials 1 \
+    --proxy \
+    --train_framework autotorch
+
 ## use docker 
 python benchmark.py \
     --data_path /home/image_data/hymenoptera/split/train \
@@ -31,7 +31,7 @@ python benchmark.py \
     --report_path /home/automl/autodl/benchmark \
     --dataset  hymenoptera \
     --model_config  'default_hpo' \
-    --batch-size 16 \
+    --batch-size 64 \
     --num_epochs 10 \
     --num_trials 4 \
     --train_framework autogluon 
