@@ -20,7 +20,7 @@ from torchmetrics.functional import accuracy
 import sys
 sys.path.append("../../")
 from autotorch.models.network import init_network
-from autotorch.autopl.custom_trainer import CustomTrainer
+from autotorch.autoptl.custom_trainer import CustomTrainer
 
 seed_everything(7)
 
@@ -207,9 +207,9 @@ model = LitResnet(lr=0.05)
 model.datamodule = cifar10_dm
 trainer = CustomTrainer(
     progress_bar_refresh_rate=50,
-    log_every_n_steps=50,
+    log_every_n_steps=1,
     log_gpu_memory='all',
-    max_epochs=1,
+    max_epochs=10,
     gpus=AVAIL_GPUS,
     sync_batchnorm=True,
     limit_train_batches=1.0,
