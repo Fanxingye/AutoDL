@@ -61,7 +61,7 @@ python multiproc_ddp.py --nproc_per_node 2 benchmark.py  \
     --train_framework autotorch
 
 
-python -m torch.distributed.launch --nproc_per_node 2 benchmark.py  \
+python -m torch.distributed.run --nproc_per_node 2 benchmark.py  \
     --data_path /data/AutoML_compete/Flowers-Recognition/split/train \
     --output_path /home/jianzheng.nie/autodl/benchmark/checkpoint \
     --report_path /home/jianzheng.nie/autodl/benchmark/checkpoint \
