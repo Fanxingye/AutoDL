@@ -43,7 +43,7 @@ def set_default(cfg):
 
 
 class BaseEstimator:
-    """This is the base estimator for gluoncv.auto.Estimators.
+    """This is the base estimator for autotorch.auto.Estimators.
 
     Parameters
     ----------
