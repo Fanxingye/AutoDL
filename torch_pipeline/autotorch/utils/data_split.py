@@ -91,20 +91,24 @@ def move_images(root_dir, dest_dir, classes, img_list):
     print("%s has been moved to %s" % (classes, dest_dir))
 
 
-def mkdir(dir):
+def mkdir(dir, rmdir=False):
+    split_mode = True
     if not os.path.exists(dir):
         os.makedirs(dir)
         print("%s does not exist, will be created." % dir)
+    elif rmdir:
+        print("%s exists, will be deleted and rebuilt." % dir)
+        shutil.rmtree(dir)
+        os.makedirs(dir)
     else:
-        # print("%s exists, will be deleted and rebuilt." % dir)
-        # shutil.rmtree(dir)
-        # os.makedirs(dir)
-        SPLIT = False
+        print("%s has exists, create new dir will be ignored " % dir)
+        split_mode = False
+    return split_mode
 
 
 class DataSplit(object):
 
-    def __init__(self, cfg, split = "split_data", train='train', val='val', test='test', ):
+    def __init__(self, cfg, split="split_data", train='train', val='val', test='test'):
         self.cfg = cfg
         self.root_dir = cfg.get('data_path')
         self.dataset = cfg.get('data_name')
@@ -131,11 +135,12 @@ class DataSplit(object):
                 img_cls_list = os.listdir(img_cls_dir)
                 img_cls_list = [name for name in img_cls_list if has_file_allowed_extension(name)]
                 if len(img_cls_list) > 0:
-                    mkdir(os.path.join(self.train_path, img_cls))
-                    mkdir(os.path.join(self.val_path, img_cls))
-                    mkdir(os.path.join(self.test_path, img_cls))
-                    if  SPLIT == False:
+                    split_mode = mkdir(os.path.join(self.train_path, img_cls))
+                    if not split_mode:
                         break
+                    split_mode = mkdir(os.path.join(self.val_path, img_cls))
+                    split_mode = mkdir(os.path.join(self.test_path, img_cls))
+
                     if sampling_strategy == "random":
                         train_list, val_list, test_list = random_split(img_cls_list, val_ratio=val_ratio,
                                                                        test_ratio=test_ratio)
