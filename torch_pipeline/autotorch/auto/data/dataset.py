@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import cv2
 import mmcv
-from gluoncv.auto.data.auto_data import is_url, url_data
+from autotorch.auto.utils.auto_data import is_url, url_data
 
 try:
     import torch

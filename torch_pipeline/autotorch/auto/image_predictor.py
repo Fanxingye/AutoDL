@@ -18,7 +18,7 @@ from autogluon.core.utils import verbosity2loglevel, get_gpu_count
 from autogluon.core.utils.utils import generate_train_test_split
 from autogluon.vision.configs.presets_configs import unpack, _check_gpu_memory_presets
 from autotorch.auto.utils import sanitize_batch_size
-from gluoncv.auto.estimators.utils import _suggest_load_context
+
 
 __all__ = ['ImagePredictor']
 

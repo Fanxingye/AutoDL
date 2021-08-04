@@ -1,7 +1,7 @@
-from .ctx_utils import _suggest_load_context
+from .utils import _suggest_load_context
+from .utils import EarlyStopperOnPlateau
 from .error_handler import TorchErrorCatcher
-from .parallel import *
 from .space_sanitizer import sanitize_batch_size
 
-__all__ = ['_suggest_load_context', 'TorchErrorCatcher', 'allreduce', 'DataParallelModel', 'DataParallelCriterion', 'sanitize_batch_size']
+__all__ = ['_suggest_load_context', 'EarlyStopperOnPlateau', 'TorchErrorCatcher', 'sanitize_batch_size']
 
