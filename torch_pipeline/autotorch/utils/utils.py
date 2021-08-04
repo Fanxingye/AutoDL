@@ -18,6 +18,18 @@ def mkdir(root_dir):
     return file_path
 
 
+def load_yaml(file_path):
+    with open(file_path, 'r', encoding='utf-8') as yaml_file:
+        result = yaml.load(yaml_file.read(), Loader=yaml.SafeLoader)
+        return result
+
+
+def load_json(file_path):
+    with open(file_path, 'r', encoding='utf-8') as f:
+        result = json.load(f)
+    return result
+
+
 def update_kwargs(hyperparameters, hyperparameter_tune_kwargs, summary):
     for key in hyperparameters:
         hyperparameters[key] = summary[key]

@@ -4,12 +4,13 @@ import pandas as pd
 from scipy.stats import skew, kurtosis, mode
 # from constant import  Constant
 
-from meta_feature_utils import sample_num_strategy # sample strategy
+from .meta_feature_utils import sample_num_strategy # sample strategy
 import random
 import re
 
 import easyocr  # pip install easyocr
-from mtcnn import MTCNN  # pip install mtcnn
+import torch
+from facenet_pytorch import MTCNN  # pip install mtcnn
 
 # python -m pip install 'git+https://github.com/facebookresearch/detectron2.git'
 
@@ -169,20 +170,16 @@ class EngineerFeature:
         return False
 
     def _data_has_face(self, images:list, total_sample) -> bool:
+
         faces = 0
-        detector = MTCNN()
+        device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        detector = MTCNN(keep_all=True, device=device)
         for im in images:
-            im = np.array(Image.open(im).convert('RGB')).astype(np.float32)
-            res = detector.detect_faces(im)
-
-            largest = 0
-            for face in res :
-                curr = face['box'][0] * face['box'][0]
-                largest = curr if curr > largest else largest
-
-            if(largest / 50176 > 0.35):
+            im = np.array(Image.open(im).convert('RGB'))
+            im = Image.fromarray(im)
+            boxes, _ = detector.detect(im)
+            if boxes is not None:
                 faces +=1
-
         if faces / total_sample > 0.9:
             self._contain_faces = True
             return True
