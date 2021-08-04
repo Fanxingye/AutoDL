@@ -83,7 +83,7 @@ def train_mnist(config, checkpoint_dir=False):
     for epoch in range(10):
         train(model, optimizer, train_loader, device)
         acc = test(model, test_loader, device)
-
+        print(acc)
         if epoch % 3 == 0:
             with distributed_checkpoint_dir(step=epoch) as checkpoint_dir:
                 path = os.path.join(checkpoint_dir, "checkpoint")

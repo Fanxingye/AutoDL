@@ -83,7 +83,7 @@ def train_mnist(config, checkpoint_dir=False):
     for epoch in range(10):
         train(model, optimizer, train_loader, device)
         acc = test(model, test_loader, device)
-
+        print(acc)
         if epoch % 3 == 0:
             with distributed_checkpoint_dir(step=epoch) as checkpoint_dir:
                 path = os.path.join(checkpoint_dir, "checkpoint")
@@ -96,9 +96,7 @@ def run_ddp_tune(num_workers, num_gpus_per_worker, workers_per_node=None):
         train_mnist,
         num_workers=num_workers,
         num_gpus_per_worker=num_gpus_per_worker,
-        num_workers_per_host=workers_per_node,
-        backend='nccl',
-        use_gpu=True)
+        num_workers_per_host=workers_per_node)
 
     analysis = tune.run(trainable_cls,
                         num_samples=4,
