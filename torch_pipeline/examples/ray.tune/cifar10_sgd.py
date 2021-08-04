@@ -54,12 +54,12 @@ class CifarTrainingOperator(TrainingOperator):
         ])
         with FileLock(".ray.lock"):
             train_dataset = CIFAR10(
-                root="~/data",
+                root="/media/robin/DATA/datatsets/image_data/cifar10",
                 train=True,
-                download=True,
+                download=False,
                 transform=transform_train)
             validation_dataset = CIFAR10(
-                root="~/data",
+                root="/media/robin/DATA/datatsets/image_data/cifar10",
                 train=False,
                 download=False,
                 transform=transform_test)
@@ -95,13 +95,13 @@ def train_cifar(test_mode=False,
                 fp16=False):
     trainer1 = TorchTrainer(
         training_operator_cls=CifarTrainingOperator,
-        initialization_hook=initialization_hook,
+        # initialization_hook=initialization_hook,
         num_workers=num_workers,
         config={
             "lr": 0.1,
             "test_mode": test_mode,  # subset the data
             # this will be split across workers.
-            BATCH_SIZE: 128 * num_workers
+            BATCH_SIZE: 64 * num_workers
         },
         use_gpu=use_gpu,
         scheduler_step_freq="epoch",
@@ -167,12 +167,12 @@ if __name__ == "__main__":
     if args.server_address:
         ray.util.connect(args.server_address)
     else:
-        num_cpus = 16 if args.smoke_test else None
-        ray.init(address=args.address, num_cpus=num_cpus, log_to_driver=True)
+        num_cpus = 4 if args.smoke_test else None
+        ray.init(address=args.address, num_cpus=num_cpus, num_gpus=2, log_to_driver=True)
 
     train_cifar(
         test_mode=args.smoke_test,
         num_workers=2,
         use_gpu=True,
-        num_epochs=args.num_epochs,
+        num_epochs=1,
         fp16=args.fp16)

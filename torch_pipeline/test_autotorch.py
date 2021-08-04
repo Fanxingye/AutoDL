@@ -19,8 +19,13 @@ predictor.fit(
     hyperparameters={
         'model': ag.Categorical('swin_large_patch4_window12_384'),
         'batch_size': ag.Categorical(4),
+<<<<<<< HEAD
         'lr': ag.Categorical(0.001, 0.005, 0.0005, 0.0001),
         'epochs': 50,
+=======
+        'lr': ag.Categorical(0.005),
+        'epochs': 1,
+>>>>>>> f5ab696849ce96b98c7a66659ef1edc1027dc714
         'cleanup_disk': False
     },
     hyperparameter_tune_kwargs={
