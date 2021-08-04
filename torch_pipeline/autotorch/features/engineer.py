@@ -4,7 +4,7 @@ import pandas as pd
 from scipy.stats import skew, kurtosis, mode
 # from constant import  Constant
 
-from meta_feature_utils import sample_num_strategy # sample strategy
+from .meta_feature_utils import sample_num_strategy # sample strategy
 import random
 import re
 

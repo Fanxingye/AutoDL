@@ -8,7 +8,7 @@ import numpy as np
 
 IMG_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.ppm', '.bmp', '.pgm', '.tif',
                   '.tiff', '.webp')
-
+SPLIT = True
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a model for different kaggle competitions.')
@@ -96,22 +96,23 @@ def mkdir(dir):
         os.makedirs(dir)
         print("%s does not exist, will be created." % dir)
     else:
-        print("%s exists, will be deleted and rebuilt." % dir)
-        shutil.rmtree(dir)
-        os.makedirs(dir)
+        # print("%s exists, will be deleted and rebuilt." % dir)
+        # shutil.rmtree(dir)
+        # os.makedirs(dir)
+        SPLIT = False
 
 
 class DataSplit(object):
 
-    def __init__(self, cfg, train='train', val='val', test='test', ):
+    def __init__(self, cfg, split = "split_data", train='train', val='val', test='test', ):
         self.cfg = cfg
         self.root_dir = cfg.get('data_path')
         self.dataset = cfg.get('data_name')
 
         self.data_dir = os.path.join(self.root_dir, self.dataset)
-        self.train_path = os.path.join(self.root_dir, 'split', train)
-        self.val_path = os.path.join(self.root_dir, 'split', val)
-        self.test_path = os.path.join(self.root_dir, 'split', test)
+        self.train_path = os.path.join(self.root_dir, split, train)
+        self.val_path = os.path.join(self.root_dir, split, val)
+        self.test_path = os.path.join(self.root_dir, split, test)
 
     def run_data_split(self, sampling_strategy='balanced', val_ratio=0.1, test_ratio=0.1):
         """root_dir,
@@ -133,6 +134,8 @@ class DataSplit(object):
                     mkdir(os.path.join(self.train_path, img_cls))
                     mkdir(os.path.join(self.val_path, img_cls))
                     mkdir(os.path.join(self.test_path, img_cls))
+                    if  SPLIT == False:
+                        break
                     if sampling_strategy == "random":
                         train_list, val_list, test_list = random_split(img_cls_list, val_ratio=val_ratio,
                                                                        test_ratio=test_ratio)

@@ -5,7 +5,7 @@ import autogluon.core as ag
 import pandas as pd
 import yaml
 
-from utils.constant import Constant
+from autotorch.utils.constant import Constant
 
 
 class DefaultConfig:

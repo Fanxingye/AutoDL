@@ -15,22 +15,20 @@ def main():
     yaml_file = "config.yaml"
     # parse configuration
     task_config = utils.load_yaml(yaml_file)
-    train_dataset, val_dataset, test_dataset = DataSplit(
-        task_config).run_data_split()
-
-    model_config = config_generator.generate_config()
     # calculate similarity
     similar_datasets = DNNFeature(
         task_config,
         save_to_file=True
         ).calculate_similarity_topk(1)
-    engineer_feature = EngineerFeature(task_config)
-    ef = engineer_feature.get_engineered_feature()
+    # engineer_feature = EngineerFeature(task_config)
+    # ef = engineer_feature.get_engineered_feature()
     config_generator = ConfigGenerator(
         dataset_name=similar_datasets[0],
         device_limit=task_config["device_limit"],
         time_limit=task_config["time_limit_sec"])
     model_config = config_generator.generate_config()
+    print("=="*10)
+    print(model_config)
     # dataset spilt
     train_dataset, val_dataset, test_dataset = DataSplit(
         task_config).run_data_split()
@@ -44,7 +42,7 @@ def main():
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     print(model_config)
-    predictor = ImagePredictor(path=checkpoint_dir)
+    predictor = ImagePredictor(log_dir=checkpoint_dir)
     predictor.fit(train_data=train_dataset,
                     val_data=val_dataset,
                     hyperparameters=model_config["hyperparameters"],
@@ -56,6 +54,7 @@ def main():
     summary = predictor.fit_summary()
     print(summary)
     config_generator.update_config_csv(checkpoint_dir)
+    print("Finished!")
 
 
 
