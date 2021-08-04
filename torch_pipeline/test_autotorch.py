@@ -20,7 +20,7 @@ predictor.fit(
         'model': ag.Categorical('tf_efficientnet_b5'),
         'batch_size': ag.Categorical(4),
         'lr': ag.Categorical(0.005),
-        'epochs': 50,
+        'epochs': 1,
         'cleanup_disk': False
     },
     hyperparameter_tune_kwargs={
