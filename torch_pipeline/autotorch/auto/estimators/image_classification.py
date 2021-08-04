@@ -31,7 +31,7 @@ from ..data.dataset import TorchImageClassificationDataset
 from ..data.dataloader import get_pytorch_train_loader, get_pytorch_val_loader
 from ..data.transforms import transform_eval
 from .conf import _BEST_CHECKPOINT_FILE
-from autotorch.auto.utils.utils import EarlyStopperOnPlateau
+from autotorch.auto.utils import EarlyStopperOnPlateau
 from autotorch.utils.filesystem import try_import
 problem_type_constants = try_import(
     package='autogluon.core.constants',
