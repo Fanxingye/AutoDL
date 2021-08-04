@@ -96,7 +96,8 @@ def run_ddp_tune(num_workers, num_gpus_per_worker, workers_per_node=None):
         train_mnist,
         num_workers=num_workers,
         num_gpus_per_worker=num_gpus_per_worker,
-        num_workers_per_host=workers_per_node)
+        num_workers_per_host=workers_per_node,
+        backend='nccl')
 
     analysis = tune.run(trainable_cls,
                         num_samples=4,

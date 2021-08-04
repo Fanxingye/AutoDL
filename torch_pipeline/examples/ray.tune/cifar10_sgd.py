@@ -95,7 +95,7 @@ def train_cifar(test_mode=False,
                 fp16=False):
     trainer1 = TorchTrainer(
         training_operator_cls=CifarTrainingOperator,
-        initialization_hook=initialization_hook,
+        # initialization_hook=initialization_hook,
         num_workers=num_workers,
         config={
             "lr": 0.1,
@@ -167,8 +167,8 @@ if __name__ == "__main__":
     if args.server_address:
         ray.util.connect(args.server_address)
     else:
-        num_cpus = 16 if args.smoke_test else None
-        ray.init(address=args.address, num_cpus=num_cpus, log_to_driver=True)
+        num_cpus = 4 if args.smoke_test else None
+        ray.init(address=args.address, num_cpus=num_cpus, num_gpus=2, log_to_driver=True)
 
     train_cifar(
         test_mode=args.smoke_test,
