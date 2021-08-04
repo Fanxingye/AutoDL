@@ -1,13 +1,9 @@
 import os
-import sys
 import time
 import argparse
-import importlib
 import logging
 from configuration import gluon_config_choice
-from utils import mkdir, find_best_model, parse_config, write_csv_file, find_best_model_loop, update_kwargs
-sys.path.append("../torch_pipeline")
-sys.path.append("/data/autodl/torch_pipeline")
+from autotorch.utils.utils import find_best_model, parse_config, write_csv_file, find_best_model_loop, update_kwargs
 from autotorch.proxydata.search_proxy_data import ProxyModel
 
 
@@ -125,9 +121,6 @@ def main():
 
         train_data_dir = opt.data_path
         val_data_dir = opt.data_path.replace("train", "val")
-        if opt.data_augmention == "True":
-            train_data_dir = opt.data_path.replace("train",
-                                                   "train_dataaug2_balance")
         test_data_dir = opt.data_path.replace("train", "test")
 
         train_dataset = ImagePredictor.Dataset.from_folder(train_data_dir)
@@ -140,7 +133,7 @@ def main():
                 opt.data_path[:-6])
             proxmodel = ProxyModel()
             proxmodel.fit(train_data, val_data)
-            saved_path = os.path.join(opt.output_path, opt.dataset)
+            saved_path = os.path.join(opt.out_dir, opt.dataset)
             proxy_data = proxmodel.generate_proxy_data(train_data=train_data,
                                                        output_dir=saved_path)
             csv_path = os.path.join(saved_path, "proxy_data.csv")
@@ -149,6 +142,9 @@ def main():
         if opt.proxy:
             train_data = proxy_data
             tuning_data = None
+        else:
+            train_data = train_dataset
+            tuning_data = val_dataset
 
         if not opt.checkpoint_path:
             predictor = ImagePredictor(path=output_directory)
@@ -180,7 +176,9 @@ def main():
                 logger.info("=" * 10)
                 logger.info("Refit the full data by best config")
                 logger.info("Update the model config from the searched space")
-                target_hyperparams, tune_hyperparameter = update_kwargs(target_hyperparams, tune_hyperparameter, summary['best_config'])
+                target_hyperparams, tune_hyperparameter = update_kwargs(
+                    target_hyperparams, tune_hyperparameter,
+                    summary['best_config'])
 
                 predictor.fit(train_data=train_dataset,
                               tuning_data=val_dataset,
@@ -349,14 +347,30 @@ def main():
 
         train_data_dir = opt.data_path
         val_data_dir = opt.data_path.replace("train", "val")
-        if opt.data_augmention == "True":
-            train_data_dir = opt.data_path.replace("train",
-                                                   "train_dataaug2_balance")
         test_data_dir = opt.data_path.replace("train", "test")
 
         train_dataset = ImagePredictor.Dataset.from_folder(train_data_dir)
         val_dataset = ImagePredictor.Dataset.from_folder(val_data_dir)
         test_dataset = ImagePredictor.Dataset.from_folder(test_data_dir)
+
+        if opt.proxy:
+            from autotorch.auto.data import TorchImageClassificationDataset
+            train_data, val_data, test_data = TorchImageClassificationDataset.from_folders(
+                opt.data_path[:-6])
+            proxmodel = ProxyModel()
+            proxmodel.fit(train_data, val_data)
+            saved_path = os.path.join(opt.output_path, opt.dataset)
+            proxy_data = proxmodel.generate_proxy_data(train_data=train_data,
+                                                       output_dir=saved_path)
+            csv_path = os.path.join(saved_path, "proxy_data.csv")
+            proxy_data = ImagePredictor.Dataset.from_csv(csv_path)
+
+        if opt.proxy:
+            train_data = proxy_data
+            tuning_data = None
+        else:
+            train_data = train_dataset
+            tuning_data = val_dataset
 
         if not opt.checkpoint_path:
             predictor = ImagePredictor(log_dir=output_directory)
@@ -372,8 +386,8 @@ def main():
             if int(opt.ngpus_per_trial) > 0:
                 ngpus_per_trial = int(opt.ngpus_per_trial)
 
-            predictor.fit(train_data=train_dataset,
-                          tuning_data=val_dataset,
+            predictor.fit(train_data=train_data,
+                          tuning_data=tuning_data,
                           hyperparameters=target_hyperparams,
                           hyperparameter_tune_kwargs=tune_hyperparameter,
                           ngpus_per_trial=ngpus_per_trial,

@@ -2,10 +2,10 @@ import autogluon.core as ag
 from autotorch.auto import ImagePredictor
 from autotorch.proxydata import ProxyModel
 
-# train_dataset, _, test_dataset = ImagePredictor.Dataset.from_folders(
-#     'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
-train_dataset, valid_dataset, _ = ImagePredictor.Dataset.from_folders(
-    "/data/AutoML_compete/leafy-vegetable-pests/split/", test="None")
+train_dataset, _, valid_dataset = ImagePredictor.Dataset.from_folders(
+    'https://autogluon.s3.amazonaws.com/datasets/shopee-iet.zip')
+# train_dataset, valid_dataset, _ = ImagePredictor.Dataset.from_folders(
+#     "/data/AutoML_compete/leafy-vegetable-pests/split/", test="None")
 
 proxy_model = ProxyModel()
 proxy_model.fit(train_dataset, valid_dataset)
@@ -17,14 +17,14 @@ predictor.fit(
     train_data=train_dataset,
     tuning_data=valid_dataset,
     hyperparameters={
-        'model': ag.Categorical('resnet50'),
-        'batch_size': ag.Categorical(8),
-        'lr': ag.Categorical(0.001),
-        'epochs': 1,
+        'model': ag.Categorical('tf_efficientnet_b5'),
+        'batch_size': ag.Categorical(4),
+        'lr': ag.Categorical(0.005),
+        'epochs': 50,
         'cleanup_disk': False
     },
     hyperparameter_tune_kwargs={
-        'num_trials': 1,
+        'num_trials': 2,
         'max_reward': 1.0,
         'searcher': 'random'
 

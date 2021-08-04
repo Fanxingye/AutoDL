@@ -731,8 +731,6 @@ class ImageClassificationEstimator(BaseEstimator):
                     f'Loaded on gpu({valid_gpus}), different from gpu({self._cfg.gpus}).'
                 )
 
-        self.ctx = [int(i) for i in valid_gpus]
-
         # network
         if self._custom_net is None:
             model_name = self._cfg.img_cls.model.lower()
@@ -782,7 +780,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         top1_val, top5_val = self._val_epoch(val_loader,
                                              model=self.net,
-                                             criterion=self.criterion,
+                                             criterion=self.val_criterion,
                                              num_class=self.num_class,
                                              use_amp=False,
                                              logger=self._logger)
