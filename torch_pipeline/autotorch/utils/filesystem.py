@@ -6,6 +6,7 @@ from pathlib import Path
 import tarfile
 import zipfile
 
+
 def makedirs(path):
     """Create directory recursively if not exists.
     Similar to `makedir -p`, you can skip checking existence before this function.
@@ -20,6 +21,7 @@ def makedirs(path):
     except OSError as exc:
         if exc.errno != errno.EEXIST:
             raise
+
 
 def try_import(package, message=None, fromlist=None):
     """Try import specified package, with custom message support.
@@ -44,6 +46,7 @@ def try_import(package, message=None, fromlist=None):
             raise e
         raise ImportError(message)
 
+
 def try_import_cv2():
     """Try import cv2 at runtime.
 
@@ -54,7 +57,9 @@ def try_import_cv2():
     """
     msg = "cv2 is required, you can install by package manager, e.g. 'apt-get', \
         or `pip install opencv-python --user` (note that this is unofficial PYPI package)."
+
     return try_import('cv2', msg)
+
 
 def try_import_munkres():
     """Try import munkres at runtime.
@@ -68,6 +73,7 @@ def try_import_munkres():
     msg = "munkres is required, you can install by `pip install munkres --user`. "
     return try_import('munkres', msg)
 
+
 def try_import_colorama():
     """Try import colorama at runtime.
 
@@ -78,7 +84,9 @@ def try_import_colorama():
     """
     msg = "colorama is required, you can install by `pip install colorama --user` \
          (note that this is unofficial PYPI package)."
+
     return try_import('colorama', msg)
+
 
 def try_import_decord():
     """Try import decord at runtime.
@@ -90,7 +98,9 @@ def try_import_decord():
     """
     msg = "Decord is required, you can install by `pip install decord --user` \
         (note that this is unofficial PYPI package)."
+
     return try_import('decord', msg)
+
 
 def try_import_mmcv():
     """Try import mmcv at runtime.
@@ -102,7 +112,9 @@ def try_import_mmcv():
     """
     msg = "mmcv is required, you can install by first `pip install Cython --user` \
         and then `pip install mmcv --user` (note that this is unofficial PYPI package)."
+
     return try_import('mmcv', msg)
+
 
 def try_import_rarfile():
     """Try import rarfile at runtime.
@@ -114,7 +126,9 @@ def try_import_rarfile():
     """
     msg = "rarfile is required, you can install by first `sudo apt-get install unrar` \
         and then `pip install rarfile --user` (note that this is unofficial PYPI package)."
+
     return try_import('rarfile', msg)
+
 
 def import_try_install(package, extern_url=None):
     """Try import the specified package.
@@ -154,7 +168,8 @@ def import_try_install(package, extern_url=None):
 
             # trying to install package
             url = package if extern_url is None else extern_url
-            pipmain(['install', '--user', url])  # will raise SystemExit Error if fails
+            pipmain(['install', '--user',
+                     url])  # will raise SystemExit Error if fails
 
             # trying to load again
             try:
@@ -168,6 +183,7 @@ def import_try_install(package, extern_url=None):
                 return __import__(package)
     return __import__(package)
 
+
 def try_import_dali():
     """Try import NVIDIA DALI at runtime.
     """
@@ -179,11 +195,14 @@ def try_import_dali():
             msg = "DALI not found, please check if you installed it correctly."
         elif isinstance(e, RuntimeError):
             msg = "No CUDA-capable device is detected ({}).".format(e)
+
         class dali:
             class Pipeline:
                 def __init__(self):
                     raise NotImplementedError(msg)
+
     return dali
+
 
 def try_import_html5lib():
     """Try import html5lib at runtime.
@@ -196,6 +215,7 @@ def try_import_html5lib():
     msg = "html5lib is required, you can install by package manager, " \
           "e.g. pip install html5lib --user` (note that this is unofficial PYPI package)."
     return try_import('html5lib', msg)
+
 
 def try_import_gdfDownloader():
     """Try import googleDriveFileDownloader at runtime.
@@ -210,6 +230,7 @@ def try_import_gdfDownloader():
           "(note that this is unofficial PYPI package)."
     return try_import('googleDriveFileDownloader', msg)
 
+
 def unzip(zip_file_path, root='./', strict=False):
     """Unzips files located at `zip_file_path` into parent directory specified by `root`.
     """
@@ -220,6 +241,7 @@ def unzip(zip_file_path, root='./', strict=False):
         folder = os.path.commonprefix(zf.namelist())
     return os.path.join(root, folder)
 
+
 def untar(tar_file_path, root='./', strict=False):
     """Untars files located at `tar_file_path` into parent directory specified by `root`.
     """
@@ -229,6 +251,7 @@ def untar(tar_file_path, root='./', strict=False):
             zf.extractall(root)
         folder = os.path.commonprefix(zf.getnames())
     return os.path.join(root, folder)
+
 
 @contextlib.contextmanager
 def temporary_filename(suffix=None):
@@ -255,6 +278,7 @@ def temporary_filename(suffix=None):
         yield tmp_name
     finally:
         os.unlink(tmp_name)
+
 
 class _DisplayablePath:
     """A util class for displaying the tree structure of root path.
@@ -291,7 +315,12 @@ class _DisplayablePath:
 
     # pylint: disable=inconsistent-return-statements
     @classmethod
-    def make_tree(cls, root, parent=None, is_last=False, criteria=None, max_depth=1):
+    def make_tree(cls,
+                  root,
+                  parent=None,
+                  is_last=False,
+                  criteria=None,
+                  max_depth=1):
         """Make tree structure from root.
 
         Parameters
@@ -316,8 +345,7 @@ class _DisplayablePath:
             return displayable_root
         yield displayable_root
 
-        children = sorted(list(path
-                               for path in root.iterdir()
+        children = sorted(list(path for path in root.iterdir()
                                if criteria(path)),
                           key=lambda s: str(s).lower())
         count = 1
@@ -349,18 +377,15 @@ class _DisplayablePath:
         if self.parent is None:
             return self.displayname
 
-        _filename_prefix = (self.display_filename_prefix_last
-                            if self.is_last
+        _filename_prefix = (self.display_filename_prefix_last if self.is_last
                             else self.display_filename_prefix_middle)
 
-        parts = ['{!s} {!s}'.format(_filename_prefix,
-                                    self.displayname)]
+        parts = ['{!s} {!s}'.format(_filename_prefix, self.displayname)]
 
         parent = self.parent
         while parent and parent.parent is not None:
-            parts.append(self.display_parent_prefix_middle
-                         if parent.is_last
-                         else self.display_parent_prefix_last)
+            parts.append(self.display_parent_prefix_middle if parent.
+                         is_last else self.display_parent_prefix_last)
             parent = parent.parent
 
         return ''.join(reversed(parts))
@@ -378,11 +403,13 @@ class PathTree:
 
     """
     def __init__(self, root, max_depth=1):
-        self._disp_path = _DisplayablePath.make_tree(Path(root), max_depth=max_depth)
+        self._disp_path = _DisplayablePath.make_tree(Path(root),
+                                                     max_depth=max_depth)
 
     def __str__(self):
         s = '\n'.join([p.displayable() for p in self._disp_path])
         return s
+
 
 def try_import_skimage():
     """Try import scikit-image at runtime.

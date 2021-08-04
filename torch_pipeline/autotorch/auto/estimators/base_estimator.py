@@ -8,9 +8,8 @@ import logging
 from datetime import datetime
 import numpy as np
 import pandas as pd
-from gluoncv.utils import random as _random
 from autotorch.auto.utils import _suggest_load_context
-
+from autotorch.utils.random import setup_seed
 
 logging.basicConfig(level=logging.INFO)
 
@@ -111,7 +110,7 @@ class BaseEstimator:
         # freeze config
         self._cfg.freeze()
         seed = self._cfg.get('seed', np.random.randint(1000000))
-        _random.seed(seed)
+        setup_seed(seed)
 
     def fit(self, train_data, val_data=None, train_size=0.9, random_state=None,
             resume=False, time_limit=None):
