@@ -10,16 +10,13 @@ from autotorch.utils import utils
 from autotorch.utils.constant import Constant
 
 
-
 def main():
     yaml_file = "config.yaml"
     # parse configuration
     task_config = utils.load_yaml(yaml_file)
     # calculate similarity
     similar_datasets = DNNFeature(
-        task_config,
-        save_to_file=True
-        ).calculate_similarity_topk(1)
+        task_config, save_to_file=True).calculate_similarity_topk(1)
     # engineer_feature = EngineerFeature(task_config)
     # ef = engineer_feature.get_engineered_feature()
     config_generator = ConfigGenerator(
@@ -27,7 +24,7 @@ def main():
         device_limit=task_config["device_limit"],
         time_limit=task_config["time_limit_sec"])
     model_config = config_generator.generate_config()
-    print("=="*10)
+    print("==" * 10)
     print(model_config)
     # dataset spilt
     train_dataset, val_dataset, test_dataset = DataSplit(
@@ -43,19 +40,18 @@ def main():
         os.makedirs(checkpoint_dir)
     print(model_config)
     predictor = ImagePredictor(log_dir=checkpoint_dir)
-    predictor.fit(train_data=train_dataset,
-                    val_data=val_dataset,
-                    hyperparameters=model_config["hyperparameters"],
-                    hyperparameter_tune_kwargs=model_config[
-                        "hyperparameter_tune_kwargs"],
-                    ngpus_per_trial=model_config["ngpus_per_trial"],
-                    time_limit=model_config['time_limit'],
-                    verbosity=2)
+    predictor.fit(
+        train_data=train_dataset,
+        val_data=val_dataset,
+        hyperparameters=model_config["hyperparameters"],
+        hyperparameter_tune_kwargs=model_config["hyperparameter_tune_kwargs"],
+        ngpus_per_trial=model_config["ngpus_per_trial"],
+        time_limit=model_config['time_limit'],
+        verbosity=2)
     summary = predictor.fit_summary()
     print(summary)
     config_generator.update_config_csv(checkpoint_dir)
     print("Finished!")
-
 
 
 if __name__ == '__main__':

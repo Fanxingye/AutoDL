@@ -31,3 +31,4 @@ python -m torch.distributed.launch --nproc_per_node=4 test.py \
 
 ### autodl
 python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=2 test_autotorch.py 
+python -m torch.distributed.run --standalone --nnodes=1 --nproc_per_node=2 test_pipeline.py
