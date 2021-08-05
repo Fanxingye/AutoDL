@@ -18,7 +18,7 @@ def test_torch_image_classification_custom_net():
     import torch.nn as nn
     net = create_model('resnet18')
     net.fc = nn.Linear(512, 4)
-    task = ImageClassification({'num_trials': 1, 'epochs': 1, 'custom_net': net, 'batch_size': 32})
+    task = ImageClassification({'num_trials': 1, 'epochs': 1, 'lr': 0.01, 'custom_net': net, 'batch_size': 32, 'cleanup_disk': False})
     classifier = task.fit(IMAGE_CLASS_DATASET)
     assert task.fit_summary().get('valid_acc', 0) > 0
     test_result = classifier.predict(IMAGE_CLASS_TEST)
