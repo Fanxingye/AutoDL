@@ -4,6 +4,7 @@ import time
 import argparse
 import importlib
 import logging
+import torch
 from configuration import gluon_config_choice
 from utils import mkdir, find_best_model, parse_config, write_csv_file, find_best_model_loop, update_kwargs
 sys.path.append("../torch_pipeline")
@@ -83,7 +84,8 @@ def parse_args():
                         default="False",
                         help='Whether use thee data augmention')
     parser.add_argument('--proxy',
-                        action='store_true',
+                        type=str,
+                        default="False",
                         help='Whether make proxy dataset')
     parser.add_argument('--local_rank',
                         type=int,
@@ -134,7 +136,7 @@ def main():
         val_dataset = ImagePredictor.Dataset.from_folder(val_data_dir)
         test_dataset = ImagePredictor.Dataset.from_folder(test_data_dir)
 
-        if opt.proxy:
+        if opt.proxy == "True":
             from autotorch.auto.data import TorchImageClassificationDataset
             train_data, val_data, test_data = TorchImageClassificationDataset.from_folders(
                 opt.data_path[:-6])
@@ -146,7 +148,7 @@ def main():
             csv_path = os.path.join(saved_path, "proxy_data.csv")
             proxy_data = ImagePredictor.Dataset.from_csv(csv_path)
 
-        if opt.proxy:
+        if opt.proxy == "True":
             train_data = proxy_data
             tuning_data = None
 
@@ -176,7 +178,7 @@ def main():
             logger.info('Top-1 val acc: %.3f' % summary['valid_acc'])
             logger.info(summary)
 
-            if opt.proxy:
+            if opt.proxy == "True":
                 logger.info("=" * 10)
                 logger.info("Refit the full data by best config")
                 logger.info("Update the model config from the searched space")
