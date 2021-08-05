@@ -19,8 +19,12 @@ def mkdir(root_dir):
 
 
 def update_kwargs(hyperparameters, hyperparameter_tune_kwargs, summary):
-    for key in hyperparameters:
-        hyperparameters[key] = summary[key]
+    key_list = ["model", "batch_size", "epochs", "lr", "wd"] 
+    for key in key_list:
+        if key == "model":
+            hyperparameters[key] = summary["img_cls"]["model"]
+        else:
+            hyperparameters[key] = summary["train"][key]
     hyperparameter_tune_kwargs['num_trials'] = 1
     return hyperparameters, hyperparameter_tune_kwargs
 

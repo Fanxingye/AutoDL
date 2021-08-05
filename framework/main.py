@@ -16,7 +16,7 @@ if not Constant.DEBUG:
 
     gpu = tf.config.experimental.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(gpu[0], True)
-
+print("*"*10)
 
 def main():
     yaml_file = "config.yaml"
@@ -31,7 +31,7 @@ def main():
         device_limit=task_config["device_limit"],
         time_limit=task_config["time_limit_sec"])
     model_config, framework = config_generator.generate_config()
-    data_aug = DataAug(task_config, None, None)
+    # data_aug = DataAug(task_config, None, None)
     # calculate similarity
     if not Constant.DEBUG:
         similar_datasets = DNNFeature(
@@ -76,7 +76,7 @@ def main():
         # TODO
         # use wrapper
         config_generator.update_config_csv(checkpoint_dir)
-        data_aug.clear()
+        # data_aug.clear()
     # calculate engineer feature
     # engineer_feature = EngineerFeature(task_config)
     # # select config

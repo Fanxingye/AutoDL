@@ -224,6 +224,7 @@ class ProxyModel():
         proxy_data = train_data.iloc[indices, :]
         saved_path = os.path.join(output_dir, "proxy_data.csv")
         proxy_data.to_csv(saved_path, index=None)
+        torch.cuda.empty_cache()
         return proxy_data
 
 
