@@ -226,6 +226,12 @@ class ProxyModel():
         proxy_data = train_data.iloc[indices, :]
         saved_path = os.path.join(output_dir, "proxy_data.csv")
         proxy_data.to_csv(saved_path, index=None)
+
+        # releases all unoccupied cached memory
+        if hasattr(torch.cuda, 'empty_cache'):
+            torch.cuda.empty_cache()
+        else:
+            raise Exception
         return proxy_data
 
 
