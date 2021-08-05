@@ -32,8 +32,6 @@ def test_image_classification_estimator():
         'train': {
             'epochs': 1,
             'batch_size': 8
-        },
-        'gpus': list(range(get_gpu_count()))
     })
     res = est.fit(IMAGE_CLASS_DATASET)
     assert res.get('valid_acc', 0) > 0
@@ -48,7 +46,6 @@ def test_image_classification_estimator():
     est.predict_feature(IMAGE_CLASS_TEST.iloc[0]['image'])
     # test save/load
     _save_load_test(est, 'imgcls.pkl')
-
 
 def test_image_classification_estimator_custom_net_optimizer():
     from gluoncv.auto.estimators import ImageClassificationEstimator
@@ -77,4 +74,5 @@ def test_image_classification_estimator_custom_net_optimizer():
 
 
 if __name__ == '__main__':
-    test_image_classification_estimator()
+    import nose
+    nose.runmodule()
