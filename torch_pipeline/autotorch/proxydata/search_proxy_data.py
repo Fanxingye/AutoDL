@@ -184,19 +184,21 @@ class ProxyModel():
         entropy_list = []  # result
         label_list = []
 
+        self.net.eval()
         steps_per_epoch = len(data_loader)
-        for i, (input, target) in enumerate(data_loader):
-            input = input.to(self.device)
-            target = target.to(self.device)
-            output = self.net(input)  # model must be declared
-            ent = get_entropy(output.data)  # entropy extraction
+        with torch.no_grad():
+            for i, (input, target) in enumerate(data_loader):
+                input = input.to(self.device)
+                target = target.to(self.device)
+                output = self.net(input)  # model must be declared
+                ent = get_entropy(output.data)  # entropy extraction
 
-            if i % self._cfg.valid.log_interval == 0 or (i == steps_per_epoch -
-                                                         1):
-                print("===> generate entropy value batch: %d " % i)
-            # generate entropy file
-            entropy_list.extend(ent.tolist())
-            label_list.extend(target.data.tolist())
+                if i % self._cfg.valid.log_interval == 0 or (
+                        i == steps_per_epoch - 1):
+                    print("===> generate entropy value batch: %d " % i)
+                # generate entropy file
+                entropy_list.extend(ent.tolist())
+                label_list.extend(target.data.tolist())
 
         # write the entropy file
         print("===> Finished generate entropy_list")

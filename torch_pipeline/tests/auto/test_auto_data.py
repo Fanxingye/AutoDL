@@ -46,4 +46,5 @@ def test_image_datasets_from_csv():
 
 
 if __name__ == '__main__':
-    test_image_datasets_from_csv()
+    import nose
+    nose.runmodule()
