@@ -78,13 +78,12 @@ def main():
         os.makedirs(checkpoint_dir)
     predictor = ImagePredictor(log_dir=checkpoint_dir)
     predictor.fit(train_data=train_dataset,
-                    val_data=val_dataset,
+                    tuning_data=val_dataset,
                     hyperparameters=model_config["hyperparameters"],
                     hyperparameter_tune_kwargs=model_config[
                         "hyperparameter_tune_kwargs"],
                     ngpus_per_trial=model_config["ngpus_per_trial"],
-                    time_limit=model_config['time_limit'],
-                    verbosity=2)
+                    time_limit=model_config['time_limit'])
     summary = predictor.fit_summary()
     print(summary)
     config_generator.update_config_csv(checkpoint_dir)
