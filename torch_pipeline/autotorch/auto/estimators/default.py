@@ -27,7 +27,7 @@ class TrainCfg:
     end_lr: float = 0.0  # cosine lr schedule
     warmup_lr: float = 0.0  # starting warmup learning rate.
     warmup_epochs: int = 0  # number of warmup epochs
-    num_workers: int = 0
+    num_workers: int = 4
     weight_decay: float = 0.0001
     momentum: float = 0.9
     nesterov: bool = False
@@ -61,7 +61,7 @@ class TrainCfg:
 @dataclass
 class ValidCfg:
     batch_size: int = 16
-    num_workers: int = 0
+    num_workers: int = 4
     log_interval: int = 50
 
 
