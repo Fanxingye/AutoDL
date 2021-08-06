@@ -15,19 +15,18 @@ predictor.fit(
     tuning_data=test_dataset,
     hyperparameters={
         'model': ag.Categorical('resnet18'),
-        'batch_size': ag.Categorical(32),
+        'batch_size': ag.Categorical(32, 64),
         'lr': ag.Categorical(0.01),
         'epochs': 1,
         'cleanup_disk': False
     },
     hyperparameter_tune_kwargs={
-        'num_trials': 1,
+        'num_trials': 2,
         'max_reward': 1.0,
         'searcher': 'random'
     },
     nthreads_per_trial=8,
     ngpus_per_trial=1,
-    log_dir="checkpoint",
 )  # you can trust the default config, we reduce the # epoch to save some build time
 
 res = predictor.predict(data=test_dataset, batch_size=32)

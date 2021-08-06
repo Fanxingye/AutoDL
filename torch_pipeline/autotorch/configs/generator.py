@@ -1,6 +1,6 @@
 import json
 import os
-
+import numpy as np
 import autogluon.core as ag
 import pandas as pd
 import yaml
@@ -192,12 +192,23 @@ class ConfigGenerator:
                     config_dict["lr"] = config_yaml.get('train').get('lr')
                     config_dict["momentum"] = config_yaml.get('train').get('momentum')
                     config_dict["wd"] = config_yaml.get('train').get('wd')
-                    # input_size = config_yaml.get('train').get('input_size')
                     config_dict["early_stop_patience"] = config_yaml.get('train').get('early_stop_patience')
                     config_dict["total_time"] = val_result.get("total_time", val_result.get("time"))
                     config_dict["dataset_name"] = self.dataset_name
 
             return config_dict
+        
+        hp_config = {
+            'dataset': np.str,
+            'model': np.str,
+            'batch_size': np.uint8,
+            'epochs': np.uint8,
+            'lr': np.float,
+            'momentum': np.float,
+            'weight_decay': np.float,
+            'early_stop_patience': np.uint8,
+            'total_time': np.float
+        }
 
         best_config = find_best_autogluon_config(checkpoint_dir)
         if best_config:

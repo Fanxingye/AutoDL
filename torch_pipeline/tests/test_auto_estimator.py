@@ -1,3 +1,5 @@
+import sys
+sys.path.append('../')
 from autotorch.auto.data import TorchImageClassificationDataset
 from autotorch.auto.estimators import ImageClassificationEstimator
 

@@ -113,7 +113,7 @@ class DataSplit(object):
         self.root_dir = cfg.get('data_path')
         self.dataset = cfg.get('data_name')
 
-        self.data_dir = os.path.join(self.root_dir, self.dataset)
+        self.data_dir = os.path.join(self.root_dir, 'data')
         self.train_path = os.path.join(self.root_dir, split, train)
         self.val_path = os.path.join(self.root_dir, split, val)
         self.test_path = os.path.join(self.root_dir, split, test)
@@ -139,7 +139,11 @@ class DataSplit(object):
                     if not split_mode:
                         break
                     split_mode = mkdir(os.path.join(self.val_path, img_cls))
+                    if not split_mode:
+                        break
                     split_mode = mkdir(os.path.join(self.test_path, img_cls))
+                    if not split_mode:
+                        break
 
                     if sampling_strategy == "random":
                         train_list, val_list, test_list = random_split(img_cls_list, val_ratio=val_ratio,
