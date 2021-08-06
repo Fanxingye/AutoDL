@@ -191,32 +191,19 @@ class ConfigGenerator:
                     config_dict["epochs"] = config_yaml.get('train').get('epochs')
                     config_dict["lr"] = config_yaml.get('train').get('lr')
                     config_dict["momentum"] = config_yaml.get('train').get('momentum')
-                    config_dict["wd"] = config_yaml.get('train').get('wd')
+                    config_dict["weight_decay"] = config_yaml.get('train').get('weight_decay')
                     config_dict["early_stop_patience"] = config_yaml.get('train').get('early_stop_patience')
                     config_dict["total_time"] = val_result.get("total_time", val_result.get("time"))
                     config_dict["dataset_name"] = self.dataset_name
 
             return config_dict
-        
-        hp_config = {
-            'dataset': np.str,
-            'model': np.str,
-            'batch_size': np.uint8,
-            'epochs': np.uint8,
-            'lr': np.float,
-            'momentum': np.float,
-            'weight_decay': np.float,
-            'early_stop_patience': np.uint8,
-            'total_time': np.float
-        }
-
         best_config = find_best_autogluon_config(checkpoint_dir)
         if best_config:
             config_pd = pd.read_csv(Constant.DATASET_CONFIGURATION_CSV)
             exist_rows = config_pd.loc[config_pd.dataset_name == self.dataset_name]
             if len(exist_rows) > 0:
-                config_pd.loc[config_pd.dataset_name == self.dataset_name] = pd.DataFrame.from_dict(best_config,
-                                                                                                    orient='index')
+                best_config_pd = pd.DataFrame.from_dict(best_config,orient='index').T
+                config_pd[config_pd.dataset_name == self.dataset_name] = best_config_pd.iloc[0][config_pd.columns]
             else:
                 config_pd = config_pd.append(best_config, ignore_index=True)
             print("finish update config ...")
