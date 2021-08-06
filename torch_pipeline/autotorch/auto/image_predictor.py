@@ -460,7 +460,7 @@ class ImagePredictor(object):
         if invalid_kwargs:
             raise KeyError(f'Invalid kwargs specified: {invalid_kwargs}. Valid kwargs names: {list(valid_kwargs)}')
 
-            kwargs['holdout_frac'] = kwargs.get('holdout_frac', 0.1)
+        kwargs['holdout_frac'] = kwargs.get('holdout_frac', 0.1)
         if not (0 < kwargs['holdout_frac'] < 1.0):
             raise ValueError(f'Range error for `holdout_frac`, expected to be within range (0, 1), given {kwargs["holdout_frac"]}')
         kwargs['random_state'] = kwargs.get('random_state', None)
