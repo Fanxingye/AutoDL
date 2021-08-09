@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 from torchvision import transforms
+import torch
 import torch.nn as nn
 from timm.models.layers.classifier import ClassifierHead
 import timm
@@ -40,6 +41,7 @@ class DNNFeature:
         '''
         self.data_name = task_config.get('data_name')
         self.data_path = task_config.get('data_path')
+        self.data_path = os.path.join(self.data_path, "data")
         self.csv_path = csv_path
 
         self.DIM = 2048
@@ -133,8 +135,9 @@ class DNNFeature:
 
         # check save to file
         if save_to_file:
-            df = pd.DataFrame(entry, index=[self.data_name])
-            df.to_csv(self.csv_path, mode='a', header=False)
+            if not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0:
+                df = pd.DataFrame(entry, index=[self.data_name])
+                df.to_csv(self.csv_path, mode='a', header=False)
         return entry
 
     def _load_csv(self) -> pandas.DataFrame:

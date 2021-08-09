@@ -1,5 +1,6 @@
 import os
 import argparse
+import torch
 from autotorch.auto import ImagePredictor
 from autotorch.configs.generator import ConfigGenerator
 from autotorch.data.generator import generate_dataset
@@ -86,8 +87,9 @@ def main():
                     time_limit=model_config['time_limit'])
     summary = predictor.fit_summary()
     print(summary)
-    config_generator.update_config_csv(checkpoint_dir)
-    print("Finished!")
+    if not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0:
+        config_generator.update_config_csv(checkpoint_dir)
+        print("Finished!")
 
 
 

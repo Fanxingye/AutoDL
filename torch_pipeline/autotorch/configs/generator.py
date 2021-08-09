@@ -186,15 +186,16 @@ class ConfigGenerator:
             if os.path.isfile(best_config):
                 with open(best_config, 'r') as f:
                     config_yaml = yaml.load(f, Loader=yaml.FullLoader)
+                    config_dict["dataset_name"] = self.dataset_name
                     config_dict["model"] = config_yaml.get('img_cls').get('model')
+                    config_dict["lr"] = config_yaml.get('train').get('lr')
                     config_dict["batch_size"] = config_yaml.get('train').get('batch_size')
                     config_dict["epochs"] = config_yaml.get('train').get('epochs')
-                    config_dict["lr"] = config_yaml.get('train').get('lr')
+                    config_dict["early_stop_patience"] = config_yaml.get('train').get('early_stop_patience')
                     config_dict["momentum"] = config_yaml.get('train').get('momentum')
                     config_dict["weight_decay"] = config_yaml.get('train').get('weight_decay')
-                    config_dict["early_stop_patience"] = config_yaml.get('train').get('early_stop_patience')
                     config_dict["total_time"] = val_result.get("total_time", val_result.get("time"))
-                    config_dict["dataset_name"] = self.dataset_name
+                    
 
             return config_dict
         best_config = find_best_autogluon_config(checkpoint_dir)
