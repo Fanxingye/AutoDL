@@ -418,6 +418,7 @@ class _TorchImageClassificationDataset(TorchDataset):
         self._has_label = 'label' in dataset.columns
         self._dataset = dataset
         self.classes = self._dataset.classes
+        self._imread = Image.open
         self.transform = transform
 
     def __len__(self):
@@ -425,11 +426,14 @@ class _TorchImageClassificationDataset(TorchDataset):
 
     def __getitem__(self, idx):
         im_path = self._dataset['image'][idx]
-        img = mmcv.imread(im_path, flag='color', channel_order='rgb')
-        img = Image.fromarray(img.astype('uint8')).convert('RGB')
+        img = self._imread(im_path).convert('RGB')
+        # img = mmcv.imread(im_path, flag='color', channel_order='rgb')
+        # img = Image.fromarray(img.astype('uint8')).convert('RGB')
         label = None
         if self._has_label:
             label = self._dataset['label'][idx]
+        else:
+            label = torch.tensor(-1, dtype=torch.long)
         if self.transform is not None:
             img = self.transform(img)
         return img, label
