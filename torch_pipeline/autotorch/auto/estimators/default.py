@@ -8,10 +8,6 @@ from autocfg import dataclass, field
 class ImageClassification:
     model: str = 'resnet18'
     use_pretrained: bool = True
-    use_gn: bool = False
-    batch_norm: bool = False
-    use_se: bool = False
-    last_gamma: bool = False
 
 
 @dataclass
@@ -31,19 +27,16 @@ class TrainCfg:
     weight_decay: float = 0.0001
     momentum: float = 0.9
     nesterov: bool = False
-    dtype: str = 'float32'
     input_size: int = 224
     crop_ratio: float = 0.875
     data_augment: str = ''
     data_dir: str = ''
-    no_wd: bool = False
     label_smoothing: bool = False
     resume_epoch: int = 0
     mixup: bool = False
     mixup_alpha: float = 0.1
     mixup_off_epoch: int = 0
     log_interval: int = 50
-    mode: str = ''
     amp: bool = False
     static_loss_scale: float = 1.0
     dynamic_loss_scale: bool = False

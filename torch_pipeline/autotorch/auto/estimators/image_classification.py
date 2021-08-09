@@ -24,6 +24,7 @@ from autotorch.optim.optimizers import get_optimizer
 from autotorch.scheduler import StepLRScheduler, LinearLRScheduler, CosineLRScheduler, ExponentialLRScheduler
 from autotorch.utils.model import reduce_tensor
 from autotorch.utils.metrics import AverageMeter, accuracy
+from timm.utils import unwrap_model, get_state_dict
 
 from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
@@ -1006,3 +1007,107 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _predict_proba(self, x):
         return df
+
+    # def _reconstruct_state_dict(self, state_dict):
+    #     new_state_dict = {}
+    #     for k, v in state_dict.items():
+    #         name = k[7:] if k.startswith('module') else k
+    #         new_state_dict[name] = v
+    #     return new_state_dict
+
+    # def __getstate__(self):
+    #     d = self.__dict__.copy()
+    #     try:
+    #         import torch
+    #         net = d.pop('net', None)
+    #         optimizer = d.pop('optimizer', None)
+    #         save_state = {}
+
+    #         if net is not None:
+    #             if not self._custom_net:
+    #                 if isinstance(net, torch.nn.DataParallel):
+    #                     save_state['state_dict'] = get_state_dict(
+    #                         net.module, unwrap_model)
+    #                 else:
+    #                     save_state['state_dict'] = get_state_dict(
+    #                         net, unwrap_model)
+    #             else:
+    #                 net_pickle = pickle.dumps(net)
+    #                 save_state['net_pickle'] = net_pickle
+
+    #         if optimizer is not None:
+    #             save_state['optimizer'] = optimizer.state_dict()
+    #         if loss_scaler is not None:
+    #             save_state[
+    #                 loss_scaler.state_dict_key] = loss_scaler.state_dict()
+    #         if model_ema is not None:
+    #             save_state['state_dict_ema'] = get_state_dict(
+    #                 model_ema, unwrap_model)
+
+    #     except ImportError:
+    #         pass
+    #     d['save_state'] = save_state
+    #     d['_logger'] = None
+    #     d['_reporter'] = None
+    #     return d
+
+    # def __setstate__(self, state):
+    #     save_state = state.pop('save_state', None)
+    #     self.__dict__.update(state)
+    #     if not save_state:
+    #         self.net = None
+    #         self.optimizer = None
+    #         return
+    #     try:
+    #         import torch
+    #         self.net = None
+    #         self.optimizer = None
+    #         if self._custom_net:
+    #             if save_state.get('net_pickle', None):
+    #                 self.net = pickle.loads(save_state['net_pickle'])
+    #         else:
+    #             if save_state.get('state_dict', None):
+    #                 self._init_network(load_only=True)
+    #                 net_state_dict = self._reconstruct_state_dict(
+    #                     save_state['state_dict'])
+    #                 if isinstance(self.net, torch.nn.DataParallel):
+    #                     self.net.module.load_state_dict(net_state_dict)
+    #                 else:
+    #                     self.net.load_state_dict(net_state_dict)
+    #         if save_state.get('optimizer', None):
+    #             self._init_trainer()
+    #             self._optimizer.load_state_dict(save_state['optimizer'])
+    #         if hasattr(
+    #                 self, '_loss_scaler'
+    #         ) and self._loss_scaler and self._loss_scaler.state_dict_key in save_state:
+    #             loss_scaler_dict = save_state[self._loss_scaler.state_dict_key]
+    #             self._loss_scaler.load_state_dict(loss_scaler_dict)
+    #         if save_state.get('state_dict_ema', None):
+    #             self._init_model_ema()
+    #             model_ema_dict = save_state.get('state_dict_ema')
+    #             model_ema_dict = self._reconstruct_state_dict(model_ema_dict)
+    #             if isinstance(self.net, torch.nn.DataParallel):
+    #                 self._model_ema.module.module.load_state_dict(
+    #                     model_ema_dict)
+    #             else:
+    #                 self._model_ema.module.load_state_dict(model_ema_dict)
+    #     except ImportError:
+    #         pass
+    #     self._logger.setLevel(logging.INFO)
+
+
+class ImageListDataset(torch.utils.data.Dataset):
+    """An internal image list dataset for batch predict"""
+    def __init__(self, imlist, transform):
+        self._imlist = imlist
+        self.transform = transform
+
+    def __getitem__(self, idx):
+        img = Image.open(self._imlist[idx]).convert('RGB')
+        label = None
+        if self.transform is not None:
+            img = self.transform(img)
+        return img, torch.tensor(-1, dtype=torch.long)
+
+    def __len__(self):
+        return len(self._imlist)
