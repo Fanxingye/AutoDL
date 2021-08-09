@@ -427,7 +427,6 @@ class ImageClassification(BaseTask):
         self._logger.info("Finished, total runtime is %.2f s", end_time - start_time)
         if config.get('num_trials', 1) > 1:
             best_config = sample_config(_train_image_classification.args, results['best_config'])
-            best_config.update({'estimator': results['estimator']})
             # convert best config to nested form
             best_config = config_to_nested(best_config)
             best_config.pop('train_data', None)
