@@ -252,6 +252,7 @@ class BaseEstimator:
             for gid in gpu_ids:
                 try:
                     torch.cuda.set_device(gid)
+                    _ = torch.zeros(1, device=f'cuda:{gid}')
                     valid_gpus.append(gid)
                 except Exception as e:
                     self._logger.warning(e, ", GPU %s is not available" % gid)
@@ -272,15 +273,23 @@ class BaseEstimator:
         """
         if not ctx:
             return
+        if not isinstance(ctx, (tuple, list)):
+            ctx_list = [ctx]
+        else:
+            ctx_list = ctx
         done = False
         try:
             import torch
-            if isinstance(self.net, torch.nn.Module):
+            if isinstance(self.net, (torch.nn.Module, torch.nn.DataParallel)):
+                for c in ctx_list:
+                    assert isinstance(c, torch.device)
                 if hasattr(self.net, 'reset_ctx'):
-                    self.net.to(ctx)
+                    self.net.reset_ctx(ctx_list)
                 else:
-                    self.net.to(ctx)
-                self.ctx = ctx
+                    if isinstance(self.net, torch.nn.DataParallel):
+                        self.net = torch.nn.DataParallel(self.net.module, device_ids=[ctx.index for ctx in ctx_list])
+                    self.net.to(self.ctx[0])
+                self.ctx = ctx_list
                 done = True
         except ImportError:
             pass
@@ -296,7 +305,11 @@ class BaseEstimator:
             The file name for storing the full state.
         """
         with open(filename, 'wb') as fid:
-            pickle.dump(self, fid)
+            try:
+                pickle.dump(self, fid)
+            except pickle.PicklingError as e:
+                self._logger.warning(f"Unable to pickle object due to the reason: {str(e)}. This object is not saved.")
+                return
         self._logger.debug('Pickled to %s', filename)
 
     @classmethod
