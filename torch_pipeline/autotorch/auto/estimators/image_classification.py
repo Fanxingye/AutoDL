@@ -4,6 +4,7 @@ import time
 import os
 import math
 import copy
+import pickle
 from PIL import Image
 import pandas as pd
 import numpy as np
@@ -1037,13 +1038,6 @@ class ImageClassificationEstimator(BaseEstimator):
 
     #         if optimizer is not None:
     #             save_state['optimizer'] = optimizer.state_dict()
-    #         if loss_scaler is not None:
-    #             save_state[
-    #                 loss_scaler.state_dict_key] = loss_scaler.state_dict()
-    #         if model_ema is not None:
-    #             save_state['state_dict_ema'] = get_state_dict(
-    #                 model_ema, unwrap_model)
-
     #     except ImportError:
     #         pass
     #     d['save_state'] = save_state
@@ -1076,24 +1070,9 @@ class ImageClassificationEstimator(BaseEstimator):
     #                     self.net.load_state_dict(net_state_dict)
     #         if save_state.get('optimizer', None):
     #             self._init_trainer()
-    #             self._optimizer.load_state_dict(save_state['optimizer'])
-    #         if hasattr(
-    #                 self, '_loss_scaler'
-    #         ) and self._loss_scaler and self._loss_scaler.state_dict_key in save_state:
-    #             loss_scaler_dict = save_state[self._loss_scaler.state_dict_key]
-    #             self._loss_scaler.load_state_dict(loss_scaler_dict)
-    #         if save_state.get('state_dict_ema', None):
-    #             self._init_model_ema()
-    #             model_ema_dict = save_state.get('state_dict_ema')
-    #             model_ema_dict = self._reconstruct_state_dict(model_ema_dict)
-    #             if isinstance(self.net, torch.nn.DataParallel):
-    #                 self._model_ema.module.module.load_state_dict(
-    #                     model_ema_dict)
-    #             else:
-    #                 self._model_ema.module.load_state_dict(model_ema_dict)
+    #             self.optimizer.load_state_dict(save_state['optimizer'])
     #     except ImportError:
     #         pass
-    #     self._logger.setLevel(logging.INFO)
 
 
 class ImageListDataset(torch.utils.data.Dataset):
