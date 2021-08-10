@@ -32,7 +32,7 @@ def parse_args():
                         help='dataset path')
     parser.add_argument('--output_path',
                         type=str,
-                        default='/home/yiran.wu/work_dirs/autodl_benchmark/A-Large-Scale-Fish-Dataset',
+                        default='/home/yiran.wu/work_dirs/autodl_benchmark',
                         help='output path')
     parser.add_argument('--device_limit',
                         type=int,
@@ -61,7 +61,8 @@ def main():
     print(similar_datasets)
     # print(f"similar data: {similar_datasets[0]}")
     config_generator = ConfigGenerator(
-        dataset_name=similar_datasets[0],
+        dataset_name = task_config["data_name"],
+        similar_data=similar_datasets[0],
         device_limit=task_config["device_limit"],
         time_limit=task_config["time_limit_sec"])
     model_config = config_generator.generate_config()
@@ -76,7 +77,7 @@ def main():
         train_dataset, val_dataset, test_dataset)
 
     # model_predictor
-    checkpoint_dir = os.path.join(task_config.get('output_path'), "checkpoint")
+    checkpoint_dir = os.path.join(task_config.get('output_path'), task_config["data_name"], "checkpoint")
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
     predictor = ImagePredictor(log_dir=checkpoint_dir)
@@ -89,6 +90,9 @@ def main():
                     time_limit=model_config['time_limit'])
     summary = predictor.fit_summary()
     print(summary)
+    #calculate accuracy of test dataset
+    test_acc, _ = predictor.evaluate(test_dataset)
+    print(f"Test Accuracy: {test_acc}")
     if int(os.environ["LOCAL_RANK"]) == 0:
         config_generator.update_config_csv(checkpoint_dir)
         print("Finished!")

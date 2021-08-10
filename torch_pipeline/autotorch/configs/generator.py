@@ -35,13 +35,14 @@ class DefaultConfig:
 
 class ConfigGenerator:
     LR_RANGE = 1e-2
-    EXTRA_MODELS = ["resnet50_v1b"]
+    EXTRA_MODELS = ["swin_base_patch4_window7_224_in21k", "pit_b_224"]
 
     # TODO
     # parser mongodb
     # parser csv to config
-    def __init__(self, dataset_name=None, time_limit=None, device_limit=1):
+    def __init__(self, dataset_name=None, similar_data=None, time_limit=None, device_limit=1):
         self.dataset_name = dataset_name
+        self.similar_data = similar_data
         self.time_limit = time_limit
         self.device_limit = device_limit
 
@@ -78,7 +79,9 @@ class ConfigGenerator:
         # add more model
         space = [model]
         for extra_model in self.EXTRA_MODELS:
-            space.append(extra_model)
+            if extra_model not in space:
+                space.append(extra_model)
+                break
         return ag.Categorical(*space), len(ag.Categorical(*space))
 
 
@@ -106,7 +109,7 @@ class ConfigGenerator:
         df = pd.read_csv(Constant.DATASET_CONFIGURATION_CSV)
         # TODO
         # 1 to 1 dataset_name
-        dataset_config = df.loc[df["dataset_name"] == self.dataset_name]
+        dataset_config = df.loc[df["dataset_name"] == self.similar_data]
         if dataset_config.size > 0:
             return dataset_config.to_dict(orient='records')[0]
         else:
@@ -150,7 +153,7 @@ class ConfigGenerator:
                                             'lr': 0.01,
                                             'batch_size': 2,
                                             'epochs': 1, 'early_stop_patience': 1, 'num_workers': 8,
-                                            'cleanup_disk': False, 'dataset_name': self.dataset_name,
+                                            'cleanup_disk': False, 'dataset_name': self.similar_data,
                                             'total_time': 3000},
                         'hyperparameter_tune_kwargs': {
                             'num_trials': 1, 'max_reward': 1.0}, 'ngpus_per_trial': 1, 'time_limit': 36000}
@@ -202,6 +205,7 @@ class ConfigGenerator:
         if best_config:
             config_pd = pd.read_csv(Constant.DATASET_CONFIGURATION_CSV)
             exist_rows = config_pd.loc[config_pd.dataset_name == self.dataset_name]
+            print(best_config)
             if len(exist_rows) > 0:
                 best_config_pd = pd.DataFrame.from_dict(best_config,orient='index').T
                 config_pd[config_pd.dataset_name == self.dataset_name] = best_config_pd.iloc[0][config_pd.columns]
