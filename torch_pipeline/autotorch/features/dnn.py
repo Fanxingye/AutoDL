@@ -175,7 +175,12 @@ class DNNFeature:
         Returns:
             b : concatenated feature vectors of four models
         '''
-        img = Image.open(im)
+        img = Image.open(im).convert('RGB')
+        nump_array = np.asarray(img, dtype=np.uint8)
+        if nump_array.ndim < 3:
+            nump_array = np.expand_dims(nump_array, axis=-1)
+            nump_array = np.rollaxis(nump_array, 2)
+        img = Image.fromarray(nump_array)
         tfms = transforms.Compose([
             transforms.Resize([224, 224]),
             transforms.ToTensor(),

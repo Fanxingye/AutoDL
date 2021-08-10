@@ -1,8 +1,7 @@
-
 import math
 
 
-def sample_num_strategy(mean: int, total: int, upper_bound = 1000) -> int :
+def sample_num_strategy(mean: int, total: int, upper_bound=1000) -> int:
     ''' Strategy when sampling images from dataset.
 
     Logic:
