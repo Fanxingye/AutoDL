@@ -15,7 +15,6 @@ class DefaultConfig:
             'lr': ag.Categorical(1e-3, 5e-3, 1e-2, 5e-2, 1e-1),
             'batch_size': ag.Categorical(32),
             'momentum': 0.9,
-            'wd': 1e-3,
             'epochs': 50,
             'early_stop_patience': 5,
             'num_workers': 8,
@@ -54,21 +53,18 @@ class ConfigGenerator:
             space = [base_lr * 1e-1, base_lr * 1e1]
             return ag.Real(*space), 4
         else:
-            # 0.01 0.05 0.1 0.5 1
-            # if lr > 1.0 or lr < 1e-6:
-            # 0.3 
             space = [
-                base_lr * 1e-1, base_lr * 5e-1, base_lr, base_lr * 5e0,
-                base_lr * 1e1
+                base_lr * 0.1, base_lr, base_lr * 10
             ]
+            space = [min(max(1e-4, lr), 0.9) for lr in space]
+            space = list(set(space))
             return ag.Categorical(*space), len(ag.Categorical(*space))
-
 
     def generate_batch_size_space(self,
                                   batch_size=32):
         # only max value
         # TODO
-        space = [int(batch_size * 5e-1), batch_size, batch_size * 2]
+        space = [batch_size * 2, batch_size, int(batch_size * 5e-1)]
         return ag.Categorical(*space), len(ag.Categorical(*space))
 
 
@@ -116,7 +112,6 @@ class ConfigGenerator:
     SPACE_FUNCTION_DICT = {
         "lr": generate_lr_space,
         "model": generate_model_space,
-        "wd": generate_wd_space,
         "batch_size": generate_batch_size_space,
     }
 
@@ -125,7 +120,7 @@ class ConfigGenerator:
         for key, value in config.items():
             if self.SPACE_FUNCTION_DICT.__contains__(key):
                 config[key], trials = self.SPACE_FUNCTION_DICT[key](self, value)
-                num_trials += trials
+                num_trials *= trials
         return config, num_trials
 
     def generate_config(self):
