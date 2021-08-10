@@ -108,7 +108,7 @@ def mkdir(dir, rmdir=False):
 
 class DataSplit(object):
 
-    def __init__(self, cfg, split="split_data", train='train', val='val', test='test'):
+    def __init__(self, cfg, split="split", train='train', val='val', test='test'):
         self.cfg = cfg
         self.root_dir = cfg.get('data_path')
         self.dataset = cfg.get('data_name')

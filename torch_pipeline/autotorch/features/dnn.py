@@ -128,14 +128,16 @@ class DNNFeature:
             print(
                 f'{self.data_name} already in csv file so stored features will be loaded. '
                 f'Please use another name if you entered a new dataset.')
-            return np.array(self.df.loc[self.data_name])
+            entry = self.df.loc[self.data_name].iloc[0].to_numpy()
+            entry = np.reshape(entry, [1,-1])
+            return entry
 
         # extract features
         entry = self._get_deep_features(self.data_path)
 
         # check save to file
         if save_to_file:
-            if not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0:
+            if int(os.environ["LOCAL_RANK"]) == 0:
                 df = pd.DataFrame(entry, index=[self.data_name])
                 df.to_csv(self.csv_path, mode='a', header=False)
         return entry
@@ -157,10 +159,7 @@ class DNNFeature:
         df = pd.read_csv(self.csv_path, header=None, index_col=0)
 
         def _remove_zeros(df: pandas.DataFrame):
-            for i in df.columns:
-                for j in df.index:
-                    if df[i][j] < 1e-7:
-                        df[i][j] = 1e-7
+            df[df < 1e-7] = 1e-7
             return df
 
         df = _remove_zeros(df)
@@ -175,12 +174,7 @@ class DNNFeature:
         Returns:
             b : concatenated feature vectors of four models
         '''
-        img = Image.open(im).convert('RGB')
-        nump_array = np.asarray(img, dtype=np.uint8)
-        if nump_array.ndim < 3:
-            nump_array = np.expand_dims(nump_array, axis=-1)
-            nump_array = np.rollaxis(nump_array, 2)
-        img = Image.fromarray(nump_array)
+        img = Image.open(im).convert("RGB")
         tfms = transforms.Compose([
             transforms.Resize([224, 224]),
             transforms.ToTensor(),
