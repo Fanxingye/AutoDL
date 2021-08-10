@@ -7,7 +7,6 @@
 ## This source code is licensed under the MIT-style license found in the
 ## LICENSE file in the root directory of this source tree
 ##+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
 """Encoding Data Parallel"""
 import threading
 import functools
@@ -22,19 +21,24 @@ torch_ver = torch.__version__[:3]
 
 __all__ = ['allreduce', 'DataParallelModel', 'DataParallelCriterion']
 
+
 def allreduce(*inputs):
     """Cross GPU all reduce autograd operation for calculate mean and
     variance in SyncBN.
     """
     return AllReduce.apply(*inputs)
 
+
 class AllReduce(Function):
     @staticmethod
     def forward(ctx, num_inputs, *inputs):
         ctx.num_inputs = num_inputs
-        ctx.target_gpus = [inputs[i].get_device() for i in range(0, len(inputs), num_inputs)]
-        inputs = [inputs[i:i + num_inputs]
-                 for i in range(0, len(inputs), num_inputs)]
+        ctx.target_gpus = [
+            inputs[i].get_device() for i in range(0, len(inputs), num_inputs)
+        ]
+        inputs = [
+            inputs[i:i + num_inputs] for i in range(0, len(inputs), num_inputs)
+        ]
         # sort before reduce sum
         inputs = sorted(inputs, key=lambda i: i[0].get_device())
         results = comm.reduce_add_coalesced(inputs, ctx.target_gpus[0])
@@ -44,11 +48,15 @@ class AllReduce(Function):
     @staticmethod
     def backward(ctx, *inputs):
         inputs = [i.data for i in inputs]
-        inputs = [inputs[i:i + ctx.num_inputs]
-                 for i in range(0, len(inputs), ctx.num_inputs)]
+        inputs = [
+            inputs[i:i + ctx.num_inputs]
+            for i in range(0, len(inputs), ctx.num_inputs)
+        ]
         results = comm.reduce_add_coalesced(inputs, ctx.target_gpus[0])
         outputs = comm.broadcast_coalesced(results, ctx.target_gpus)
-        return (None,) + tuple([Variable(t) for tensors in outputs for t in tensors])
+        return (None, ) + tuple(
+            [Variable(t) for tensors in outputs for t in tensors])
+
 
 class Reduce(Function):
     @staticmethod
@@ -132,13 +140,17 @@ class DataParallelCriterion(DataParallel):
         return Reduce.apply(*outputs) / len(outputs)
 
 
-def _criterion_parallel_apply(modules, inputs, targets, kwargs_tup=None, devices=None):
+def _criterion_parallel_apply(modules,
+                              inputs,
+                              targets,
+                              kwargs_tup=None,
+                              devices=None):
     assert len(modules) == len(inputs)
     assert len(targets) == len(inputs)
     if kwargs_tup:
         assert len(modules) == len(kwargs_tup)
     else:
-        kwargs_tup = ({},) * len(modules)
+        kwargs_tup = ({}, ) * len(modules)
     if devices is not None:
         assert len(modules) == len(devices)
     else:
@@ -164,11 +176,13 @@ def _criterion_parallel_apply(modules, inputs, targets, kwargs_tup=None, devices
                 results[i] = e
 
     if len(modules) > 1:
-        threads = [threading.Thread(target=_worker,
-                                    args=(i, module, input, target,
-                                          kwargs, device),)
-                   for i, (module, input, target, kwargs, device) in
-                   enumerate(zip(modules, inputs, targets, kwargs_tup, devices))]
+        threads = [
+            threading.Thread(
+                target=_worker,
+                args=(i, module, input, target, kwargs, device),
+            ) for i, (module, input, target, kwargs, device) in enumerate(
+                zip(modules, inputs, targets, kwargs_tup, devices))
+        ]
 
         for thread in threads:
             thread.start()
@@ -184,5 +198,3 @@ def _criterion_parallel_apply(modules, inputs, targets, kwargs_tup=None, devices
             raise output
         outputs.append(output)
     return outputs
-
-    

@@ -49,14 +49,8 @@ python benchmark.py \
     --train_framework autotorch 
 
 
-## autotorch
-python multiproc_ddp.py --nproc_per_node 2 benchmark.py  \
-    --data_path /data/AutoML_compete/Flowers-Recognition/split/train \
-    --output_path /home/jianzheng.nie/autodl/benchmark/checkpoint \
-    --report_path /home/jianzheng.nie/autodl/benchmark/checkpoint \
-    --dataset  Flowers-Recognition \
-    --batch-size 64  \
-    --num_epochs 1 \
-    --model_config  'default' \
-    --train_framework autotorch
-
+## test pipeline
+python test_pipeline.py --data_name  hymenoptera \
+                        --data_path /media/robin/DATA/datatsets/image_data/hymenoptera \
+                        --output_path /home/robin/jianzh/automl/autodl/torch_pipeline  \
+                        --device_limit 1

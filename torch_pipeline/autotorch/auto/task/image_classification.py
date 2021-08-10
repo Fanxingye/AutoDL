@@ -37,9 +37,20 @@ REGRESSION = problem_type_constants.REGRESSION
 
 __all__ = ['ImageClassification', 'ImagePrediction']
 
+try:
+    import timm
+except ImportError:
+    timm = None
+try:
+    import torch
+except ImportError:
+    torch = None
+
+
+
 @dataclass
 class LiteConfig:
-    model : Union[type(None), str, ag.Space] = ag.Categorical('resnet18_v1b', 'mobilenetv3_small')
+    model : Union[type(None), str, ag.Space] = ag.Categorical('resnet18')
     lr : Union[ag.Space, float] = 1e-2
     num_trials : int = 1
     epochs : Union[ag.Space, int] = 5
@@ -52,7 +63,7 @@ class LiteConfig:
 
 @dataclass
 class DefaultConfig:
-    model : Union[type(None), str, ag.Space] = ag.Categorical('resnet50_v1b', 'resnest50')
+    model : Union[type(None), str, ag.Space] = ag.Categorical('resnet50', 'efficientnet_b0')
     lr : Union[ag.Space, float] = ag.Categorical(1e-2, 5e-2)
     num_trials : int = 3
     epochs : Union[ag.Space, int] = 15
@@ -102,6 +113,32 @@ def _train_image_classification(args, reporter):
         num_trials = args.pop('num_trials')
     except AttributeError:
         task = None
+
+    # mxnet and torch dispatcher
+    dispatcher = None
+    torch_model_list = None
+    custom_net = None
+    if args.get('custom_net', None):
+        custom_net = args.get('custom_net')
+        if torch and timm:
+            if isinstance(custom_net, torch.nn.Module):
+                dispatcher = 'torch'
+
+    else:
+        if torch and timm:
+            torch_model_list = timm.list_models()
+        model = args.get('model', None)
+        if model:
+            # timm model has higher priority
+            if torch_model_list and model in torch_model_list:
+                dispatcher = 'torch'
+            else:
+                if not torch_model_list:
+                    raise ValueError('Model not found in timm model zoo. Install torch and timm if it supports the model.')
+
+    assert dispatcher in ('torch'), 'custom net needs to be of type either torch.nn.Module or mx.gluon.Block'
+
+    args['estimator'] = ImageClassificationEstimator
     # convert user defined config to nested form
     args = config_to_nested(args)
 
@@ -173,7 +210,11 @@ def _train_image_classification(args, reporter):
                 'time': time.time() - tic, 'train_acc': -1, 'valid_acc': -1}
 
     if estimator:
-        result.update({'model_checkpoint': pickle.dumps(estimator)})
+        try:
+            result.update({'model_checkpoint': pickle.dumps(estimator)})
+        except pickle.PicklingError:
+            result.update({'model_checkpoint': estimator})
+        result.update({'estimator': estimator_cls})
     return result
 
 
@@ -248,6 +289,7 @@ class ImageClassification(BaseTask):
         self._config = config
 
         # scheduler options
+        self.scheduler = config.get('scheduler', 'local')
         self.search_strategy = config.get('search_strategy', 'random')
         self.search_options = config.get('search_options', {})
         self.scheduler_options = {
@@ -355,6 +397,7 @@ class ImageClassification(BaseTask):
         config['val_data'] = val_data
         config['wall_clock_tick'] = wall_clock_tick
         config['log_dir'] = os.path.join(config.get('log_dir', os.getcwd()), str(uuid.uuid4())[:8])
+        self.scheduler_options['checkpoint'] = os.path.join(config['log_dir'], 'exp1.ag')
         config['problem_type'] = self._problem_type
         _train_image_classification.register_args(**config)
 
@@ -375,8 +418,8 @@ class ImageClassification(BaseTask):
             self._results = self._fit_summary
         else:
             self._logger.info("Starting HPO experiments")
-            results = self.run_fit(_train_image_classification, self.search_strategy,
-                                   self.scheduler_options)
+            results = self.run_fit(_train_image_classification, self.scheduler,
+                                   self.scheduler_options, plot_results=False)
             if isinstance(results, dict):
                 ks = ('best_reward', 'best_config', 'total_time', 'config_history', 'reward_attr')
                 self._results.update({k: v for k, v in results.items() if k in ks})
@@ -401,7 +444,10 @@ class ImageClassification(BaseTask):
             if results.get('traceback', '') == 'timeout':
                 raise TimeoutError(f'Unable to fit a usable model given `time_limit={time_limit}`')
             raise RuntimeError(f'Unexpected error happened during fit: {pprint.pformat(results, indent=2)}')
-        estimator = pickle.loads(results['model_checkpoint'])
+        if isinstance(results['model_checkpoint'], bytes):
+            estimator = pickle.loads(results['model_checkpoint'])
+        else:
+            estimator = results['model_checkpoint']
         return estimator
 
     def fit_summary(self):

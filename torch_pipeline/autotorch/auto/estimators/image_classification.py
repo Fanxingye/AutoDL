@@ -4,6 +4,7 @@ import time
 import os
 import math
 import copy
+import pickle
 from PIL import Image
 import pandas as pd
 import numpy as np
@@ -24,6 +25,7 @@ from autotorch.optim.optimizers import get_optimizer
 from autotorch.scheduler import StepLRScheduler, LinearLRScheduler, CosineLRScheduler, ExponentialLRScheduler
 from autotorch.utils.model import reduce_tensor
 from autotorch.utils.metrics import AverageMeter, accuracy
+from timm.utils import unwrap_model, get_state_dict
 
 from .base_estimator import BaseEstimator, set_default
 from .default import ImageClassificationCfg
@@ -1006,3 +1008,85 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _predict_proba(self, x):
         return df
+
+    # def _reconstruct_state_dict(self, state_dict):
+    #     new_state_dict = {}
+    #     for k, v in state_dict.items():
+    #         name = k[7:] if k.startswith('module') else k
+    #         new_state_dict[name] = v
+    #     return new_state_dict
+
+    # def __getstate__(self):
+    #     d = self.__dict__.copy()
+    #     try:
+    #         import torch
+    #         net = d.pop('net', None)
+    #         optimizer = d.pop('optimizer', None)
+    #         save_state = {}
+
+    #         if net is not None:
+    #             if not self._custom_net:
+    #                 if isinstance(net, torch.nn.DataParallel):
+    #                     save_state['state_dict'] = get_state_dict(
+    #                         net.module, unwrap_model)
+    #                 else:
+    #                     save_state['state_dict'] = get_state_dict(
+    #                         net, unwrap_model)
+    #             else:
+    #                 net_pickle = pickle.dumps(net)
+    #                 save_state['net_pickle'] = net_pickle
+
+    #         if optimizer is not None:
+    #             save_state['optimizer'] = optimizer.state_dict()
+    #     except ImportError:
+    #         pass
+    #     d['save_state'] = save_state
+    #     d['_logger'] = None
+    #     d['_reporter'] = None
+    #     return d
+
+    # def __setstate__(self, state):
+    #     save_state = state.pop('save_state', None)
+    #     self.__dict__.update(state)
+    #     if not save_state:
+    #         self.net = None
+    #         self.optimizer = None
+    #         return
+    #     try:
+    #         import torch
+    #         self.net = None
+    #         self.optimizer = None
+    #         if self._custom_net:
+    #             if save_state.get('net_pickle', None):
+    #                 self.net = pickle.loads(save_state['net_pickle'])
+    #         else:
+    #             if save_state.get('state_dict', None):
+    #                 self._init_network(load_only=True)
+    #                 net_state_dict = self._reconstruct_state_dict(
+    #                     save_state['state_dict'])
+    #                 if isinstance(self.net, torch.nn.DataParallel):
+    #                     self.net.module.load_state_dict(net_state_dict)
+    #                 else:
+    #                     self.net.load_state_dict(net_state_dict)
+    #         if save_state.get('optimizer', None):
+    #             self._init_trainer()
+    #             self.optimizer.load_state_dict(save_state['optimizer'])
+    #     except ImportError:
+    #         pass
+
+
+class ImageListDataset(torch.utils.data.Dataset):
+    """An internal image list dataset for batch predict"""
+    def __init__(self, imlist, transform):
+        self._imlist = imlist
+        self.transform = transform
+
+    def __getitem__(self, idx):
+        img = Image.open(self._imlist[idx]).convert('RGB')
+        label = None
+        if self.transform is not None:
+            img = self.transform(img)
+        return img, torch.tensor(-1, dtype=torch.long)
+
+    def __len__(self):
+        return len(self._imlist)

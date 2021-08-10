@@ -385,10 +385,13 @@ class ImagePredictor(object):
         self._train_classes = train_data.classes
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            with TorchErrorCatcher() as err:
-                self._classifier = task.fit(train_data, tuning_data, 1 - holdout_frac, random_state)
-            if err.exc_value is not None:
-                raise RuntimeError(err.exc_value + err.hint)
+            # with TorchErrorCatcher() as err:
+            #     self._classifier = task.fit(train_data, tuning_data, 1 - holdout_frac, random_state)
+            # if err.exc_value is not None:
+            #     raise RuntimeError(err.exc_value + err.hint)
+            self._classifier = task.fit(train_data, tuning_data, 1 - holdout_frac, random_state)
+
+
         self._classifier._logger.setLevel(log_level)
         self._classifier._logger.propagate = True
         self._fit_summary = task.fit_summary()
