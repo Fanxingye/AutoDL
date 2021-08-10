@@ -58,6 +58,8 @@ def main():
         ).calculate_similarity_topk(1)
     # engineer_feature = EngineerFeature(task_config)
     # ef = engineer_feature.get_engineered_feature()
+    print(similar_datasets)
+    # print(f"similar data: {similar_datasets[0]}")
     config_generator = ConfigGenerator(
         dataset_name=similar_datasets[0],
         device_limit=task_config["device_limit"],
@@ -87,7 +89,7 @@ def main():
                     time_limit=model_config['time_limit'])
     summary = predictor.fit_summary()
     print(summary)
-    if not torch.distributed.is_initialized() or torch.distributed.get_rank() == 0:
+    if int(os.environ["LOCAL_RANK"]) == 0:
         config_generator.update_config_csv(checkpoint_dir)
         print("Finished!")
 

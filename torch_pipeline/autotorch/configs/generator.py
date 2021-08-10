@@ -206,7 +206,7 @@ class ConfigGenerator:
                 best_config_pd = pd.DataFrame.from_dict(best_config,orient='index').T
                 config_pd[config_pd.dataset_name == self.dataset_name] = best_config_pd.iloc[0][config_pd.columns]
             else:
-                config_pd = config_pd.append(best_config, ignore_index=True)
+                config_pd = config_pd.append([best_config], ignore_index=True)
             print("finish update config ...")
             print(config_pd)
             config_pd.to_csv(Constant.DATASET_CONFIGURATION_CSV, index=False)
