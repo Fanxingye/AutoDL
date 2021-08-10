@@ -761,31 +761,23 @@ class ImageClassificationEstimator(BaseEstimator):
 
     def _evaluate(self, val_data, metric_name=None):
         """Test on validation dataset."""
+        val_loader = get_pytorch_val_loader(
+            data_dir=self._cfg.train.data_dir,
+            batch_size=self.batch_size,
+            num_workers=self._cfg.valid.num_workers,
+            input_size=self.input_size,
+            crop_ratio=self._cfg.train.crop_ratio,
+            val_dataset=val_data)
 
-        resize = int(math.ceil(self.input_size / self._cfg.train.crop_ratio))
-        normalize = transforms.Normalize([0.485, 0.456, 0.406],
-                                         [0.229, 0.224, 0.225])
-        transform_test = transforms.Compose([
-            transforms.Resize(resize),
-            transforms.CenterCrop(self.input_size),
-            transforms.ToTensor(), normalize
-        ])
-        if not isinstance(val_data, torch.utils.data.DataLoader):
-            if hasattr(val_data, 'to_pytorch'):
-                val_data = val_data.to_pytorch(transform_test)
-            val_loader = torch.utils.data.DataLoader(
-                val_data,
-                batch_size=self._cfg.valid.batch_size,
-                shuffle=False,
-                num_workers=self._cfg.valid.num_workers,
-                pin_memory=True)
-
-        top1_val, top5_val = self._val_epoch(val_loader,
-                                             model=self.net,
-                                             criterion=self.val_criterion,
-                                             num_class=self.num_class,
-                                             use_amp=False,
-                                             logger=self._logger)
+        top1_val, top5_val = self._val_epoch(
+            val_loader,
+            model=self.net,
+            criterion=self.val_criterion,
+            num_class=self.num_class,
+            use_amp=False,
+            logger=self._logger,
+            log_name="Val-log",
+            log_interval=self._cfg.valid.log_interval)
 
         return top1_val, top5_val
 
@@ -1041,8 +1033,6 @@ class ImageClassificationEstimator(BaseEstimator):
     #     except ImportError:
     #         pass
     #     d['save_state'] = save_state
-    #     d['_logger'] = None
-    #     d['_reporter'] = None
     #     return d
 
     # def __setstate__(self, state):
