@@ -224,7 +224,7 @@ def validate(val_loader,
     steps_per_epoch = len(val_loader)
     end = time.time()
     data_iter = enumerate(val_loader)
-
+    batch_size = 1
     for i, (input, target) in data_iter:
         input = input.cuda()
         target = target.cuda()
@@ -240,6 +240,9 @@ def validate(val_loader,
         losses_m.update(loss.item(), bs)
         top1_m.update(prec1.item(), bs)
         top5_m.update(prec5.item(), bs)
+
+        if i == 1:
+            batch_size = bs
 
         if (i % log_interval == 0) or (i == steps_per_epoch - 1):
             if not torch.distributed.is_initialized(
@@ -259,7 +262,7 @@ def validate(val_loader,
                         loss=losses_m,
                         top1=top1_m,
                         top5=top5_m))
-    return top1_m.avg
+    return losses_m.avg, top1_m.avg / 100.0, top5_m.avg / 100.0, batch_size
 
 
 def train_loop(
@@ -314,7 +317,6 @@ def train_loop(
                     batch_size_multiplier=batch_size_multiplier,
                     log_interval=10)
 
-            batch_size = batch_size
             steps_per_epoch = len(train_loader)
             throughput = int(batch_size * steps_per_epoch /
                              (time.time() - tic))
@@ -325,7 +327,8 @@ def train_loop(
                         time.time() - tic)
 
             if not skip_validation:
-                prec1 = validate(
+                tic = time.time()
+                losses_m, top1_m, top5_m, batch_size = validate(
                     val_loader,
                     model,
                     criterion,
@@ -334,6 +337,16 @@ def train_loop(
                     "Val-log",
                     use_amp=use_amp,
                 )
+                steps_per_epoch = len(val_loader)
+                throughput = int(batch_size * steps_per_epoch /
+                                 (time.time() - tic))
+                logger.info(
+                    '[Epoch %d] validation: loss=%f, top1=%f, top5=%f' %
+                    (epoch + 1, losses_m, top1_m, top5_m))
+                logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f',
+                            epoch + 1, throughput,
+                            time.time() - tic)
+
                 if use_ema:
                     model_ema.load_state_dict({
                         k.replace('module.', ''): v

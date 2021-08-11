@@ -215,8 +215,10 @@ class BaseEstimator:
         if not cp:
             return return_value
         self._logger.info('Applying the state from the best checkpoint...')
+        print(cp)
         try:
             tmp = self.load(cp)
+            print(tmp)
             self.__dict__.update(tmp.__dict__)
         except:
             self._logger.warning(
@@ -332,7 +334,6 @@ class BaseEstimator:
         """
         with open(filename, 'rb') as fid:
             obj = pickle.load(fid)
+            print(obj)
             obj._logger.debug('Unpickled from %s', filename)
-            new_ctx = _suggest_load_context(obj.net, ctx, obj.ctx)
-            obj.reset_ctx(new_ctx)
             return obj
