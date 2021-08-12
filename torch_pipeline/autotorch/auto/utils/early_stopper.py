@@ -117,30 +117,30 @@ def _suggest_load_context(model, mode, orig_ctx):
     if not isinstance(orig_ctx, (list, tuple)):
         orig_ctx = [orig_ctx]
     try:
-        import mxnet as mx
-    except ImportError:
-        mx = None
-    try:
         import torch
     except ImportError:
         torch = None
-    if mx is not None and isinstance(model, mx.gluon.Block):
+
+    if torch is not None and isinstance(
+            model, (torch.nn.Module, torch.nn.DataParallel)):
         if mode == 'auto':
-            if orig_ctx[0].device_type == 'gpu':
-                mode = 'gpu'
-            else:
+            if orig_ctx[0] == torch.device('cpu'):
                 mode = 'cpu'
+            else:
+                mode = 'gpu'
         if mode == 'cpu':
-            return [mx.cpu()]
+            return [torch.device('cpu')]
         if mode == 'gpu':
-            return [mx.gpu(i) for i in range(mx.context.num_gpus())]
+            return [
+                torch.device(f'cuda:{gid}')
+                for gid in range(torch.cuda.device_count())
+            ]
         if isinstance(mode, (list, tuple)):
             if not all(isinstance(i, int) for i in mode):
                 raise ValueError(
                     'Requires integer gpu id, given {}'.format(mode))
             return [
-                mx.gpu(i) for i in mode if i in range(mx.context.num_gpus())
+                torch.device(f'cuda:{gid}') for gid in mode
+                if gid in range(torch.cuda.device_count())
             ]
-    if torch is not None and isinstance(model, torch.Module):
-        pass
     return None

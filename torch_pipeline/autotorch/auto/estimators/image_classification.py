@@ -48,7 +48,7 @@ __all__ = ['ImageClassificationEstimator']
 
 @set_default(ImageClassificationCfg())
 class ImageClassificationEstimator(BaseEstimator):
-    """Estimator implementation for Image Classification.
+    """Torch Estimator implementation for Image Classification.
 
     Parameters
     ----------
@@ -197,7 +197,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         train_loader = get_pytorch_train_loader(
             data_dir=self._cfg.train.data_dir,
-            batch_size=self.batch_size,
+            batch_size=self._cfg.train.batch_size,
             num_workers=self._cfg.train.num_workers,
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
@@ -212,7 +212,7 @@ class ImageClassificationEstimator(BaseEstimator):
 
         val_loader = get_pytorch_val_loader(
             data_dir=self._cfg.train.data_dir,
-            batch_size=self.batch_size,
+            batch_size=self._cfg.valid.batch_size,
             num_workers=self._cfg.valid.num_workers,
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
@@ -289,7 +289,7 @@ class ImageClassificationEstimator(BaseEstimator):
                 log_interval=self._cfg.train.log_interval)
 
             steps_per_epoch = len(train_loader)
-            throughput = int(self.batch_size * steps_per_epoch /
+            throughput = int(self._cfg.train.batch_size * steps_per_epoch /
                              (time.time() - tic))
 
             self._logger.info(
@@ -621,7 +621,6 @@ class ImageClassificationEstimator(BaseEstimator):
                 type(self.last_train)))
 
         batch_size = self._cfg.train.batch_size
-        self.batch_size = batch_size
         lr = self._cfg.train.lr
         warmup_epochs = self._cfg.train.warmup_epochs
         decay_factor = self._cfg.train.decay_factor
@@ -763,7 +762,7 @@ class ImageClassificationEstimator(BaseEstimator):
         """Test on validation dataset."""
         val_loader = get_pytorch_val_loader(
             data_dir=self._cfg.train.data_dir,
-            batch_size=self.batch_size,
+            batch_size=self._cfg.valid.batch_size,
             num_workers=self._cfg.valid.num_workers,
             input_size=self.input_size,
             crop_ratio=self._cfg.train.crop_ratio,
