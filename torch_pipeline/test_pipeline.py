@@ -48,6 +48,10 @@ def parse_args():
 def main():
     opt = parse_args()
     task_config = vars(opt)
+    checkpoint_dir = os.path.join(task_config.get('output_path'), task_config["data_name"], "checkpoint")
+    if int(os.environ["LOCAL_RANK"]) == 0:
+        if not os.path.exists(checkpoint_dir):
+            os.makedirs(checkpoint_dir)
     # yaml_file = "config.yaml"
     # # parse configuration
     # task_config = utils.load_yaml(yaml_file)
@@ -77,9 +81,6 @@ def main():
         train_dataset, val_dataset, test_dataset)
 
     # model_predictor
-    checkpoint_dir = os.path.join(task_config.get('output_path'), task_config["data_name"], "checkpoint")
-    if not os.path.exists(checkpoint_dir):
-        os.makedirs(checkpoint_dir)
     predictor = ImagePredictor(log_dir=checkpoint_dir)
     predictor.fit(train_data=train_dataset,
                     tuning_data=val_dataset,

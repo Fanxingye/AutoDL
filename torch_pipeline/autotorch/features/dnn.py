@@ -128,7 +128,10 @@ class DNNFeature:
             print(
                 f'{self.data_name} already in csv file so stored features will be loaded. '
                 f'Please use another name if you entered a new dataset.')
-            entry = self.df.loc[self.data_name].iloc[0].to_numpy()
+            if len(self.df.loc[self.data_name].shape) > 1:
+                entry = self.df.loc[self.data_name].iloc[0].to_numpy()
+            else:
+                entry = self.df.loc[self.data_name].to_numpy()
             entry = np.reshape(entry, [1,-1])
             return entry
 

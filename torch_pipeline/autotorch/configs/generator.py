@@ -34,7 +34,7 @@ class DefaultConfig:
 
 class ConfigGenerator:
     LR_RANGE = 1e-2
-    EXTRA_MODELS = ["swin_base_patch4_window7_224_in21k", "pit_b_224"]
+    EXTRA_MODELS = ["swin_base_patch4_window7_224_in22k", "pit_b_224"]
 
     # TODO
     # parser mongodb
