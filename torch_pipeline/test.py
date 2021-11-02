@@ -2,6 +2,9 @@ import argparse
 import os
 import random
 import logging
+import time
+
+import json
 import numpy as np
 from copy import deepcopy
 import torch
@@ -72,7 +75,11 @@ def parse_args():
                         help="memory layout, nchw or nhwc",)
     parser.add_argument('--output-dir', default="/home/yiran.wu/work_dirs/pytorch_model_benchmark", type=str,
                         help='output directory for model and log')
-    args = parser.parse_args()
+    parser.add_argument('--output_path', default="/home/yiran.wu/work_dirs/pytorch_model_benchmark", type=str,
+                        help='output directory for model and log')
+    args,_ = parser.parse_known_args()
+    if args.output_path is not None:
+        args.output_dir=args.output_path
     return args
 
 
@@ -220,6 +227,36 @@ if __name__ == "__main__":
     logger.addHandler(filehandler)
     logger.addHandler(streamhandler)
     cudnn.benchmark = True
+    start_time = time.time()
     prec1 = test(args, logger)
+    # (0.6832659840583801, 0.6190476190476191, 1.0, 8)
     logger.info("**"*100)
-    logger.info("Test Acc of Top1 is %s" % prec1)
+    logger.info("Test Acc of Top1 is %s" % prec1[1])
+    logger.info("Test Acc of Top5 is %s" % prec1[2])
+    end_time = time.time()
+    test_time = end_time - start_time
+    logger.info("Total time of test is {:7.1f} s".format(test_time))
+    with open(os.path.join(args.output_path, "eval_result.json"), "w")as f:
+        json.dump({
+            "name": f"lenet-classification-tensorflow",
+            "evaluation": [
+                {
+                    "key": "accuary",
+                    "value": f"{prec1[1]}",
+                    "type": "float",
+                    "desc": "分类准确率TOP1"
+                },
+                {
+                    "key": "accuary",
+                    "value": f"{prec1[2]}",
+                    "type": "float",
+                    "desc": "分类准确率TOP5"
+                },
+                {
+                    "key": "time_cost",
+                    "value": f"{test_time}s",
+                    "type": "string",
+                    "desc": "评估耗时"
+                }
+            ]
+        }, f)

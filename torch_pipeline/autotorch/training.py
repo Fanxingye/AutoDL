@@ -264,6 +264,7 @@ def validate(val_loader,
                         top5=top5_m))
     return losses_m.avg, top1_m.avg / 100.0, top5_m.avg / 100.0, batch_size
 
+from torch.utils.tensorboard import SummaryWriter
 
 def train_loop(
     model,
@@ -296,6 +297,7 @@ def train_loop(
         epochs_since_improvement = 0
 
     print(f"RUNNING EPOCHS FROM {start_epoch} TO {end_epoch}")
+    writer = SummaryWriter(checkpoint_dir)
     with TimeoutHandler() as timeout_handler:
         interrupted = False
         for epoch in range(start_epoch, end_epoch):
@@ -320,6 +322,11 @@ def train_loop(
             steps_per_epoch = len(train_loader)
             throughput = int(batch_size * steps_per_epoch /
                              (time.time() - tic))
+            writer.add_scalar('loss',losses_m, global_step=epoch)
+            writer.add_scalar('fps', throughput, global_step=epoch)
+            writer.add_scalar('top1_acc', top1_m, global_step=epoch)
+            writer.add_scalar('top5_acc', top5_m, global_step=epoch)
+
             logger.info('[Epoch %d] training: loss=%f, top1=%f, top5=%f' %
                         (epoch + 1, losses_m, top1_m, top5_m))
             logger.info('[Epoch %d] speed: %d samples/sec\ttime cost: %f',
@@ -340,6 +347,10 @@ def train_loop(
                 steps_per_epoch = len(val_loader)
                 throughput = int(batch_size * steps_per_epoch /
                                  (time.time() - tic))
+                writer.add_scalar('loss', losses_m, global_step=epoch)
+                writer.add_scalar('fps', throughput, global_step=epoch)
+                writer.add_scalar('top1_acc', top1_m, global_step=epoch)
+                writer.add_scalar('top5_acc', top5_m, global_step=epoch)
                 logger.info(
                     '[Epoch %d] validation: loss=%f, top1=%f, top5=%f' %
                     (epoch + 1, losses_m, top1_m, top5_m))
