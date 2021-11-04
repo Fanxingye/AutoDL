@@ -1,0 +1,7 @@
+name: classification
+time_limit_sec: 36000
+data_name: A-Large-Scale-Fish-Dataset
+data_path: /data/AutoML_compete/A-Large-Scale-Fish-Dataset
+output_path: /home/yiran.wu/work_dirs/autodl_benchmark/A-Large-Scale-Fish-Dataset
+device_limit: 1
+device_type: nvidia
